@@ -14,7 +14,8 @@ use sp_core::{crypto::KeyTypeId, OpaqueMetadata};
 use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
 	traits::{
-		AccountIdLookup, BlakeTwo256, Block as BlockT, IdentifyAccount, NumberFor, One, Verify,
+		AccountIdLookup, BlakeTwo256, Block as BlockT, IdentifyAccount, NumberFor, One, OpaqueKeys,
+		Verify,
 	},
 	transaction_validity::{TransactionSource, TransactionValidity},
 	ApplyExtrinsicResult, MultiSignature,
@@ -25,6 +26,7 @@ use sp_version::NativeVersion;
 use sp_version::RuntimeVersion;
 
 // A few exports that help ease life for downstream crates.
+use frame_election_provider_support::{generate_solution_type, onchain, SequentialPhragmen};
 pub use frame_support::{
 	construct_runtime, parameter_types,
 	traits::{
@@ -118,11 +120,19 @@ pub const MILLISECS_PER_BLOCK: u64 = 6000;
 // NOTE: Currently it is not possible to change the slot duration after the chain has started.
 //       Attempting to do so will brick block production.
 pub const SLOT_DURATION: u64 = MILLISECS_PER_BLOCK;
+pub const EPOCH_DURATION_IN_SLOTS: u64 = 4 * HOURS;
 
 // Time is measured by number of blocks.
 pub const MINUTES: BlockNumber = 60_000 / (MILLISECS_PER_BLOCK as BlockNumber);
 pub const HOURS: BlockNumber = MINUTES * 60;
 pub const DAYS: BlockNumber = HOURS * 24;
+
+/// Existential deposit.
+pub const EXISTENTIAL_DEPOSIT: u128 = 500;
+
+pub const UNITS: Balance = 1_000_000;
+pub const DOLLARS: Balance = UNITS; // 1_000_000
+pub const CENTS: Balance = DOLLARS / 1_000_000; // 1
 
 /// The version information used to identify this runtime when compiled natively.
 #[cfg(feature = "std")]
@@ -236,9 +246,9 @@ impl pallet_session::Config for Runtime {
 	type ShouldEndSession = Babe;
 	type NextSessionRotation = Babe;
 	type SessionManager = pallet_session::historical::NoteHistoricalRoot<Self, Staking>;
-	type SessionHandler = <SessionKeys as OpaqueKeys>::KeyTypeIdProviders;
-	type Keys = SessionKeys;
-	type WeightInfo = pallet_session::WeightInfo<Runtime>;
+	type SessionHandler = <opaque::SessionKeys as OpaqueKeys>::KeyTypeIdProviders;
+	type Keys = opaque::SessionKeys;
+	type WeightInfo = pallet_session::weights::SubstrateWeight<Runtime>;
 }
 
 impl pallet_session::historical::Config for Runtime {
@@ -246,8 +256,55 @@ impl pallet_session::historical::Config for Runtime {
 	type FullIdentificationOf = pallet_staking::ExposureOf<Runtime>;
 }
 
-/// Existential deposit.
-pub const EXISTENTIAL_DEPOSIT: u128 = 500;
+parameter_types! {
+	// phase durations. 1/4 of the last session for each
+	pub SignedPhase: u32 = EPOCH_DURATION_IN_SLOTS / 4;
+	pub UnsignedPhase: u32 = EPOCH_DURATION_IN_SLOTS / 4;
+
+	// signed config
+	pub const SignedMaxSubmissions: u32 = 16;
+	pub const SignedMaxRefunds: u32 = 16 / 4;
+	// 40 UNITs fixed deposit..
+	pub const SignedDepositBase: Balance = 40 * UNITS; // TODO: setup this values
+	// 0.01 UNITs per KB of solution data.
+	pub const SignedDepositByte: Balance = 1 * UNITS / 100; // TODO: setup this values
+	// Each good submission will get 1 UNITs as reward
+	pub SignedRewardBase: Balance = 1 * UNITS; // TODO: setup this values
+	pub BetterUnsignedThreshold: Perbill = Perbill::from_rational(5u32, 10_000);
+
+	// 4 hour session, 1 hour unsigned phase, 32 offchain executions.
+	pub OffchainRepeat: BlockNumber = UnsignedPhase::get() / 32;
+
+	/// We take the top 22500 nominators as electing voters..
+	pub const MaxElectingVoters: u32 = 22_500;
+	/// ... and all of the validators as electable targets. Whilst this is the case, we cannot and
+	/// shall not increase the size of the validator intentions.
+	pub const MaxElectableTargets: u16 = u16::MAX;
+	/// Setup election pallet to support maximum winners upto 1200. This will mean Staking Pallet
+	/// cannot have active validators higher than this count.
+	pub const MaxActiveValidators: u32 = 1200;
+}
+
+generate_solution_type!(
+	#[compact]
+	pub struct NposCompactSolution16::<
+		VoterIndex = u32,
+		TargetIndex = u16,
+		Accuracy = sp_runtime::PerU16,
+		MaxVoters = MaxElectingVoters,
+	>(16)
+);
+
+pub struct OnChainSeqPhragmen;
+impl onchain::Config for OnChainSeqPhragmen {
+	type System = Runtime;
+	type Solver = SequentialPhragmen<AccountId, sp_runtime::Perbill>;
+	type DataProvider = Staking;
+	type WeightInfo = frame_election_provider_support::weights::SubstrateWeight<Runtime>;
+	type MaxWinners = MaxActiveValidators;
+	type VotersBound = MaxElectingVoters;
+	type TargetsBound = MaxElectableTargets;
+}
 
 impl pallet_balances::Config for Runtime {
 	type MaxLocks = ConstU32<50>;

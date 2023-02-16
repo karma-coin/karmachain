@@ -26,6 +26,7 @@ frame-try-runtime = { version = "0.10.0-dev", default-features = false, git = "h
 pallet-timestamp = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.37" }
 pallet-transaction-payment = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.37" }
 pallet-session = { version = "4.0.0-dev", default-features = false, features = ["historical"], git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.37" }
+frame-election-provider-support = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.37" }
 frame-executive = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.37" }
 sp-api = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.37" }
 sp-block-builder = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.37" }
@@ -72,6 +73,7 @@ std = [
 	"pallet-transaction-payment-rpc-runtime-api/std",
 	"pallet-transaction-payment/std",
 	"pallet-session/std",
+	"frame-election-provider-support/std",
 	"sp-api/std",
 	"sp-block-builder/std",
 	"sp-core/std",
@@ -92,6 +94,7 @@ runtime-benchmarks = [
 	"pallet-balances/runtime-benchmarks",
 	"pallet-grandpa/runtime-benchmarks",
 	"pallet-timestamp/runtime-benchmarks",
+	"frame-election-provider-support/runtime-benchmarks",
 	"sp-runtime/runtime-benchmarks",
 ]
 try-runtime = [
