@@ -1,6 +1,6 @@
 use node_template_runtime::{
-	AccountId, BalancesConfig, GenesisConfig, GrandpaConfig, Signature, SudoConfig,
-	SystemConfig, WASM_BINARY,
+	AccountId, BalancesConfig, GenesisConfig, GrandpaConfig, Signature, SudoConfig, SystemConfig,
+	WASM_BINARY,
 };
 use sc_service::ChainType;
 use sp_core::{sr25519, Pair, Public};
@@ -30,9 +30,9 @@ where
 	AccountPublic::from(get_from_seed::<TPublic>(seed)).into_account()
 }
 
-
 /// Generate an Babe authority key.
-pub fn authority_keys_from_seed(s: &str) -> ((), GrandpaId) { // TODO: Add BabeId
+pub fn authority_keys_from_seed(s: &str) -> ((), GrandpaId) {
+	// TODO: Add BabeId
 	todo!()
 }
 

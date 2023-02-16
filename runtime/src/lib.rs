@@ -46,7 +46,6 @@ use pallet_transaction_payment::{ConstFeeMultiplier, CurrencyAdapter, Multiplier
 pub use sp_runtime::BuildStorage;
 pub use sp_runtime::{Perbill, Permill};
 
-
 /// An index to a block.
 pub type BlockNumber = u32;
 
@@ -230,6 +229,18 @@ impl pallet_timestamp::Config for Runtime {
 	type WeightInfo = ();
 }
 
+impl pallet_session::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type ValidatorId = AccountId;
+	type ValidatorIdOf = pallet_staking::StashOf<Self>;
+	type ShouldEndSession = Babe;
+	type NextSessionRotation = Babe;
+	type SessionManager = pallet_session::historical::NoteHistoricalRoot<Self, Staking>;
+	type SessionHandler = <SessionKeys as OpaqueKeys>::KeyTypeIdProviders;
+	type Keys = SessionKeys;
+	type WeightInfo = weights::pallet_session::WeightInfo<Runtime>;
+}
+
 /// Existential deposit.
 pub const EXISTENTIAL_DEPOSIT: u128 = 500;
 
@@ -273,13 +284,24 @@ construct_runtime!(
 		NodeBlock = opaque::Block,
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
+		// Basic stuff; balances is uncallable initially.
 		System: frame_system,
+
 		RandomnessCollectiveFlip: pallet_randomness_collective_flip,
 		Timestamp: pallet_timestamp,
-		Grandpa: pallet_grandpa,
 		Balances: pallet_balances,
 		TransactionPayment: pallet_transaction_payment,
 		Sudo: pallet_sudo,
+
+		// Consensus support.
+		// Authorship must be before session in order to note author in the correct session and era
+		// for im-online and staking.
+		// TODO: Staking
+		// TODO: Historical
+		Session: pallet_session,
+		Grandpa: pallet_grandpa,
+		// Governance stuff.
+
 		// Include the custom logic from the pallet-template in the runtime.
 	}
 );
