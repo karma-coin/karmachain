@@ -238,7 +238,12 @@ impl pallet_session::Config for Runtime {
 	type SessionManager = pallet_session::historical::NoteHistoricalRoot<Self, Staking>;
 	type SessionHandler = <SessionKeys as OpaqueKeys>::KeyTypeIdProviders;
 	type Keys = SessionKeys;
-	type WeightInfo = weights::pallet_session::WeightInfo<Runtime>;
+	type WeightInfo = pallet_session::WeightInfo<Runtime>;
+}
+
+impl pallet_session::historical::Config for Runtime {
+	type FullIdentification = pallet_staking::Exposure<AccountId, Balance>;
+	type FullIdentificationOf = pallet_staking::ExposureOf<Runtime>;
 }
 
 /// Existential deposit.
@@ -297,7 +302,7 @@ construct_runtime!(
 		// Authorship must be before session in order to note author in the correct session and era
 		// for im-online and staking.
 		// TODO: Staking
-		// TODO: Historical
+		Historical: pallet_session::historical,
 		Session: pallet_session,
 		Grandpa: pallet_grandpa,
 		// Governance stuff.
