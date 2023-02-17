@@ -33,6 +33,8 @@ pub(crate) type FullClient =
 	sc_service::TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<ExecutorDispatch>>;
 type FullBackend = sc_service::TFullBackend<Block>;
 type FullSelectChain = sc_consensus::LongestChain<FullBackend, Block>;
+type FullGrandpaBlockImport =
+    sc_finality_grandpa::GrandpaBlockImport<FullBackend, Block, FullClient, FullSelectChain>;
 
 pub fn new_partial(
 	config: &Configuration,
@@ -44,13 +46,13 @@ pub fn new_partial(
 		sc_consensus::DefaultImportQueue<Block, FullClient>,
 		sc_transaction_pool::FullPool<Block, FullClient>,
 		(
-			sc_finality_grandpa::GrandpaBlockImport<
-				FullBackend,
-				Block,
-				FullClient,
-				FullSelectChain,
-			>,
+			sc_consensus_babe::BabeBlockImport<
+					Block,
+					FullClient,
+					FullGrandpaBlockImport,
+				>,
 			sc_finality_grandpa::LinkHalf<Block, FullClient, FullSelectChain>,
+			sc_consensus_babe::BabeLink<Block>,
 			Option<Telemetry>,
 		),
 	>,
@@ -108,7 +110,34 @@ pub fn new_partial(
 		telemetry.as_ref().map(|x| x.handle()),
 	)?;
 
-	let import_queue = todo!();
+	let justification_import = grandpa_block_import.clone();
+
+	let babe_config = sc_consensus_babe::configuration(&*client)?;
+	let (block_import, babe_link) =
+		sc_consensus_babe::block_import(babe_config, grandpa_block_import, client.clone())?;
+
+	let slot_duration = babe_link.config().slot_duration();
+	let import_queue = sc_consensus_babe::import_queue(
+		babe_link.clone(),
+		block_import.clone(),
+		Some(Box::new(justification_import)),
+		client.clone(),
+		select_chain.clone(),
+		move |_, ()| async move {
+			let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
+
+			let slot =
+				sp_consensus_babe::inherents::InherentDataProvider::from_timestamp_and_slot_duration(
+					*timestamp,
+					slot_duration,
+				);
+
+			Ok((slot, timestamp))
+		},
+		&task_manager.spawn_essential_handle(),
+		config.prometheus_registry(),
+		telemetry.as_ref().map(|x| x.handle()),
+	)?;
 
 	Ok(sc_service::PartialComponents {
 		client,
@@ -118,7 +147,7 @@ pub fn new_partial(
 		keystore_container,
 		select_chain,
 		transaction_pool,
-		other: (grandpa_block_import, grandpa_link, telemetry),
+		other: (block_import, grandpa_link, babe_link, telemetry),
 	})
 }
 
@@ -139,7 +168,7 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
 		mut keystore_container,
 		select_chain,
 		transaction_pool,
-		other: (block_import, grandpa_link, mut telemetry),
+		other: (block_import, grandpa_link, babe_link, mut telemetry),
 	} = new_partial(&config)?;
 
 	if let Some(url) = &config.keystore_remote {
@@ -220,13 +249,47 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
 	})?;
 
 	if role.is_authority() {
-		// let proposer_factory = sc_basic_authorship::ProposerFactory::new(
-		// 	task_manager.spawn_handle(),
-		// 	client.clone(),
-		// 	transaction_pool,
-		// 	prometheus_registry.as_ref(),
-		// 	telemetry.as_ref().map(|x| x.handle()),
-		// );
+		let proposer = sc_basic_authorship::ProposerFactory::new(
+			task_manager.spawn_handle(),
+			client.clone(),
+			transaction_pool,
+			prometheus_registry.as_ref(),
+			telemetry.as_ref().map(|x| x.handle()),
+		);
+
+		let slot_duration = babe_link.config().slot_duration();
+		let babe_config = sc_consensus_babe::BabeParams {
+			keystore: keystore_container.sync_keystore(),
+			client,
+			select_chain,
+			block_import,
+			env: proposer,
+			sync_oracle: network.clone(),
+			justification_sync_link: network.clone(),
+			create_inherent_data_providers: move |_, ()| async move {
+				let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
+
+				let slot =
+						sp_consensus_babe::inherents::InherentDataProvider::from_timestamp_and_slot_duration(
+							*timestamp,
+							slot_duration,
+						);
+
+				Ok((slot, timestamp))
+			},
+			force_authoring,
+			backoff_authoring_blocks,
+			babe_link,
+			block_proposal_slot_portion: sc_consensus_babe::SlotProportion::new(2f32 / 3f32),
+			max_block_proposal_slot_portion: None,
+			telemetry: telemetry.as_ref().map(|x| x.handle()),
+		};
+
+		task_manager.spawn_essential_handle().spawn_blocking(
+			"babe",
+			None,
+			sc_consensus_babe::start_babe(babe_config)?,
+		);
 	}
 
 	if enable_grandpa {
