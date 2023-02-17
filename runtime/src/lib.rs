@@ -344,9 +344,9 @@ impl pallet_bags_list::Config<VoterBagsListInstance> for Runtime {
 pub struct EraPayout;
 impl pallet_staking::EraPayout<Balance> for EraPayout {
 	fn era_payout(
-		total_staked: Balance,
-		total_issuance: Balance,
-		era_duration_millis: u64,
+		_total_staked: Balance,
+		_total_issuance: Balance,
+		_era_duration_millis: u64,
 	) -> (Balance, Balance) {
 		todo!()
 	}
