@@ -88,6 +88,7 @@ pub mod opaque {
 
 	impl_opaque_keys! {
 		pub struct SessionKeys {
+			pub babe: Babe,
 			pub grandpa: Grandpa,
 		}
 	}
@@ -111,6 +112,17 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	transaction_version: 1,
 	state_version: 1,
 };
+
+/// The BABE epoch configuration at genesis.
+pub const BABE_GENESIS_EPOCH_CONFIG: sp_consensus_babe::BabeEpochConfiguration =
+	sp_consensus_babe::BabeEpochConfiguration {
+		// 1 in 4 blocks (on average, not counting collisions) will be primary babe blocks.
+		// The choice of is done in accordance to the slot duration and expected target
+		// block time, for safely resisting network delays of maximum two seconds.
+		// <https://research.web3.foundation/en/latest/polkadot/BABE/Babe/#6-practical-results>
+		c: (1, 4),
+		allowed_slots: sp_consensus_babe::AllowedSlots::PrimaryAndSecondaryVRFSlots,
+	};
 
 /// This determines the average expected block time that we are targeting.
 /// Blocks will be produced at a minimum duration defined by `SLOT_DURATION`.

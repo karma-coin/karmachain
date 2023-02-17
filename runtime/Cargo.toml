@@ -44,6 +44,7 @@ sp-transaction-pool = { version = "4.0.0-dev", default-features = false, git = "
 sp-staking = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.37" }
 sp-npos-elections = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.37" }
 sp-version = { version = "5.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.37" }
+sp-consensus-babe = { version = "0.10.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.37" }
 
 # Used for the node template's RPCs
 frame-system-rpc-runtime-api = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.37" }
@@ -95,6 +96,7 @@ std = [
 	"sp-transaction-pool/std",
 	"sp-version/std",
 	"substrate-wasm-builder",
+	"sp-consensus-babe/std"
 ]
 runtime-benchmarks = [
 	"frame-benchmarking/runtime-benchmarks",
