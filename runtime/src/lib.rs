@@ -315,6 +315,20 @@ impl onchain::Config for OnChainSeqPhragmen {
 	type TargetsBound = MaxElectableTargets;
 }
 
+parameter_types! {
+	// TODO: https://github.com/paritytech/substrate/blob/master/frame/bags-list/src/lib.rs#L117
+	pub const BagThresholds: &'static [u64] = &[];
+}
+
+type VoterBagsListInstance = pallet_bags_list::Instance1;
+impl pallet_bags_list::Config<VoterBagsListInstance> for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type ScoreProvider = Staking;
+	type WeightInfo = pallet_bags_list::weights::SubstrateWeight<Runtime>;
+	type BagThresholds = BagThresholds;
+	type Score = sp_npos_elections::VoteWeight;
+}
+
 pub struct EraPayout;
 impl pallet_staking::EraPayout<Balance> for EraPayout {
 	fn era_payout(
@@ -373,7 +387,7 @@ impl pallet_staking::Config for Runtime {
 		MaxActiveValidators,
 	)>; // TODO:
 	type GenesisElectionProvider = onchain::OnChainExecution<OnChainSeqPhragmen>;
-	type VoterList = (); // TODO:
+	type VoterList = VoterList;
 	type TargetList = UseValidatorsMap<Self>;
 	type MaxUnlockingChunks = frame_support::traits::ConstU32<32>;
 	type HistoryDepth = frame_support::traits::ConstU32<84>;
@@ -478,6 +492,9 @@ construct_runtime!(
 		Session: pallet_session,
 		Grandpa: pallet_grandpa,
 		// Governance stuff.
+
+		// Provides a semi-sorted list of nominators for staking.
+		VoterList: pallet_bags_list::<Instance1>::{Pallet, Call, Storage, Event<T>} = 37,
 
 		// Include the custom logic from the pallet-template in the runtime.
 	}
