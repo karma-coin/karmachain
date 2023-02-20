@@ -21,7 +21,7 @@ use sp_runtime::{
 	ApplyExtrinsicResult, MultiSignature,
 };
 use sp_staking::SessionIndex;
-use sp_std::prelude::*;
+use sp_std::{marker::PhantomData, prelude::*};
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
 use sp_version::RuntimeVersion;
@@ -50,6 +50,8 @@ use pallet_transaction_payment::{ConstFeeMultiplier, CurrencyAdapter, Multiplier
 #[cfg(any(feature = "std", test))]
 pub use sp_runtime::BuildStorage;
 pub use sp_runtime::{Perbill, Permill};
+
+mod era_payout;
 
 /// An index to a block.
 pub type BlockNumber = u32;
@@ -135,12 +137,18 @@ pub const MILLISECS_PER_BLOCK: u64 = 60_000;
 // NOTE: Currently it is not possible to change the slot duration after the chain has started.
 //       Attempting to do so will brick block production.
 pub const SLOT_DURATION: u64 = MILLISECS_PER_BLOCK;
-pub const EPOCH_DURATION_IN_SLOTS: BlockNumber = 4 * HOURS;
+// pub const EPOCH_DURATION_IN_SLOTS: BlockNumber = 4 * HOURS;
+// pub const ERA_DURATION_IN_EPOCH: u32 = 6;
+
+pub const EPOCH_DURATION_IN_SLOTS: BlockNumber = MINUTES;
+pub const ERA_DURATION_IN_EPOCH: u32 = 4;
 
 // Time is measured by number of blocks.
 pub const MINUTES: BlockNumber = 60_000 / (MILLISECS_PER_BLOCK as BlockNumber);
 pub const HOURS: BlockNumber = MINUTES * 60;
 pub const DAYS: BlockNumber = HOURS * 24;
+// Assumse month contains 30 days
+pub const MONTHS: BlockNumber = DAYS * 30;
 
 /// Existential deposit.
 pub const EXISTENTIAL_DEPOSIT: u128 = 500;
@@ -341,20 +349,27 @@ impl pallet_bags_list::Config<VoterBagsListInstance> for Runtime {
 	type Score = sp_npos_elections::VoteWeight;
 }
 
-pub struct EraPayout;
-impl pallet_staking::EraPayout<Balance> for EraPayout {
+pub struct EraPayout<T>(PhantomData<T>);
+impl pallet_staking::EraPayout<Balance> for EraPayout<Staking> {
 	fn era_payout(
 		_total_staked: Balance,
 		_total_issuance: Balance,
 		_era_duration_millis: u64,
 	) -> (Balance, Balance) {
-		todo!()
+		let eras_per_month = MONTHS / (ERA_DURATION_IN_EPOCH * EPOCH_DURATION_IN_SLOTS);
+		let era_index = Staking::active_era().unwrap().index;
+		let month_index = era_index % eras_per_month;
+
+		let payout = era_payout::era_payout(month_index);
+		let rest = 0;
+
+		(payout, rest)
 	}
 }
 
 parameter_types! {
-	// Six sessions in an era (6 hours).
-	pub const SessionsPerEra: SessionIndex = 6;
+	// Six sessions in an era (24 hours).
+	pub const SessionsPerEra: SessionIndex = ERA_DURATION_IN_EPOCH;
 
 	// 28 eras for unbonding (7 days).
 	pub BondingDuration: sp_staking::EraIndex = 28;
@@ -388,7 +403,7 @@ impl pallet_staking::Config for Runtime {
 	type SlashDeferDuration = SlashDeferDuration;
 	type AdminOrigin = EnsureRoot<Self::AccountId>; // TODO:
 	type SessionInterface = Self;
-	type EraPayout = EraPayout;
+	type EraPayout = EraPayout<Staking>;
 	type MaxNominatorRewardedPerValidator = MaxNominatorRewardedPerValidator;
 	type OffendingValidatorsThreshold = OffendingValidatorsThreshold;
 	type NextNewSession = Session;
