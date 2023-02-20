@@ -1,4 +1,4 @@
-use node_template_runtime::{
+use karmachain_node_runtime::{
 	opaque::SessionKeys, AccountId, BabeConfig, BalancesConfig, GenesisConfig, GrandpaConfig,
 	SessionConfig, Signature, StakingConfig, SudoConfig, SystemConfig, DOLLARS, WASM_BINARY,
 };
@@ -183,7 +183,7 @@ fn testnet_genesis(
 		transaction_payment: Default::default(),
 		babe: BabeConfig {
 			authorities: Default::default(),
-			epoch_config: Some(node_template_runtime::BABE_GENESIS_EPOCH_CONFIG),
+			epoch_config: Some(karmachain_node_runtime::BABE_GENESIS_EPOCH_CONFIG),
 		},
 		staking: StakingConfig {
 			minimum_validator_count: 1,
