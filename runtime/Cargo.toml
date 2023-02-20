@@ -1,5 +1,5 @@
 [package]
-name = "node-template-runtime"
+name = "karmachain-node-runtime"
 version = "4.0.0-dev"
 description = "The runtime of the Karma Coin Blockcnain aka Karmachain Node"
 authors = ["Karma Coin Authors <https://karmaco.in/docs/license>"]
