@@ -74,7 +74,15 @@ pub fn development_config() -> Result<ChainSpec, String> {
 		None,
 		None,
 		// Properties
-		None,
+		Some(
+	      serde_json::json!({
+	        "tokenDecimals": 6,
+	        "tokenSymbol": "KC",
+	      })
+	      .as_object()
+	      .expect("Map given")
+	      .clone(),
+	    ),
 		// Extensions
 		None,
 	))
@@ -133,9 +141,17 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 		None,
 		// Protocol ID
 		None,
+		None,
 		// Properties
-		None,
-		None,
+		Some(
+	      serde_json::json!({
+	        "tokenDecimals": 6,
+	        "tokenSymbol": "KC",
+	      })
+	      .as_object()
+	      .expect("Map given")
+	      .clone(),
+	    ),
 		// Extensions
 		None,
 	))
