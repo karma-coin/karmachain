@@ -49,8 +49,8 @@ pub fn development_config() -> Result<ChainSpec, String> {
 				wasm_binary,
 				// Initial PoA authorities
 				vec![(
-					get_account_id_from_seed::<sr25519::Public>("Alice"),
 					get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
+					get_account_id_from_seed::<sr25519::Public>("Alice"),
 					get_from_seed::<BabeId>("Alice"),
 					get_from_seed::<GrandpaId>("Alice"),
 				)],
