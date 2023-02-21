@@ -51,7 +51,7 @@ use pallet_transaction_payment::{ConstFeeMultiplier, CurrencyAdapter, Multiplier
 pub use sp_runtime::BuildStorage;
 pub use sp_runtime::{Perbill, Permill};
 
-mod era_payout;
+mod validators_rewards;
 
 /// An index to a block.
 pub type BlockNumber = u32;
@@ -360,7 +360,7 @@ impl pallet_staking::EraPayout<Balance> for EraPayout<Staking> {
 		let era_index = Staking::active_era().unwrap().index;
 		let month_index = era_index % eras_per_month;
 
-		let payout = era_payout::month_payout(month_index) / eras_per_month as u128;
+		let payout = validators_rewards::month_payout(month_index) / eras_per_month as u128;
 		let rest = 0;
 
 		(payout, rest)

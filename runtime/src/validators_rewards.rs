@@ -14,7 +14,7 @@ pub fn month_payout(month_index: u32) -> u128 {
 
 #[cfg(test)]
 mod tests {
-	use crate::era_payout::month_payout;
+	use crate::validators_rewards::month_payout;
 
 	#[test]
 	fn test_month_payout() {
@@ -38,9 +38,9 @@ mod tests {
 
 	#[test]
 	fn test_total_paypout() {
-        assert_eq!(total_payout(12), 107_620_843_645_481);
-        assert_eq!(total_payout(24), 192_035_499_231_408);
-        assert_eq!(total_payout(240), 495_223_524_341_127);
-        assert_eq!(total_payout(260), 496_514_472_945_642);
-    }
+		assert_eq!(total_payout(12), 107_620_843_645_481);
+		assert_eq!(total_payout(24), 192_035_499_231_408);
+		assert_eq!(total_payout(240), 495_223_524_341_127);
+		assert_eq!(total_payout(260), 496_514_472_945_642);
+	}
 }
