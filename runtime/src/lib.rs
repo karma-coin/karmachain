@@ -360,7 +360,7 @@ impl pallet_staking::EraPayout<Balance> for EraPayout<Staking> {
 		let era_index = Staking::active_era().unwrap().index;
 		let month_index = era_index % eras_per_month;
 
-		let payout = era_payout::era_payout(month_index);
+		let payout = era_payout::month_payout(month_index) / eras_per_month as u128;
 		let rest = 0;
 
 		(payout, rest)
