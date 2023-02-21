@@ -76,8 +76,8 @@ pub fn development_config() -> Result<ChainSpec, String> {
 		// Properties
 		Some(
 	      serde_json::json!({
-	        "tokenDecimals": 6,
-	        "tokenSymbol": "KC",
+	        "tokenDecimals": 0,
+	        "tokenSymbol": "KCent",
 	      })
 	      .as_object()
 	      .expect("Map given")
@@ -145,8 +145,8 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 		// Properties
 		Some(
 	      serde_json::json!({
-	        "tokenDecimals": 6,
-	        "tokenSymbol": "KC",
+	        "tokenDecimals": 0,
+	        "tokenSymbol": "KCent",
 	      })
 	      .as_object()
 	      .expect("Map given")
