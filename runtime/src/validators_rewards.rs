@@ -1,9 +1,9 @@
-use crate::UNITS;
+use crate::KCOINS;
 
 pub fn month_payout(month_index: u32) -> u128 {
 	const LAMBDA: u128 = 20_036;
 	const LAMBDA_DELIMETER: u128 = 1_000_000;
-	const INITIAL_AMOUNT: u128 = 10_000_000 * UNITS;
+	const INITIAL_AMOUNT: u128 = 10_000_000 * KCOINS;
 
 	let mut amount = INITIAL_AMOUNT;
 

@@ -153,9 +153,8 @@ pub const MONTHS: BlockNumber = DAYS * 30;
 /// Existential deposit.
 pub const EXISTENTIAL_DEPOSIT: u128 = 500;
 
-pub const UNITS: Balance = 1_000_000;
-pub const DOLLARS: Balance = UNITS; // 1_000_000
-pub const CENTS: Balance = DOLLARS / 1_000_000; // 1
+pub const KCENTS: Balance = 1;
+pub const KCOINS: Balance = KCENTS * 1_000_000;
 
 /// The type used for currency conversion.
 ///
@@ -294,11 +293,11 @@ parameter_types! {
 	pub const SignedMaxSubmissions: u32 = 16;
 	pub const SignedMaxRefunds: u32 = 16 / 4;
 	// 40 UNITs fixed deposit..
-	pub const SignedDepositBase: Balance = 40 * UNITS; // TODO: setup this values
+	pub const SignedDepositBase: Balance = 40 * KCOINS; // TODO: setup this values
 	// 0.01 UNITs per KB of solution data.
-	pub const SignedDepositByte: Balance = 1 * UNITS / 100; // TODO: setup this values
+	pub const SignedDepositByte: Balance = 1 * KCOINS / 100; // TODO: setup this values
 	// Each good submission will get 1 UNITs as reward
-	pub SignedRewardBase: Balance = 1 * UNITS; // TODO: setup this values
+	pub SignedRewardBase: Balance = 1 * KCOINS; // TODO: setup this values
 	pub BetterUnsignedThreshold: Perbill = Perbill::from_rational(5u32, 10_000);
 
 	// 4 hour session, 1 hour unsigned phase, 32 offchain executions.

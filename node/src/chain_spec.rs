@@ -1,6 +1,6 @@
 use karmachain_node_runtime::{
 	opaque::SessionKeys, AccountId, BabeConfig, BalancesConfig, GenesisConfig, GrandpaConfig,
-	SessionConfig, Signature, StakingConfig, SudoConfig, SystemConfig, DOLLARS, WASM_BINARY,
+	SessionConfig, Signature, StakingConfig, SudoConfig, SystemConfig, KCOINS, WASM_BINARY,
 };
 use pallet_staking::{Forcing, StakerStatus};
 use sc_service::ChainType;
@@ -149,8 +149,8 @@ fn testnet_genesis(
 	endowed_accounts: Vec<AccountId>,
 	_enable_println: bool,
 ) -> GenesisConfig {
-	const ENDOWMENT: u128 = 1_000_000_000 * DOLLARS;
-	const STASH: u128 = 2_500_000 * DOLLARS;
+	const ENDOWMENT: u128 = 1_000_000_000 * KCOINS;
+	const STASH: u128 = 2_500_000 * KCOINS;
 
 	GenesisConfig {
 		system: SystemConfig {
