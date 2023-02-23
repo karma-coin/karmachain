@@ -37,7 +37,7 @@ mod tests {
 	}
 
 	#[test]
-	fn test_total_paypout() {
+	fn test_total_payout() {
 		assert_eq!(total_payout(12), 107_620_843_645_481);
 		assert_eq!(total_payout(24), 192_035_499_231_408);
 		assert_eq!(total_payout(240), 495_223_524_341_127);
