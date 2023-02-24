@@ -471,11 +471,9 @@ impl pallet_staking::EraPayout<Balance> for EraPayout<Staking> {
 		_total_issuance: Balance,
 		_era_duration_millis: u64,
 	) -> (Balance, Balance) {
-		let eras_per_month = MONTHS / (ERA_DURATION_IN_EPOCH * EPOCH_DURATION_IN_SLOTS);
 		let era_index = Staking::active_era().unwrap().index;
-		let month_index = era_index / eras_per_month;
 
-		let payout = validators_rewards::month_payout(month_index) / eras_per_month as u128;
+		let payout = validators_rewards::era_payout(era_index);
 		let rest = 0;
 
 		(payout, rest)
@@ -944,7 +942,6 @@ mod tests {
 	use sp_core::hexdisplay::HexDisplay;
 	use std::collections::HashSet;
 
-	
 	#[test]
 	fn check_whitelist() {
 		let whitelist: HashSet<String> = AllPalletsWithSystem::whitelisted_storage_keys()
@@ -978,8 +975,8 @@ mod tests {
 #[cfg(test)]
 mod payout_tests {
 	use super::*;
-	use sp_staking::EraIndex;
 	use pallet_staking::{ActiveEraInfo, EraPayout as EraPayoutT};
+	use sp_staking::EraIndex;
 
 	#[allow(dead_code)]
 	pub struct TestActiveEraInfo {
@@ -1005,7 +1002,6 @@ mod payout_tests {
 		let start_era_index = month_index * 30;
 		let end_era_index = (month_index + 1) * 30;
 
-
 		for era_index in start_era_index..end_era_index {
 			set_era(era_index);
 			let (payout, rest) = EraPayout::<Staking>::era_payout(0, 0, 0);
@@ -1013,7 +1009,6 @@ mod payout_tests {
 			assert_eq!(rest, 0);
 		}
 	}
-
 
 	#[test]
 	fn test_era_payout() {
