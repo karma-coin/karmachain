@@ -75,14 +75,14 @@ pub fn development_config() -> Result<ChainSpec, String> {
 		None,
 		// Properties
 		Some(
-	      serde_json::json!({
-	        "tokenDecimals": 0,
-	        "tokenSymbol": "KCent",
-	      })
-	      .as_object()
-	      .expect("Map given")
-	      .clone(),
-	    ),
+			serde_json::json!({
+			  "tokenDecimals": 0,
+			  "tokenSymbol": "KCent",
+			})
+			.as_object()
+			.expect("Map given")
+			.clone(),
+		),
 		// Extensions
 		None,
 	))
@@ -144,14 +144,14 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 		None,
 		// Properties
 		Some(
-	      serde_json::json!({
-	        "tokenDecimals": 0,
-	        "tokenSymbol": "KCent",
-	      })
-	      .as_object()
-	      .expect("Map given")
-	      .clone(),
-	    ),
+			serde_json::json!({
+			  "tokenDecimals": 0,
+			  "tokenSymbol": "KCent",
+			})
+			.as_object()
+			.expect("Map given")
+			.clone(),
+		),
 		// Extensions
 		None,
 	))
@@ -177,9 +177,7 @@ fn testnet_genesis(
 			// Configure endowed accounts with initial balance of 1 << 60.
 			balances: endowed_accounts.iter().cloned().map(|k| (k, ENDOWMENT)).collect(),
 		},
-		grandpa: GrandpaConfig {
-			authorities: Default::default(),
-		},
+		grandpa: GrandpaConfig { authorities: Default::default() },
 		sudo: SudoConfig {
 			// Assign network admin rights.
 			key: Some(root_key),
