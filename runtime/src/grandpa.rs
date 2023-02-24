@@ -1,7 +1,7 @@
-use frame_support::traits::ConstU32;
-use sp_core::crypto::KeyTypeId;
-use pallet_grandpa::AuthorityId as GrandpaId;
 use crate::*;
+use frame_support::traits::ConstU32;
+use pallet_grandpa::AuthorityId as GrandpaId;
+use sp_core::crypto::KeyTypeId;
 
 impl pallet_grandpa::Config for Runtime {
 	/// The event type of this module.
