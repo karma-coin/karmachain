@@ -52,6 +52,7 @@ pub use sp_runtime::BuildStorage;
 pub use sp_runtime::{Perbill, Permill};
 
 mod grandpa;
+mod timestamp;
 
 /// An index to a block.
 pub type BlockNumber = u32;
@@ -234,14 +235,6 @@ impl frame_system::Config for Runtime {
 }
 
 impl pallet_randomness_collective_flip::Config for Runtime {}
-
-impl pallet_timestamp::Config for Runtime {
-	/// A timestamp: milliseconds since the unix epoch.
-	type Moment = u64;
-	type OnTimestampSet = (); // TODO: replace with Babe
-	type MinimumPeriod = ConstU64<{ SLOT_DURATION / 2 }>;
-	type WeightInfo = ();
-}
 
 impl pallet_session::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
