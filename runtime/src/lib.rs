@@ -56,6 +56,7 @@ mod balances;
 mod grandpa;
 mod historical;
 mod session;
+mod sudo;
 mod timestamp;
 
 use crate::babe::EpochDuration;
@@ -386,10 +387,7 @@ impl pallet_transaction_payment::Config for Runtime {
 	type FeeMultiplierUpdate = ConstFeeMultiplier<FeeMultiplier>;
 }
 
-impl pallet_sudo::Config for Runtime {
-	type RuntimeEvent = RuntimeEvent;
-	type RuntimeCall = RuntimeCall;
-}
+
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
