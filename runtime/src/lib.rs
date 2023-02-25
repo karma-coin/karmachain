@@ -52,6 +52,7 @@ pub use sp_runtime::BuildStorage;
 pub use sp_runtime::{Perbill, Permill};
 
 mod grandpa;
+mod historical;
 mod session;
 mod timestamp;
 
@@ -236,11 +237,6 @@ impl frame_system::Config for Runtime {
 }
 
 impl pallet_randomness_collective_flip::Config for Runtime {}
-
-impl pallet_session::historical::Config for Runtime {
-	type FullIdentification = pallet_staking::Exposure<AccountId, Balance>;
-	type FullIdentificationOf = pallet_staking::ExposureOf<Runtime>;
-}
 
 parameter_types! {
 	// phase durations. 1/4 of the last session for each
