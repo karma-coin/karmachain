@@ -58,6 +58,7 @@ mod historical;
 mod session;
 mod sudo;
 mod timestamp;
+mod transaction_payment;
 
 use crate::babe::EpochDuration;
 
@@ -377,17 +378,6 @@ impl pallet_staking::Config for Runtime {
 parameter_types! {
 	pub FeeMultiplier: Multiplier = Multiplier::one();
 }
-
-impl pallet_transaction_payment::Config for Runtime {
-	type RuntimeEvent = RuntimeEvent;
-	type OnChargeTransaction = CurrencyAdapter<Balances, ()>;
-	type OperationalFeeMultiplier = ConstU8<5>;
-	type WeightToFee = IdentityFee<Balance>;
-	type LengthToFee = IdentityFee<Balance>;
-	type FeeMultiplierUpdate = ConstFeeMultiplier<FeeMultiplier>;
-}
-
-
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
