@@ -52,6 +52,7 @@ pub use sp_runtime::BuildStorage;
 pub use sp_runtime::{Perbill, Permill};
 
 mod babe;
+mod bags_list;
 mod balances;
 mod grandpa;
 mod historical;
@@ -292,20 +293,6 @@ impl onchain::Config for OnChainSeqPhragmen {
 	type MaxWinners = MaxActiveValidators;
 	type VotersBound = MaxElectingVoters;
 	type TargetsBound = MaxElectableTargets;
-}
-
-parameter_types! {
-	// TODO: https://github.com/paritytech/substrate/blob/master/frame/bags-list/src/lib.rs#L117
-	pub const BagThresholds: &'static [u64] = &[];
-}
-
-type VoterBagsListInstance = pallet_bags_list::Instance1;
-impl pallet_bags_list::Config<VoterBagsListInstance> for Runtime {
-	type RuntimeEvent = RuntimeEvent;
-	type ScoreProvider = Staking;
-	type WeightInfo = pallet_bags_list::weights::SubstrateWeight<Runtime>;
-	type BagThresholds = BagThresholds;
-	type Score = sp_npos_elections::VoteWeight;
 }
 
 pub struct EraPayout;
