@@ -231,8 +231,6 @@ impl frame_system::Config for Runtime {
 	type MaxConsumers = frame_support::traits::ConstU32<16>;
 }
 
-impl pallet_randomness_collective_flip::Config for Runtime {}
-
 impl pallet_grandpa::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 
@@ -490,7 +488,6 @@ construct_runtime!(
 		// Babe must be before session.
 		Babe: pallet_babe,
 
-		RandomnessCollectiveFlip: pallet_randomness_collective_flip,
 		Timestamp: pallet_timestamp,
 		Balances: pallet_balances,
 		TransactionPayment: pallet_transaction_payment,
