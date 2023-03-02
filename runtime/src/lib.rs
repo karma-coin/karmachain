@@ -56,6 +56,7 @@ pub use sp_runtime::{Perbill, Permill};
 mod babe;
 mod bags_list;
 mod balances;
+mod election_provider_multi_phase;
 mod grandpa;
 mod historical;
 mod session;
@@ -336,83 +337,6 @@ impl onchain::Config for OnChainSeqPhragmen {
 	type MaxWinners = MaxActiveValidators;
 	type VotersBound = MaxElectingVoters;
 	type TargetsBound = MaxElectableTargets;
-}
-
-impl pallet_election_provider_multi_phase::MinerConfig for Runtime {
-	type AccountId = AccountId;
-	type MaxLength = OffchainSolutionLengthLimit;
-	type MaxWeight = OffchainSolutionWeightLimit;
-	type Solution = NposCompactSolution16;
-	type MaxVotesPerVoter = <
-		<Self as pallet_election_provider_multi_phase::Config>::DataProvider
-		as
-		frame_election_provider_support::ElectionDataProvider
-	>::MaxVotesPerVoter;
-
-	// The unsigned submissions have to respect the weight of the submit_unsigned call, thus their
-	// weight estimate function is wired to this call's weight.
-	fn solution_weight(v: u32, t: u32, a: u32, d: u32) -> Weight {
-		<
-			<Self as pallet_election_provider_multi_phase::Config>::WeightInfo
-			as
-			pallet_election_provider_multi_phase::WeightInfo
-		>::submit_unsigned(v, t, a, d)
-	}
-}
-
-/// The numbers configured here should always be more than the the maximum limits of staking pallet
-/// to ensure election snapshot will not run out of memory.
-pub struct BenchmarkConfig;
-impl pallet_election_provider_multi_phase::BenchmarkingConfig for BenchmarkConfig {
-	const VOTERS: [u32; 2] = [5_000, 10_000];
-	const TARGETS: [u32; 2] = [1_000, 2_000];
-	const ACTIVE_VOTERS: [u32; 2] = [1000, 4_000];
-	const DESIRED_TARGETS: [u32; 2] = [400, 800];
-	const SNAPSHOT_MAXIMUM_VOTERS: u32 = 25_000;
-	const MINER_MAXIMUM_VOTERS: u32 = 15_000;
-	const MAXIMUM_TARGETS: u32 = 2000;
-}
-
-impl pallet_election_provider_multi_phase::Config for Runtime {
-	type RuntimeEvent = RuntimeEvent;
-	type Currency = Balances;
-	type EstimateCallFee = TransactionPayment;
-	type SignedPhase = SignedPhase;
-	type UnsignedPhase = UnsignedPhase;
-	type SignedMaxSubmissions = SignedMaxSubmissions;
-	type SignedMaxRefunds = SignedMaxRefunds;
-	type SignedRewardBase = SignedRewardBase;
-	type SignedDepositBase = SignedDepositBase;
-	type SignedDepositByte = SignedDepositByte;
-	type SignedDepositWeight = ();
-	type SignedMaxWeight =
-		<Self::MinerConfig as pallet_election_provider_multi_phase::MinerConfig>::MaxWeight;
-	type MinerConfig = Self;
-	type SlashHandler = (); // burn slashes
-	type RewardHandler = (); // nothing to do upon rewards
-	type BetterUnsignedThreshold = BetterUnsignedThreshold;
-	type BetterSignedThreshold = ();
-	type OffchainRepeat = OffchainRepeat;
-	type MinerTxPriority = NposSolutionPriority;
-	type DataProvider = Staking;
-	type Fallback = frame_election_provider_support::NoElection<(
-		AccountId,
-		BlockNumber,
-		Staking,
-		MaxActiveValidators,
-	)>;
-	type GovernanceFallback = onchain::OnChainExecution<OnChainSeqPhragmen>;
-	type Solver = SequentialPhragmen<
-		AccountId,
-		pallet_election_provider_multi_phase::SolutionAccuracyOf<Self>,
-		(),
-	>;
-	type BenchmarkingConfig = BenchmarkConfig;
-	type ForceOrigin = EnsureRoot<AccountId>;
-	type WeightInfo = pallet_election_provider_multi_phase::weights::SubstrateWeight<Self>;
-	type MaxElectingVoters = MaxElectingVoters;
-	type MaxElectableTargets = MaxElectableTargets;
-	type MaxWinners = MaxActiveValidators;
 }
 
 pub struct EraPayout<T>(PhantomData<T>);
