@@ -1,5 +1,65 @@
 use crate::*;
 
+generate_solution_type!(
+	#[compact]
+	pub struct NposCompactSolution16::<
+		VoterIndex = u32,
+		TargetIndex = u16,
+		Accuracy = sp_runtime::PerU16,
+		MaxVoters = MaxElectingVoters,
+	>(16)
+);
+
+parameter_types! {
+	// phase durations. 1/4 of the last session for each
+	pub SignedPhase: u32 = EPOCH_DURATION_IN_SLOTS / 4;
+	pub UnsignedPhase: u32 = EPOCH_DURATION_IN_SLOTS / 4;
+
+	// signed config
+	pub const SignedMaxSubmissions: u32 = 16;
+	pub const SignedMaxRefunds: u32 = 16 / 4;
+	// 40 UNITs fixed deposit..
+	pub const SignedDepositBase: Balance = 40 * KCOINS; // TODO: setup this values
+	// 0.01 UNITs per KB of solution data.
+	pub const SignedDepositByte: Balance = 1 * KCOINS / 100; // TODO: setup this values
+	// Each good submission will get 1 UNITs as reward
+	pub SignedRewardBase: Balance = 1 * KCOINS; // TODO: setup this values
+	pub BetterUnsignedThreshold: Perbill = Perbill::from_rational(5u32, 10_000);
+
+	// 4 hour session, 1 hour unsigned phase, 32 offchain executions.
+	pub OffchainRepeat: BlockNumber = UnsignedPhase::get() / 32;
+
+	/// We take the top 22500 nominators as electing voters..
+	pub const MaxElectingVoters: u32 = 22_500;
+	/// ... and all of the validators as electable targets. Whilst this is the case, we cannot and
+	/// shall not increase the size of the validator intentions.
+	pub const MaxElectableTargets: u16 = u16::MAX;
+	/// Setup election pallet to support maximum winners upto 1200. This will mean Staking Pallet
+	/// cannot have active validators higher than this count.
+	pub const MaxActiveValidators: u32 = 1200;
+
+	pub NposSolutionPriority: TransactionPriority =
+		Perbill::from_percent(90) * TransactionPriority::max_value();
+
+	/// A limit for off-chain phragmen unsigned solution submission.
+	///
+	/// We want to keep it as high as possible, but can't risk having it reject,
+	/// so we always subtract the base block execution weight.
+	pub OffchainSolutionWeightLimit: Weight = BlockWeights::get()
+		.get(DispatchClass::Normal)
+		.max_extrinsic
+		.expect("Normal extrinsics have weight limit configured by default; qed")
+		.saturating_sub(BlockExecutionWeight::get());
+
+	/// A limit for off-chain phragmen unsigned solution length.
+	///
+	/// We allow up to 90% of the block's size to be consumed by the solution.
+	pub OffchainSolutionLengthLimit: u32 = Perbill::from_rational(90_u32, 100) *
+		*BlockLength::get()
+		.max
+		.get(DispatchClass::Normal);
+}
+
 impl pallet_election_provider_multi_phase::MinerConfig for Runtime {
 	/// The account id type.
 	type AccountId = AccountId;
@@ -102,11 +162,12 @@ impl pallet_election_provider_multi_phase::Config for Runtime {
 	type BetterSignedThreshold = ();
 	/// The repeat threshold of the offchain worker.
 	///
-	/// For example, if it is 5, that means that at least 5 blocks will elapse between attempts		/// to submit the worker's solution.
+	/// For example, if it is 5, that means that at least 5 blocks will elapse between attempts		///
+	/// to submit the worker's solution.
 	type OffchainRepeat = OffchainRepeat;
 	/// The priority of the unsigned transaction submitted in the unsigned-phase
 	type MinerTxPriority = NposSolutionPriority;
-		/// Something that will provide the election data.
+	/// Something that will provide the election data.
 	type DataProvider = Staking;
 	/// Configuration for the fallback.
 	type Fallback = frame_election_provider_support::NoElection<(
