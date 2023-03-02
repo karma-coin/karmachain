@@ -1,5 +1,9 @@
 use crate::*;
 
+parameter_types! {
+	pub FeeMultiplier: Multiplier = Multiplier::one();
+}
+
 impl pallet_transaction_payment::Config for Runtime {
 	/// The overarching event type.
 	type RuntimeEvent = RuntimeEvent;
