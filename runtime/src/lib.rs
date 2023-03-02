@@ -17,11 +17,11 @@ use sp_runtime::{
 		AccountIdLookup, BlakeTwo256, Block as BlockT, IdentifyAccount, NumberFor, One, OpaqueKeys,
 		Verify,
 	},
-	transaction_validity::{TransactionSource, TransactionValidity},
+	transaction_validity::{TransactionPriority, TransactionSource, TransactionValidity},
 	ApplyExtrinsicResult, MultiSignature,
 };
 use sp_staking::SessionIndex;
-use sp_std::prelude::*;
+use sp_std::{marker::PhantomData, prelude::*};
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
 use sp_version::RuntimeVersion;
@@ -29,7 +29,9 @@ use sp_version::RuntimeVersion;
 // A few exports that help ease life for downstream crates.
 use frame_election_provider_support::{generate_solution_type, onchain, SequentialPhragmen};
 pub use frame_support::{
-	construct_runtime, parameter_types,
+	construct_runtime,
+	dispatch::DispatchClass,
+	parameter_types,
 	traits::{
 		ConstU128, ConstU32, ConstU64, ConstU8, KeyOwnerProofSystem, Randomness, StorageInfo,
 	},
@@ -60,6 +62,7 @@ mod session;
 mod sudo;
 mod timestamp;
 mod transaction_payment;
+mod validators_rewards;
 
 use crate::babe::EpochDuration;
 
@@ -148,18 +151,20 @@ pub const MILLISECS_PER_BLOCK: u64 = 60_000;
 //       Attempting to do so will brick block production.
 pub const SLOT_DURATION: u64 = MILLISECS_PER_BLOCK;
 pub const EPOCH_DURATION_IN_SLOTS: BlockNumber = 4 * HOURS;
+pub const ERA_DURATION_IN_EPOCH: u32 = 6;
 
 // Time is measured by number of blocks.
 pub const MINUTES: BlockNumber = 60_000 / (MILLISECS_PER_BLOCK as BlockNumber);
 pub const HOURS: BlockNumber = MINUTES * 60;
 pub const DAYS: BlockNumber = HOURS * 24;
+// Assumse month contains 30 days
+pub const MONTHS: BlockNumber = DAYS * 30;
 
 /// Existential deposit.
 pub const EXISTENTIAL_DEPOSIT: u128 = 500;
 
-pub const UNITS: Balance = 1_000_000;
-pub const DOLLARS: Balance = UNITS; // 1_000_000
-pub const CENTS: Balance = DOLLARS / 1_000_000; // 1
+pub const KCENTS: Balance = 1;
+pub const KCOINS: Balance = KCENTS * 1_000_000;
 
 /// The type used for currency conversion.
 ///
@@ -243,7 +248,24 @@ impl frame_system::Config for Runtime {
 	type MaxConsumers = frame_support::traits::ConstU32<16>;
 }
 
-impl pallet_randomness_collective_flip::Config for Runtime {}
+impl<C> frame_system::offchain::SendTransactionTypes<C> for Runtime
+where
+	RuntimeCall: From<C>,
+{
+	type Extrinsic = UncheckedExtrinsic;
+	type OverarchingCall = RuntimeCall;
+}
+
+parameter_types! {
+	pub const UncleGenerations: u32 = 0;
+}
+
+impl pallet_authorship::Config for Runtime {
+	type FindAuthor = pallet_session::FindAccountFromAuthorIndex<Self, Babe>;
+	type UncleGenerations = UncleGenerations;
+	type FilterUncle = ();
+	type EventHandler = Staking;
+}
 
 parameter_types! {
 	// phase durations. 1/4 of the last session for each
@@ -254,11 +276,11 @@ parameter_types! {
 	pub const SignedMaxSubmissions: u32 = 16;
 	pub const SignedMaxRefunds: u32 = 16 / 4;
 	// 40 UNITs fixed deposit..
-	pub const SignedDepositBase: Balance = 40 * UNITS; // TODO: setup this values
+	pub const SignedDepositBase: Balance = 40 * KCOINS; // TODO: setup this values
 	// 0.01 UNITs per KB of solution data.
-	pub const SignedDepositByte: Balance = 1 * UNITS / 100; // TODO: setup this values
+	pub const SignedDepositByte: Balance = 1 * KCOINS / 100; // TODO: setup this values
 	// Each good submission will get 1 UNITs as reward
-	pub SignedRewardBase: Balance = 1 * UNITS; // TODO: setup this values
+	pub SignedRewardBase: Balance = 1 * KCOINS; // TODO: setup this values
 	pub BetterUnsignedThreshold: Perbill = Perbill::from_rational(5u32, 10_000);
 
 	// 4 hour session, 1 hour unsigned phase, 32 offchain executions.
@@ -272,6 +294,27 @@ parameter_types! {
 	/// Setup election pallet to support maximum winners upto 1200. This will mean Staking Pallet
 	/// cannot have active validators higher than this count.
 	pub const MaxActiveValidators: u32 = 1200;
+
+	pub NposSolutionPriority: TransactionPriority =
+		Perbill::from_percent(90) * TransactionPriority::max_value();
+
+	/// A limit for off-chain phragmen unsigned solution submission.
+	///
+	/// We want to keep it as high as possible, but can't risk having it reject,
+	/// so we always subtract the base block execution weight.
+	pub OffchainSolutionWeightLimit: Weight = BlockWeights::get()
+		.get(DispatchClass::Normal)
+		.max_extrinsic
+		.expect("Normal extrinsics have weight limit configured by default; qed")
+		.saturating_sub(BlockExecutionWeight::get());
+
+	/// A limit for off-chain phragmen unsigned solution length.
+	///
+	/// We allow up to 90% of the block's size to be consumed by the solution.
+	pub OffchainSolutionLengthLimit: u32 = Perbill::from_rational(90_u32, 100) *
+		*BlockLength::get()
+		.max
+		.get(DispatchClass::Normal);
 }
 
 generate_solution_type!(
@@ -295,20 +338,102 @@ impl onchain::Config for OnChainSeqPhragmen {
 	type TargetsBound = MaxElectableTargets;
 }
 
-pub struct EraPayout;
-impl pallet_staking::EraPayout<Balance> for EraPayout {
+impl pallet_election_provider_multi_phase::MinerConfig for Runtime {
+	type AccountId = AccountId;
+	type MaxLength = OffchainSolutionLengthLimit;
+	type MaxWeight = OffchainSolutionWeightLimit;
+	type Solution = NposCompactSolution16;
+	type MaxVotesPerVoter = <
+		<Self as pallet_election_provider_multi_phase::Config>::DataProvider
+		as
+		frame_election_provider_support::ElectionDataProvider
+	>::MaxVotesPerVoter;
+
+	// The unsigned submissions have to respect the weight of the submit_unsigned call, thus their
+	// weight estimate function is wired to this call's weight.
+	fn solution_weight(v: u32, t: u32, a: u32, d: u32) -> Weight {
+		<
+			<Self as pallet_election_provider_multi_phase::Config>::WeightInfo
+			as
+			pallet_election_provider_multi_phase::WeightInfo
+		>::submit_unsigned(v, t, a, d)
+	}
+}
+
+/// The numbers configured here should always be more than the the maximum limits of staking pallet
+/// to ensure election snapshot will not run out of memory.
+pub struct BenchmarkConfig;
+impl pallet_election_provider_multi_phase::BenchmarkingConfig for BenchmarkConfig {
+	const VOTERS: [u32; 2] = [5_000, 10_000];
+	const TARGETS: [u32; 2] = [1_000, 2_000];
+	const ACTIVE_VOTERS: [u32; 2] = [1000, 4_000];
+	const DESIRED_TARGETS: [u32; 2] = [400, 800];
+	const SNAPSHOT_MAXIMUM_VOTERS: u32 = 25_000;
+	const MINER_MAXIMUM_VOTERS: u32 = 15_000;
+	const MAXIMUM_TARGETS: u32 = 2000;
+}
+
+impl pallet_election_provider_multi_phase::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type Currency = Balances;
+	type EstimateCallFee = TransactionPayment;
+	type SignedPhase = SignedPhase;
+	type UnsignedPhase = UnsignedPhase;
+	type SignedMaxSubmissions = SignedMaxSubmissions;
+	type SignedMaxRefunds = SignedMaxRefunds;
+	type SignedRewardBase = SignedRewardBase;
+	type SignedDepositBase = SignedDepositBase;
+	type SignedDepositByte = SignedDepositByte;
+	type SignedDepositWeight = ();
+	type SignedMaxWeight =
+		<Self::MinerConfig as pallet_election_provider_multi_phase::MinerConfig>::MaxWeight;
+	type MinerConfig = Self;
+	type SlashHandler = (); // burn slashes
+	type RewardHandler = (); // nothing to do upon rewards
+	type BetterUnsignedThreshold = BetterUnsignedThreshold;
+	type BetterSignedThreshold = ();
+	type OffchainRepeat = OffchainRepeat;
+	type MinerTxPriority = NposSolutionPriority;
+	type DataProvider = Staking;
+	type Fallback = frame_election_provider_support::NoElection<(
+		AccountId,
+		BlockNumber,
+		Staking,
+		MaxActiveValidators,
+	)>;
+	type GovernanceFallback = onchain::OnChainExecution<OnChainSeqPhragmen>;
+	type Solver = SequentialPhragmen<
+		AccountId,
+		pallet_election_provider_multi_phase::SolutionAccuracyOf<Self>,
+		(),
+	>;
+	type BenchmarkingConfig = BenchmarkConfig;
+	type ForceOrigin = EnsureRoot<AccountId>;
+	type WeightInfo = pallet_election_provider_multi_phase::weights::SubstrateWeight<Self>;
+	type MaxElectingVoters = MaxElectingVoters;
+	type MaxElectableTargets = MaxElectableTargets;
+	type MaxWinners = MaxActiveValidators;
+}
+
+pub struct EraPayout<T>(PhantomData<T>);
+impl pallet_staking::EraPayout<Balance> for EraPayout<Staking> {
 	fn era_payout(
 		_total_staked: Balance,
 		_total_issuance: Balance,
 		_era_duration_millis: u64,
 	) -> (Balance, Balance) {
-		todo!()
+		let era_index = Staking::active_era().unwrap().index;
+
+		let payout = validators_rewards::era_payout(era_index);
+		let rest = 0;
+
+		(payout, rest)
 	}
 }
 
 parameter_types! {
-	// Six sessions in an era (6 hours).
-	pub const SessionsPerEra: SessionIndex = 6;
+	// Six sessions in an era (24 hours).
+	pub const SessionsPerEra: SessionIndex = ERA_DURATION_IN_EPOCH;
 
 	// 28 eras for unbonding (7 days).
 	pub BondingDuration: sp_staking::EraIndex = 28;
@@ -342,16 +467,11 @@ impl pallet_staking::Config for Runtime {
 	type SlashDeferDuration = SlashDeferDuration;
 	type AdminOrigin = EnsureRoot<Self::AccountId>; // TODO:
 	type SessionInterface = Self;
-	type EraPayout = EraPayout;
+	type EraPayout = EraPayout<Staking>;
 	type MaxNominatorRewardedPerValidator = MaxNominatorRewardedPerValidator;
 	type OffendingValidatorsThreshold = OffendingValidatorsThreshold;
 	type NextNewSession = Session;
-	type ElectionProvider = frame_election_provider_support::NoElection<(
-		AccountId,
-		BlockNumber,
-		Staking,
-		MaxActiveValidators,
-	)>; // TODO:
+	type ElectionProvider = ElectionProviderMultiPhase;
 	type GenesisElectionProvider = onchain::OnChainExecution<OnChainSeqPhragmen>;
 	type VoterList = VoterList;
 	type TargetList = UseValidatorsMap<Self>;
@@ -376,7 +496,6 @@ construct_runtime!(
 		// Babe must be before session.
 		Babe: pallet_babe,
 
-		RandomnessCollectiveFlip: pallet_randomness_collective_flip,
 		Timestamp: pallet_timestamp,
 		Balances: pallet_balances,
 		TransactionPayment: pallet_transaction_payment,
@@ -385,7 +504,10 @@ construct_runtime!(
 		// Consensus support.
 		// Authorship must be before session in order to note author in the correct session and era
 		// for im-online and staking.
+		Authorship: pallet_authorship,
 		Staking: pallet_staking,
+		// Election pallet. Only works with staking, but placed here to maintain indices.
+		ElectionProviderMultiPhase: pallet_election_provider_multi_phase,
 		Historical: pallet_session::historical,
 		Session: pallet_session,
 		Grandpa: pallet_grandpa,
@@ -729,5 +851,67 @@ mod tests {
 		assert!(
 			whitelist.contains("26aa394eea5630e07c48ae0c9558cef780d41e5e16056765bc8461851072c9d7")
 		);
+	}
+}
+
+#[cfg(test)]
+mod payout_tests {
+	use super::*;
+	use pallet_staking::{ActiveEraInfo, EraPayout as EraPayoutT};
+	use sp_staking::EraIndex;
+
+	#[allow(dead_code)]
+	pub struct TestActiveEraInfo {
+		index: EraIndex,
+		start: Option<u64>,
+	}
+
+	impl From<TestActiveEraInfo> for ActiveEraInfo {
+		fn from(val: TestActiveEraInfo) -> ActiveEraInfo {
+			unsafe { std::mem::transmute::<TestActiveEraInfo, ActiveEraInfo>(val) }
+		}
+	}
+
+	fn set_era(index: EraIndex) {
+		let era_info = TestActiveEraInfo { index, start: None };
+		pallet_staking::ActiveEra::<Runtime>::put(ActiveEraInfo::from(era_info));
+	}
+
+	// Note: this functions assumes next:
+	// during one month all era rewards are the same,
+	// each month contains 30 eras
+	fn check_month_payouts(month_index: u32, total_month_reward: Balance) {
+		let start_era_index = month_index * 30;
+		let end_era_index = (month_index + 1) * 30;
+
+		for era_index in start_era_index..end_era_index {
+			set_era(era_index);
+			let (payout, rest) = EraPayout::<Staking>::era_payout(0, 0, 0);
+			assert_eq!(payout, total_month_reward / 30);
+			assert_eq!(rest, 0);
+		}
+	}
+
+	#[test]
+	fn test_era_payout() {
+		let mut ext: sp_io::TestExternalities = frame_system::GenesisConfig::default()
+			.build_storage::<Runtime>()
+			.unwrap()
+			.into();
+
+		ext.execute_with(|| {
+			check_month_payouts(0, 10_000_000_000_000);
+			check_month_payouts(1, 9_799_640_000_000);
+			check_month_payouts(2, 9_603_294_412_960);
+			check_month_payouts(3, 9_410_882_806_101);
+			check_month_payouts(4, 9_222_326_358_197);
+			check_month_payouts(5, 9_037_547_827_284);
+			check_month_payouts(6, 8_856_471_519_016);
+			check_month_payouts(7, 8_679_023_255_660);
+			check_month_payouts(8, 8_505_130_345_709);
+			check_month_payouts(9, 8_334_721_554_102);
+			check_month_payouts(10, 8_167_727_073_044);
+			check_month_payouts(11, 8_004_078_493_408);
+		})
 	}
 }
