@@ -18,7 +18,7 @@ use sp_runtime::{
 		Verify,
 	},
 	transaction_validity::{TransactionPriority, TransactionSource, TransactionValidity},
-	ApplyExtrinsicResult, MultiSignature,
+	ApplyExtrinsicResult, BoundedVec, MultiSignature,
 };
 use sp_staking::SessionIndex;
 use sp_std::{marker::PhantomData, prelude::*};
@@ -46,6 +46,7 @@ pub use frame_support::{
 pub use frame_system::Call as SystemCall;
 use frame_system::EnsureRoot;
 pub use pallet_balances::Call as BalancesCall;
+use pallet_identity::IdentityProvider;
 use pallet_staking::UseValidatorsMap;
 pub use pallet_timestamp::Call as TimestampCall;
 use pallet_transaction_payment::{ConstFeeMultiplier, CurrencyAdapter, Multiplier};
@@ -60,6 +61,7 @@ mod balances;
 mod election_provider_multi_phase;
 mod grandpa;
 mod historical;
+mod identity;
 mod session;
 mod staking;
 mod sudo;
@@ -67,7 +69,7 @@ mod timestamp;
 mod transaction_payment;
 mod validators_rewards;
 
-use crate::{babe::EpochDuration, election_provider_multi_phase::*};
+use crate::{babe::EpochDuration, election_provider_multi_phase::*, identity::*};
 
 /// An index to a block.
 pub type BlockNumber = u32;
@@ -318,9 +320,10 @@ construct_runtime!(
 		// Governance stuff.
 
 		// Provides a semi-sorted list of nominators for staking.
-		VoterList: pallet_bags_list::<Instance1>::{Pallet, Call, Storage, Event<T>} = 37,
+		VoterList: pallet_bags_list::<Instance1>::{Pallet, Call, Storage, Event<T>},
 
 		// Include the custom logic from the pallet-template in the runtime.
+		Identity: pallet_identity,
 	}
 );
 
@@ -554,6 +557,61 @@ impl_runtime_apis! {
 			len: u32,
 		) -> pallet_transaction_payment::FeeDetails<Balance> {
 			TransactionPayment::query_call_fee_details(call, len)
+		}
+	}
+
+	impl pallet_identity_rpc_runtime_api::IdentityApi<Block, AccountId> for Runtime {
+		fn get_user_info_by_account(
+			account_id: AccountId,
+		) -> Option<pallet_identity_rpc_runtime_api::UserInfo<AccountId>> {
+			Identity::identity_by_id(account_id).map(|identity_info| {
+					let nonce = System::account_nonce(&identity_info.account_id);
+					let balance = Balances::free_balance(&identity_info.account_id);
+
+					pallet_identity_rpc_runtime_api::UserInfo {
+					account_id: identity_info.account_id,
+					nonce: nonce.into(),
+					user_name: identity_info.name.into(),
+					mobile_number: identity_info.number.into(),
+					balance: balance as u64,
+				}
+			})
+		}
+
+		fn get_user_info_by_name(
+			name: Vec<u8>,
+		) -> Option<pallet_identity_rpc_runtime_api::UserInfo<AccountId>> {
+			let name: BoundedVec<u8, NameLimit> = name.try_into().ok()?;
+			Identity::identity_by_name(name).map(|identity_info| {
+					let nonce = System::account_nonce(&identity_info.account_id);
+					let balance = Balances::free_balance(&identity_info.account_id);
+
+					pallet_identity_rpc_runtime_api::UserInfo {
+					account_id: identity_info.account_id,
+					nonce: nonce.into(),
+					user_name: identity_info.name.into(),
+					mobile_number: identity_info.number.into(),
+					balance: balance as u64,
+				}
+			})
+		}
+
+		fn get_user_info_by_number(
+			number: Vec<u8>,
+		) -> Option<pallet_identity_rpc_runtime_api::UserInfo<AccountId>> {
+			let number: BoundedVec<u8, NumberLimit> = number.try_into().ok()?;
+			Identity::identity_by_number(number).map(|identity_info| {
+					let nonce = System::account_nonce(&identity_info.account_id);
+					let balance = Balances::free_balance(&identity_info.account_id);
+
+					pallet_identity_rpc_runtime_api::UserInfo {
+					account_id: identity_info.account_id,
+					nonce: nonce.into(),
+					user_name: identity_info.name.into(),
+					mobile_number: identity_info.number.into(),
+					balance: balance as u64,
+				}
+			})
 		}
 	}
 

@@ -2983,6 +2983,7 @@ dependencies = [
  "futures",
  "jsonrpsee",
  "karmachain-node-runtime",
+ "pallet-identity-rpc",
  "pallet-staking",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc",
@@ -3037,6 +3038,8 @@ dependencies = [
  "pallet-balances",
  "pallet-election-provider-multi-phase",
  "pallet-grandpa",
+ "pallet-identity",
+ "pallet-identity-rpc-runtime-api",
  "pallet-session",
  "pallet-staking",
  "pallet-sudo",
@@ -4405,6 +4408,46 @@ dependencies = [
  "sp-session",
  "sp-staking",
  "sp-std",
+]
+
+[[package]]
+name = "pallet-identity"
+version = "4.0.0-dev"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-identity-rpc"
+version = "4.0.0-dev"
+dependencies = [
+ "jsonrpsee",
+ "pallet-identity-rpc-runtime-api",
+ "parity-scale-codec",
+ "sp-api",
+ "sp-blockchain",
+ "sp-core",
+ "sp-rpc",
+ "sp-runtime",
+ "sp-weights",
+]
+
+[[package]]
+name = "pallet-identity-rpc-runtime-api"
+version = "4.0.0-dev"
+dependencies = [
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-api",
+ "sp-runtime",
+ "sp-weights",
 ]
 
 [[package]]
