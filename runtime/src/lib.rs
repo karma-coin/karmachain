@@ -565,10 +565,10 @@ impl_runtime_apis! {
 			account_id: AccountId,
 		) -> Option<pallet_identity_rpc_runtime_api::UserInfo<AccountId>> {
 			Identity::identity_by_id(account_id).map(|identity_info| {
-					let nonce = System::account_nonce(&identity_info.account_id);
-					let balance = Balances::free_balance(&identity_info.account_id);
+				let nonce = System::account_nonce(&identity_info.account_id);
+				let balance = Balances::free_balance(&identity_info.account_id);
 
-					pallet_identity_rpc_runtime_api::UserInfo {
+				pallet_identity_rpc_runtime_api::UserInfo {
 					account_id: identity_info.account_id,
 					nonce: nonce.into(),
 					user_name: identity_info.name.into(),
@@ -583,10 +583,10 @@ impl_runtime_apis! {
 		) -> Option<pallet_identity_rpc_runtime_api::UserInfo<AccountId>> {
 			let name: BoundedVec<u8, NameLimit> = name.try_into().ok()?;
 			Identity::identity_by_name(name).map(|identity_info| {
-					let nonce = System::account_nonce(&identity_info.account_id);
-					let balance = Balances::free_balance(&identity_info.account_id);
+				let nonce = System::account_nonce(&identity_info.account_id);
+				let balance = Balances::free_balance(&identity_info.account_id);
 
-					pallet_identity_rpc_runtime_api::UserInfo {
+				pallet_identity_rpc_runtime_api::UserInfo {
 					account_id: identity_info.account_id,
 					nonce: nonce.into(),
 					user_name: identity_info.name.into(),
@@ -601,10 +601,10 @@ impl_runtime_apis! {
 		) -> Option<pallet_identity_rpc_runtime_api::UserInfo<AccountId>> {
 			let number: BoundedVec<u8, NumberLimit> = number.try_into().ok()?;
 			Identity::identity_by_number(number).map(|identity_info| {
-					let nonce = System::account_nonce(&identity_info.account_id);
-					let balance = Balances::free_balance(&identity_info.account_id);
+				let nonce = System::account_nonce(&identity_info.account_id);
+				let balance = Balances::free_balance(&identity_info.account_id);
 
-					pallet_identity_rpc_runtime_api::UserInfo {
+				pallet_identity_rpc_runtime_api::UserInfo {
 					account_id: identity_info.account_id,
 					nonce: nonce.into(),
 					user_name: identity_info.name.into(),
