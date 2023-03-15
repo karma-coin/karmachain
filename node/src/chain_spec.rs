@@ -1,6 +1,7 @@
 use karmachain_node_runtime::{
 	opaque::SessionKeys, AccountId, BabeConfig, BalancesConfig, GenesisConfig, GrandpaConfig,
-	SessionConfig, Signature, StakingConfig, SudoConfig, SystemConfig, KCOINS, WASM_BINARY,
+	IdentityConfig, SessionConfig, Signature, StakingConfig, SudoConfig, SystemConfig, KCOINS,
+	WASM_BINARY,
 };
 use pallet_staking::{Forcing, StakerStatus};
 use sc_service::ChainType;
@@ -63,6 +64,7 @@ pub fn development_config() -> Result<ChainSpec, String> {
 					get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
 					get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
 				],
+				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
 				true,
 			)
 		},
@@ -132,6 +134,7 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 					get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
 					get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
 				],
+				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
 				true,
 			)
 		},
@@ -160,9 +163,10 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 /// Configure initial storage state for FRAME modules.
 fn testnet_genesis(
 	wasm_binary: &[u8],
-	initial_authorities: Vec<(AccountId, AccountId, BabeId, GrandpaId)>, // TODO: Add BabeId
+	initial_authorities: Vec<(AccountId, AccountId, BabeId, GrandpaId)>,
 	root_key: AccountId,
 	endowed_accounts: Vec<AccountId>,
+	phone_verifiers: Vec<AccountId>,
 	_enable_println: bool,
 ) -> GenesisConfig {
 	const ENDOWMENT: u128 = 1_000_000_000 * KCOINS;
@@ -211,5 +215,6 @@ fn testnet_genesis(
 			slash_reward_fraction: Perbill::from_percent(10),
 			..Default::default()
 		},
+		identity: IdentityConfig { phone_verifiers },
 	}
 }
