@@ -1,8 +1,9 @@
 use karmachain_node_runtime::{
-	opaque::SessionKeys, AccountId, BabeConfig, BalancesConfig, GenesisConfig, GrandpaConfig,
-	IdentityConfig, SessionConfig, Signature, StakingConfig, SudoConfig, SystemConfig, KCOINS,
-	WASM_BINARY,
+	opaque::SessionKeys, AccountId, AppreciationConfig, BabeConfig, BalancesConfig, GenesisConfig,
+	GrandpaConfig, IdentityConfig, SessionConfig, Signature, StakingConfig, SudoConfig,
+	SystemConfig, KCOINS, WASM_BINARY,
 };
+use pallet_appreciation::*;
 use pallet_staking::{Forcing, StakerStatus};
 use sc_service::ChainType;
 use sp_consensus_babe::AuthorityId as BabeId;
@@ -65,6 +66,43 @@ pub fn development_config() -> Result<ChainSpec, String> {
 					get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
 				],
 				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
+				vec![
+					(1, "SignUp".as_bytes().to_vec()),
+					(2, "Spender".as_bytes().to_vec()),
+					(3, "Smart".as_bytes().to_vec()),
+					(4, "Helpfull".as_bytes().to_vec()),
+				],
+				vec![
+					(
+						1,
+						"Public".as_bytes().to_vec(),
+						vec![],
+						vec![],
+						vec![],
+						vec![],
+						vec![],
+						vec![],
+						vec![],
+						true,
+					),
+					(
+						2,
+						"Private".as_bytes().to_vec(),
+						vec![],
+						vec![],
+						vec![],
+						vec![],
+						vec![],
+						vec![],
+						vec![],
+						false,
+					),
+				],
+				vec![
+					(get_account_id_from_seed::<sr25519::Public>("Alice"), 1, CommunityRole::Admin),
+					(get_account_id_from_seed::<sr25519::Public>("Bob"), 1, CommunityRole::Member),
+					(get_account_id_from_seed::<sr25519::Public>("Alice"), 2, CommunityRole::Admin),
+				],
 				true,
 			)
 		},
@@ -135,6 +173,43 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 					get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
 				],
 				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
+				vec![
+					(1, "SignUp".as_bytes().to_vec()),
+					(2, "Spender".as_bytes().to_vec()),
+					(3, "Smart".as_bytes().to_vec()),
+					(4, "Helpfull".as_bytes().to_vec()),
+				],
+				vec![
+					(
+						1,
+						"Public".as_bytes().to_vec(),
+						vec![],
+						vec![],
+						vec![],
+						vec![],
+						vec![],
+						vec![],
+						vec![],
+						true,
+					),
+					(
+						2,
+						"Private".as_bytes().to_vec(),
+						vec![],
+						vec![],
+						vec![],
+						vec![],
+						vec![],
+						vec![],
+						vec![],
+						false,
+					),
+				],
+				vec![
+					(get_account_id_from_seed::<sr25519::Public>("Alice"), 1, CommunityRole::Admin),
+					(get_account_id_from_seed::<sr25519::Public>("Bob"), 1, CommunityRole::Member),
+					(get_account_id_from_seed::<sr25519::Public>("Alice"), 2, CommunityRole::Admin),
+				],
 				true,
 			)
 		},
@@ -167,6 +242,20 @@ fn testnet_genesis(
 	root_key: AccountId,
 	endowed_accounts: Vec<AccountId>,
 	phone_verifiers: Vec<AccountId>,
+	char_traits: Vec<(CharTraitId, Vec<u8>)>,
+	communities: Vec<(
+		CommunityId,
+		Vec<u8>,
+		Vec<u8>,
+		Vec<u8>,
+		Vec<u8>,
+		Vec<u8>,
+		Vec<u8>,
+		Vec<u8>,
+		Vec<u8>,
+		bool,
+	)>,
+	community_membership: Vec<(AccountId, CommunityId, CommunityRole)>,
 	_enable_println: bool,
 ) -> GenesisConfig {
 	const ENDOWMENT: u128 = 1_000_000_000 * KCOINS;
@@ -213,6 +302,12 @@ fn testnet_genesis(
 			invulnerables: initial_authorities.iter().map(|x| x.0.clone()).collect(),
 			force_era: Forcing::NotForcing,
 			slash_reward_fraction: Perbill::from_percent(10),
+			..Default::default()
+		},
+		appreciation: AppreciationConfig {
+			char_traits,
+			communities,
+			community_membership,
 			..Default::default()
 		},
 		identity: IdentityConfig { phone_verifiers },
