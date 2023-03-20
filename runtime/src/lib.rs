@@ -54,6 +54,7 @@ use pallet_transaction_payment::{ConstFeeMultiplier, CurrencyAdapter, Multiplier
 pub use sp_runtime::BuildStorage;
 pub use sp_runtime::{Perbill, Permill};
 
+mod appreciation;
 mod authorship;
 mod babe;
 mod bags_list;
@@ -324,6 +325,7 @@ construct_runtime!(
 
 		// Include the custom logic from the pallet-template in the runtime.
 		Identity: pallet_identity,
+		Appreciation: pallet_appreciation,
 	}
 );
 
