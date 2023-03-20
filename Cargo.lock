@@ -4451,7 +4451,7 @@ dependencies = [
  "sp-api",
  "sp-blockchain",
  "sp-core",
- "sp-rpc",
+ "sp-rpc 6.0.0",
  "sp-runtime",
  "sp-weights",
 ]
@@ -4464,6 +4464,7 @@ dependencies = [
  "scale-info",
  "serde",
  "sp-api",
+ "sp-rpc 0.1.0",
  "sp-runtime",
  "sp-weights",
 ]
@@ -4571,7 +4572,7 @@ dependencies = [
  "sp-api",
  "sp-blockchain",
  "sp-core",
- "sp-rpc",
+ "sp-rpc 6.0.0",
  "sp-runtime",
  "sp-weights",
 ]
@@ -6322,7 +6323,7 @@ dependencies = [
  "sp-core",
  "sp-keystore",
  "sp-offchain",
- "sp-rpc",
+ "sp-rpc 6.0.0",
  "sp-runtime",
  "sp-session",
  "sp-version",
@@ -6341,7 +6342,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sp-core",
- "sp-rpc",
+ "sp-rpc 6.0.0",
  "sp-runtime",
  "sp-version",
  "thiserror",
@@ -6524,7 +6525,7 @@ dependencies = [
  "sp-api",
  "sp-blockchain",
  "sp-core",
- "sp-rpc",
+ "sp-rpc 6.0.0",
  "sp-runtime",
  "sp-tracing",
  "thiserror",
@@ -7378,6 +7379,15 @@ dependencies = [
  "backtrace",
  "lazy_static",
  "regex",
+]
+
+[[package]]
+name = "sp-rpc"
+version = "0.1.0"
+dependencies = [
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
 ]
 
 [[package]]
@@ -8390,7 +8400,7 @@ dependencies = [
  "sp-externalities",
  "sp-io",
  "sp-keystore",
- "sp-rpc",
+ "sp-rpc 6.0.0",
  "sp-runtime",
  "sp-state-machine",
  "sp-version",

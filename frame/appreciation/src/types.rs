@@ -27,6 +27,15 @@ pub enum CommunityRole {
 	None,
 }
 
+impl CommunityRole {
+	pub fn is_admin(&self) -> bool {
+		match self {
+			Self::Admin => true,
+			_ => false,
+		}
+	}
+}
+
 #[derive(CloneNoBound, Encode, Decode, MaxEncodedLen, TypeInfo, RuntimeDebugNoBound)]
 #[codec(mel_bound())]
 #[scale_info(skip_type_params(NameLimit, DescLimit, EmojiLimit, UrlLimit))]

@@ -6,6 +6,7 @@ members = [
     "frame/identity",
     "frame/identity/rpc",
     "frame/identity/rpc/runtime-api",
+    "primitives/rpc",
 ]
 [profile.release]
 panic = "unwind"

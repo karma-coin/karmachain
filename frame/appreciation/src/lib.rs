@@ -347,4 +347,34 @@ impl<T: pallet::Config> Pallet<T> {
 
 		Ok(())
 	}
+
+	pub fn trait_scores_of(
+		account_id: &T::AccountId,
+	) -> scale_info::prelude::vec::Vec<(CommunityId, CharTraitId, Score)> {
+		let no_community_id = NoCommunityId::<T>::get().unwrap();
+
+		CommunityMembership::<T>::iter_prefix(account_id)
+			.map(|(community_id, _)| community_id)
+			.chain([no_community_id])
+			.flat_map(|community_id| {
+				TraitScores::<T>::iter_prefix((account_id, community_id))
+					.map(move |(char_trait_id, score)| (community_id, char_trait_id, score))
+			})
+			.collect()
+	}
+
+	pub fn community_membership_of(
+		account_id: &T::AccountId,
+	) -> scale_info::prelude::vec::Vec<(CommunityId, Score, bool)> {
+		CommunityMembership::<T>::iter_prefix(account_id)
+			.map(|(community_id, role)| {
+				let score = TraitScores::<T>::iter_prefix((account_id, community_id))
+					.map(|(_, score)| score)
+					.sum::<u32>();
+				let is_admin = role.is_admin();
+
+				(community_id, score, is_admin)
+			})
+			.collect()
+	}
 }
