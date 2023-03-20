@@ -2983,6 +2983,7 @@ dependencies = [
  "futures",
  "jsonrpsee",
  "karmachain-node-runtime",
+ "pallet-appreciation",
  "pallet-identity-rpc",
  "pallet-staking",
  "pallet-transaction-payment",
@@ -3032,6 +3033,7 @@ dependencies = [
  "frame-system-rpc-runtime-api",
  "frame-try-runtime",
  "log",
+ "pallet-appreciation",
  "pallet-authorship",
  "pallet-babe",
  "pallet-bags-list",
@@ -4292,6 +4294,22 @@ checksum = "a1914cd452d8fccd6f9db48147b29fd4ae05bea9dc5d9ad578509f72415de282"
 dependencies = [
  "cfg-if",
  "libm 0.1.4",
+]
+
+[[package]]
+name = "pallet-appreciation"
+version = "4.0.0-dev"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "pallet-balances",
+ "pallet-identity",
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
 ]
 
 [[package]]
