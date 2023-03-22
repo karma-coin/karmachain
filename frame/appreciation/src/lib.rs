@@ -4,7 +4,7 @@ use frame_support::{
 	traits::{Currency, ExistenceRequirement, Get},
 	BoundedVec,
 };
-use pallet_identity::IdentityProvider;
+use pallet_identity::{IdentityProvider, OnNewUser};
 
 mod types;
 
@@ -150,34 +150,34 @@ pub mod pallet {
 	}
 
 	#[pallet::storage]
-	pub(super) type NoCharTraitId<T: Config> =
+	pub type NoCharTraitId<T: Config> =
 		StorageValue<_, CharTraitId, ResultQuery<Error<T>::NonExistentStorageValue>>;
 
 	/// This is the signup trait - user gets it for signing up
 	#[pallet::storage]
-	pub(super) type SignupCharTraitId<T: Config> =
+	pub type SignupCharTraitId<T: Config> =
 		StorageValue<_, CharTraitId, ResultQuery<Error<T>::NonExistentStorageValue>>;
 
 	/// User gets a point in this trait for each sent appreciation / payment
 	#[pallet::storage]
-	pub(super) type SpenderCharTraitId<T: Config> =
+	pub type SpenderCharTraitId<T: Config> =
 		StorageValue<_, CharTraitId, ResultQuery<Error<T>::NonExistentStorageValue>>;
 
 	/// User gets one for each referral who signed up
 	#[pallet::storage]
-	pub(super) type AmbassadorCharTraitId<T: Config> =
+	pub type AmbassadorCharTraitId<T: Config> =
 		StorageValue<_, CharTraitId, ResultQuery<Error<T>::NonExistentStorageValue>>;
 
 	#[pallet::storage]
-	pub(super) type CharTraits<T: Config> =
+	pub type CharTraits<T: Config> =
 		StorageValue<_, BoundedVec<CharTrait<T::CharNameLimit>, T::MaxCharTrait>, ValueQuery>;
 
 	#[pallet::storage]
-	pub(super) type NoCommunityId<T: Config> =
+	pub type NoCommunityId<T: Config> =
 		StorageValue<_, CharTraitId, ResultQuery<Error<T>::NonExistentStorageValue>>;
 
 	#[pallet::storage]
-	pub(super) type Communities<T: Config> = StorageValue<
+	pub type Communities<T: Config> = StorageValue<
 		_,
 		BoundedVec<
 			Community<
@@ -376,5 +376,16 @@ impl<T: pallet::Config> Pallet<T> {
 				(community_id, score, is_admin)
 			})
 			.collect()
+	}
+}
+
+impl<T: Config> OnNewUser<T::AccountId> for Pallet<T> {
+	fn on_new_user(who: &T::AccountId) -> DispatchResult {
+		let no_community_id = NoCommunityId::<T>::get()?;
+		let signup_char_trait_id = SignupCharTraitId::<T>::get()?;
+
+		Self::increment_trait_score(who, no_community_id, signup_char_trait_id);
+
+		Ok(())
 	}
 }

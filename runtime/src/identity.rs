@@ -15,4 +15,6 @@ impl pallet_identity::Config for Runtime {
 	type NumberLimit = NumberLimit;
 
 	type MaxPhoneVerifiers = MaxPhoneVerifiers;
+
+	type OnNewUser = Appreciation;
 }
