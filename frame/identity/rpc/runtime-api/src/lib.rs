@@ -2,7 +2,6 @@
 
 use codec::Codec;
 use scale_info::prelude::vec::Vec;
-use sp_runtime::{traits::Get, BoundedVec};
 
 pub use sp_rpc::*;
 

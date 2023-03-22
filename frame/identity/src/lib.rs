@@ -1,7 +1,10 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use codec::{Decode, Encode, MaxEncodedLen};
-use frame_support::{traits::Get, pallet_prelude::DispatchResult, BoundedVec, CloneNoBound, PartialEqNoBound, RuntimeDebugNoBound};
+use frame_support::{
+	pallet_prelude::DispatchResult, traits::Get, BoundedVec, CloneNoBound, PartialEqNoBound,
+	RuntimeDebugNoBound,
+};
 use scale_info::TypeInfo;
 use sp_std::{fmt::Debug, prelude::*, vec};
 
@@ -105,7 +108,6 @@ pub mod pallet {
 	}
 
 	#[pallet::event]
-	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {}
 
 	#[pallet::call]
@@ -202,5 +204,7 @@ pub trait OnNewUser<AccountId> {
 }
 
 impl<AccountId> OnNewUser<AccountId> for () {
-	fn on_new_user(_who: &AccountId) -> DispatchResult { Ok(()) }
+	fn on_new_user(_who: &AccountId) -> DispatchResult {
+		Ok(())
+	}
 }
