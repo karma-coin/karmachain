@@ -70,7 +70,7 @@ mod timestamp;
 mod transaction_payment;
 mod validators_rewards;
 
-use crate::{babe::EpochDuration, election_provider_multi_phase::*, identity::*};
+pub use crate::{babe::EpochDuration, election_provider_multi_phase::*, identity::*};
 
 /// An index to a block.
 pub type BlockNumber = u32;
@@ -834,6 +834,6 @@ mod payout_tests {
 			check_month_payouts(9, 8_334_721_554_102);
 			check_month_payouts(10, 8_167_727_073_044);
 			check_month_payouts(11, 8_004_078_493_408);
-		})
+		});
 	}
 }
