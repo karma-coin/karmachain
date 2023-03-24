@@ -111,7 +111,7 @@ pub struct GenesisData<AccountId> {
 	pub treasury_account_name: Vec<u8>,
 
 	pub char_traits: Vec<CharTrait>,
-	pub verifiers: Vec<PhoneVerifier>,
+	pub verifiers: Vec<PhoneVerifier<AccountId>>,
 }
 
 #[derive(Encode, Decode)]
