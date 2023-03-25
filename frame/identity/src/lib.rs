@@ -1,9 +1,12 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use codec::{Decode, Encode, MaxEncodedLen};
-use frame_support::{traits::Get, BoundedVec, CloneNoBound, PartialEqNoBound, RuntimeDebugNoBound};
+use frame_support::{
+	pallet_prelude::DispatchResult, traits::Get, BoundedVec, CloneNoBound, PartialEqNoBound,
+	RuntimeDebugNoBound,
+};
 use scale_info::TypeInfo;
-use sp_std::{prelude::*, vec};
+use sp_std::{fmt::Debug, prelude::*, vec};
 
 pub use pallet::*;
 
@@ -33,6 +36,8 @@ pub mod pallet {
 		type NumberLimit: Get<u32>;
 		/// Max number of phone verifiers allowed
 		type MaxPhoneVerifiers: Get<u32>;
+		/// Handler for when a new user has just been registered
+		type OnNewUser: OnNewUser<Self::AccountId>;
 	}
 
 	#[pallet::pallet]
@@ -72,24 +77,20 @@ pub mod pallet {
 		}
 	}
 
-	/// Information that is pertinent to identify the entity behind an account.
-	///
-	/// TWOX-NOTE: OK ― `AccountId` is a secure hash.
 	#[pallet::storage]
-	#[pallet::getter(fn identity)]
-	pub(super) type IdentityOf<T: Config> =
+	pub type IdentityOf<T: Config> =
 		StorageMap<_, Blake2_128Concat, T::AccountId, IdentityStore<T::NameLimit, T::NumberLimit>>;
 
 	#[pallet::storage]
-	pub(super) type NameFor<T: Config> =
+	pub type NameFor<T: Config> =
 		StorageMap<_, Blake2_128Concat, BoundedVec<u8, T::NameLimit>, T::AccountId>;
 
 	#[pallet::storage]
-	pub(super) type NumberFor<T: Config> =
+	pub type NumberFor<T: Config> =
 		StorageMap<_, Blake2_128Concat, BoundedVec<u8, T::NumberLimit>, T::AccountId>;
 
 	#[pallet::storage]
-	pub(super) type PhoneVerifiers<T: Config> =
+	pub type PhoneVerifiers<T: Config> =
 		StorageValue<_, BoundedVec<T::AccountId, T::MaxPhoneVerifiers>, ValueQuery>;
 
 	#[pallet::error]
@@ -107,7 +108,6 @@ pub mod pallet {
 	}
 
 	#[pallet::event]
-	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {}
 
 	#[pallet::call]
@@ -123,34 +123,46 @@ pub mod pallet {
 			let who = ensure_signed(origin)?;
 			ensure!(PhoneVerifiers::<T>::get().contains(&who), Error::<T>::NotAllowed);
 
-			if <IdentityOf<T>>::contains_key(&account_id) {
+			if IdentityOf::<T>::contains_key(&account_id) {
 				return Err(Error::<T>::AlreadyRegistered.into())
 			}
 
-			if <NameFor<T>>::contains_key(&name) {
+			if NameFor::<T>::contains_key(&name) {
 				return Err(Error::<T>::UserNameTaken.into())
 			}
 
-			if <NumberFor<T>>::contains_key(&number) {
+			if NumberFor::<T>::contains_key(&number) {
 				return Err(Error::<T>::PhoneNumberTaken.into())
 			}
 
-			<NameFor<T>>::insert(&name, account_id.clone());
-			<NumberFor<T>>::insert(&number, account_id.clone());
-			<IdentityOf<T>>::insert(account_id, IdentityStore { name, number });
+			NameFor::<T>::insert(&name, account_id.clone());
+			NumberFor::<T>::insert(&number, account_id.clone());
+			IdentityOf::<T>::insert(&account_id, IdentityStore { name, number });
+
+			T::OnNewUser::on_new_user(&account_id)?;
 
 			Ok(())
 		}
 	}
 }
 
-pub struct IdentityInfo<AccountId, NameLimit: Get<u32>, NumberLimit: Get<u32>> {
+#[derive(RuntimeDebugNoBound, CloneNoBound, PartialEqNoBound, Eq)]
+pub struct IdentityInfo<
+	AccountId: Debug + Clone + PartialEq,
+	NameLimit: Get<u32>,
+	NumberLimit: Get<u32>,
+> {
 	pub account_id: AccountId,
 	pub name: BoundedVec<u8, NameLimit>,
 	pub number: BoundedVec<u8, NumberLimit>,
 }
 
-pub trait IdentityProvider<AccountId, NameLimit: Get<u32>, NumberLimit: Get<u32>> {
+pub trait IdentityProvider<
+	AccountId: Debug + Clone + PartialEq,
+	NameLimit: Get<u32>,
+	NumberLimit: Get<u32>,
+>
+{
 	fn identity_by_id(
 		account_id: AccountId,
 	) -> Option<IdentityInfo<AccountId, NameLimit, NumberLimit>>;
@@ -183,5 +195,16 @@ impl<T: Config> IdentityProvider<T::AccountId, T::NameLimit, T::NumberLimit> for
 		number: BoundedVec<u8, T::NumberLimit>,
 	) -> Option<IdentityInfo<T::AccountId, T::NameLimit, T::NumberLimit>> {
 		<NumberFor<T>>::get(&number).and_then(Self::identity_by_id)
+	}
+}
+
+pub trait OnNewUser<AccountId> {
+	/// A new account `who` has been registered.
+	fn on_new_user(who: &AccountId) -> DispatchResult;
+}
+
+impl<AccountId> OnNewUser<AccountId> for () {
+	fn on_new_user(_who: &AccountId) -> DispatchResult {
+		Ok(())
 	}
 }

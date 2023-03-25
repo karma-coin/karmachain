@@ -54,6 +54,7 @@ use pallet_transaction_payment::{ConstFeeMultiplier, CurrencyAdapter, Multiplier
 pub use sp_runtime::BuildStorage;
 pub use sp_runtime::{Perbill, Permill};
 
+mod appreciation;
 mod authorship;
 mod babe;
 mod bags_list;
@@ -69,7 +70,7 @@ mod timestamp;
 mod transaction_payment;
 mod validators_rewards;
 
-use crate::{babe::EpochDuration, election_provider_multi_phase::*, identity::*};
+pub use crate::{babe::EpochDuration, election_provider_multi_phase::*, identity::*};
 
 /// An index to a block.
 pub type BlockNumber = u32;
@@ -324,6 +325,7 @@ construct_runtime!(
 
 		// Include the custom logic from the pallet-template in the runtime.
 		Identity: pallet_identity,
+		Appreciation: pallet_appreciation,
 	}
 );
 
@@ -567,6 +569,22 @@ impl_runtime_apis! {
 			Identity::identity_by_id(account_id).map(|identity_info| {
 				let nonce = System::account_nonce(&identity_info.account_id);
 				let balance = Balances::free_balance(&identity_info.account_id);
+				let trait_scores: Vec<_> = Appreciation::trait_scores_of(&identity_info.account_id)
+					.into_iter()
+					.map(|(community_id, trait_id, karma_score)| {
+						pallet_identity_rpc_runtime_api::TraitScore {
+							trait_id, karma_score, community_id
+						}
+					})
+					.collect();
+				let community_membership: Vec<_> = Appreciation::community_membership_of(&identity_info.account_id)
+					.into_iter()
+					.map(|(community_id, karma_score, is_admin)| pallet_identity_rpc_runtime_api::CommunityMembership {
+						community_id, karma_score, is_admin
+					})
+					.collect();
+
+				let karma_score = trait_scores.iter().map(|score| score.karma_score).sum::<u32>() + community_membership.len() as u32;
 
 				pallet_identity_rpc_runtime_api::UserInfo {
 					account_id: identity_info.account_id,
@@ -574,6 +592,9 @@ impl_runtime_apis! {
 					user_name: identity_info.name.into(),
 					mobile_number: identity_info.number.into(),
 					balance: balance as u64,
+					trait_scores,
+					karma_score,
+					community_membership,
 				}
 			})
 		}
@@ -585,6 +606,23 @@ impl_runtime_apis! {
 			Identity::identity_by_name(name).map(|identity_info| {
 				let nonce = System::account_nonce(&identity_info.account_id);
 				let balance = Balances::free_balance(&identity_info.account_id);
+				let trait_scores: Vec<_> = Appreciation::trait_scores_of(&identity_info.account_id)
+					.into_iter()
+					.map(|(community_id, trait_id, karma_score)| {
+						pallet_identity_rpc_runtime_api::TraitScore {
+							trait_id, karma_score, community_id
+						}
+					})
+					.collect();
+				let community_membership: Vec<_> = Appreciation::community_membership_of(&identity_info.account_id)
+					.into_iter()
+					.map(|(community_id, karma_score, is_admin)| pallet_identity_rpc_runtime_api::CommunityMembership {
+						community_id, karma_score, is_admin
+					})
+					.collect();
+
+				let karma_score = trait_scores.iter().map(|score| score.karma_score).sum::<u32>() + community_membership.len() as u32;
+
 
 				pallet_identity_rpc_runtime_api::UserInfo {
 					account_id: identity_info.account_id,
@@ -592,6 +630,9 @@ impl_runtime_apis! {
 					user_name: identity_info.name.into(),
 					mobile_number: identity_info.number.into(),
 					balance: balance as u64,
+					trait_scores,
+					karma_score,
+					community_membership,
 				}
 			})
 		}
@@ -603,6 +644,22 @@ impl_runtime_apis! {
 			Identity::identity_by_number(number).map(|identity_info| {
 				let nonce = System::account_nonce(&identity_info.account_id);
 				let balance = Balances::free_balance(&identity_info.account_id);
+				let trait_scores: Vec<_> = Appreciation::trait_scores_of(&identity_info.account_id)
+					.into_iter()
+					.map(|(community_id, trait_id, karma_score)| {
+						pallet_identity_rpc_runtime_api::TraitScore {
+							trait_id, karma_score, community_id
+						}
+					})
+					.collect();
+				let community_membership: Vec<_> = Appreciation::community_membership_of(&identity_info.account_id)
+					.into_iter()
+					.map(|(community_id, karma_score, is_admin)| pallet_identity_rpc_runtime_api::CommunityMembership {
+						community_id, karma_score, is_admin
+					})
+					.collect();
+
+				let karma_score = trait_scores.iter().map(|score| score.karma_score).sum::<u32>() + community_membership.len() as u32;
 
 				pallet_identity_rpc_runtime_api::UserInfo {
 					account_id: identity_info.account_id,
@@ -610,6 +667,9 @@ impl_runtime_apis! {
 					user_name: identity_info.name.into(),
 					mobile_number: identity_info.number.into(),
 					balance: balance as u64,
+					trait_scores,
+					karma_score,
+					community_membership,
 				}
 			})
 		}
@@ -774,6 +834,6 @@ mod payout_tests {
 			check_month_payouts(9, 8_334_721_554_102);
 			check_month_payouts(10, 8_167_727_073_044);
 			check_month_payouts(11, 8_004_078_493_408);
-		})
+		});
 	}
 }

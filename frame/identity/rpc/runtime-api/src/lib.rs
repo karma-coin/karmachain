@@ -1,24 +1,9 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use codec::{Codec, Decode, Encode};
+use codec::Codec;
 use scale_info::prelude::vec::Vec;
-use sp_runtime::{traits::Get, BoundedVec};
 
-#[cfg(feature = "std")]
-use serde::{Deserialize, Serialize};
-
-#[derive(Encode, Decode)]
-#[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
-pub struct UserInfo<AccountId> {
-	pub account_id: AccountId,
-	pub nonce: u64,
-	pub user_name: Vec<u8>,
-	pub mobile_number: Vec<u8>,
-	pub balance: u64,
-	// trait_scores
-	// pre_keys
-	// karma_score
-}
+pub use sp_rpc::*;
 
 sp_api::decl_runtime_apis! {
 	pub trait IdentityApi<AccountId: Codec> {

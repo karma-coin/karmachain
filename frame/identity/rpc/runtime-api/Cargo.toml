@@ -13,6 +13,8 @@ sp-api = { version = "4.0.0-dev", default-features = false, git = "https://githu
 sp-runtime = { version = "7.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.37" }
 sp-weights = { version = "4.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.37" }
 
+sp-rpc = { version = "0.1.0", default-features = false, path = "../../../../primitives/rpc" }
+
 [features]
 default = ["std"]
 std = [
@@ -21,4 +23,5 @@ std = [
 	"sp-api/std",
 	"sp-runtime/std",
 	"sp-weights/std",
+	"sp-rpc/std",
 ]
