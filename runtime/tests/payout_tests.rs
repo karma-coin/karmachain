@@ -1,5 +1,5 @@
-use pallet_staking::{ActiveEraInfo, EraPayout as EraPayoutT};
 use karmachain_node_runtime::*;
+use pallet_staking::{ActiveEraInfo, EraPayout as EraPayoutT};
 use sp_staking::EraIndex;
 
 #[allow(dead_code)]
