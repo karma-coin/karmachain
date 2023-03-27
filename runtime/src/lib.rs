@@ -56,11 +56,13 @@ pub use sp_runtime::{Perbill, Permill};
 
 pub mod pallets;
 pub mod types;
+pub mod utils;
 pub mod validators_rewards;
 
 pub use crate::{
 	pallets::{babe::*, election_provider_multi_phase::*, identity::*, system::*},
 	types::*,
+	utils::*,
 };
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
@@ -137,41 +139,6 @@ pub const KCOINS: Balance = KCENTS * 1_000_000;
 #[cfg(feature = "std")]
 pub fn native_version() -> NativeVersion {
 	NativeVersion { runtime_version: VERSION, can_author_with: Default::default() }
-}
-
-impl<C> frame_system::offchain::SendTransactionTypes<C> for Runtime
-where
-	RuntimeCall: From<C>,
-{
-	type Extrinsic = UncheckedExtrinsic;
-	type OverarchingCall = RuntimeCall;
-}
-
-pub struct OnChainSeqPhragmen;
-impl onchain::Config for OnChainSeqPhragmen {
-	type System = Runtime;
-	type Solver = SequentialPhragmen<AccountId, sp_runtime::Perbill>;
-	type DataProvider = Staking;
-	type WeightInfo = frame_election_provider_support::weights::SubstrateWeight<Runtime>;
-	type MaxWinners = MaxActiveValidators;
-	type VotersBound = MaxElectingVoters;
-	type TargetsBound = MaxElectableTargets;
-}
-
-pub struct EraPayout<T>(PhantomData<T>);
-impl pallet_staking::EraPayout<Balance> for EraPayout<Staking> {
-	fn era_payout(
-		_total_staked: Balance,
-		_total_issuance: Balance,
-		_era_duration_millis: u64,
-	) -> (Balance, Balance) {
-		let era_index = Staking::active_era().unwrap().index;
-
-		let payout = validators_rewards::era_payout(era_index);
-		let rest = 0;
-
-		(payout, rest)
-	}
 }
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
