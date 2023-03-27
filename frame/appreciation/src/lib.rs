@@ -48,7 +48,7 @@ pub mod pallet {
 
 	#[pallet::genesis_config]
 	pub struct GenesisConfig<T: Config> {
-		pub char_traits: Vec<(CharTraitId, String)>,
+		pub char_traits: Vec<(CharTraitId, String, String)>,
 		pub no_char_trait_id: CharTraitId,
 		pub signup_char_trait_id: CharTraitId,
 		pub spender_char_trait_id: CharTraitId,
@@ -93,7 +93,13 @@ pub mod pallet {
 				self.char_traits
 					.clone()
 					.into_iter()
-					.flat_map(|(id, name)| name.try_into().map(|name| CharTrait { id, name }))
+					.map(|(id, name, emoji)| {
+						CharTrait {
+							id,
+							name: name.try_into().expect("Max length of character trait name should be lower than T::CharNameLimit"),
+							emoji: emoji.try_into().expect("Max length of character trait name should be lower than 4"),
+						}
+					})
 					.collect::<Vec<_>>()
 					.try_into()
 					.expect("Initial number of char_traits should be lower than T::MaxCharTrait");

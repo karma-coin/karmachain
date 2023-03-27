@@ -1,5 +1,7 @@
 use codec::{Decode, Encode, MaxEncodedLen};
-use frame_support::{traits::Get, BoundedVec, CloneNoBound, RuntimeDebugNoBound};
+use frame_support::{
+	pallet_prelude::*, traits::Get, BoundedVec, CloneNoBound, RuntimeDebugNoBound,
+};
 use scale_info::TypeInfo;
 
 #[cfg(feature = "std")]
@@ -16,6 +18,7 @@ pub type Score = u32;
 pub struct CharTrait<CharNameLimit: Get<u32>> {
 	pub id: CharTraitId,
 	pub name: BoundedVec<u8, CharNameLimit>,
+	pub emoji: BoundedVec<u8, ConstU32<4>>,
 }
 
 #[derive(Encode, Decode, MaxEncodedLen, TypeInfo, RuntimeDebugNoBound, Default)]

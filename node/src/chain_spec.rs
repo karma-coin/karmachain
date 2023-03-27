@@ -69,10 +69,10 @@ pub fn development_config() -> Result<ChainSpec, String> {
 				],
 				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
 				vec![
-					(1, "SignUp".into()),
-					(2, "Spender".into()),
-					(3, "Smart".into()),
-					(4, "Helpfull".into()),
+					(1, "SignUp".into(), "".into()),
+					(2, "Spender".into(), "".into()),
+					(3, "Smart".into(), "".into()),
+					(4, "Helpfull".into(), "".into()),
 				],
 				vec![
 					(
@@ -176,10 +176,10 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 				],
 				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
 				vec![
-					(1, "SignUp".into()),
-					(2, "Spender".into()),
-					(3, "Smart".into()),
-					(4, "Helpfull".into()),
+					(1, "SignUp".into(), "".into()),
+					(2, "Spender".into(), "".into()),
+					(3, "Smart".into(), "".into()),
+					(4, "Helpfull".into(), "".into()),
 				],
 				vec![
 					(
@@ -244,7 +244,7 @@ fn testnet_genesis(
 	root_key: AccountId,
 	endowed_accounts: Vec<AccountId>,
 	phone_verifiers: Vec<AccountId>,
-	char_traits: Vec<(CharTraitId, String)>,
+	char_traits: Vec<(CharTraitId, String, String)>,
 	communities: Vec<(
 		CommunityId,
 		String,
