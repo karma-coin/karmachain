@@ -15,6 +15,7 @@ pub use pallet::*;
 pub mod pallet {
 	use super::*;
 	use frame_system::pallet_prelude::*;
+	use sp_common::*;
 
 	#[pallet::config]
 	pub trait Config:
@@ -47,7 +48,7 @@ pub mod pallet {
 
 	#[pallet::genesis_config]
 	pub struct GenesisConfig<T: Config> {
-		pub char_traits: Vec<(CharTraitId, Vec<u8>)>,
+		pub char_traits: Vec<(CharTraitId, String)>,
 		pub no_char_trait_id: CharTraitId,
 		pub signup_char_trait_id: CharTraitId,
 		pub spender_char_trait_id: CharTraitId,
@@ -55,14 +56,14 @@ pub mod pallet {
 
 		pub communities: Vec<(
 			CommunityId,
-			Vec<u8>,
-			Vec<u8>,
-			Vec<u8>,
-			Vec<u8>,
-			Vec<u8>,
-			Vec<u8>,
-			Vec<u8>,
-			Vec<u8>,
+			String,
+			String,
+			String,
+			String,
+			String,
+			String,
+			String,
+			String,
 			bool,
 		)>,
 		pub community_membership: Vec<(T::AccountId, CommunityId, CommunityRole)>,

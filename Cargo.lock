@@ -3031,6 +3031,7 @@ dependencies = [
  "sp-api",
  "sp-block-builder",
  "sp-blockchain",
+ "sp-common",
  "sp-consensus",
  "sp-consensus-babe",
  "sp-core",
@@ -4417,6 +4418,7 @@ dependencies = [
  "parity-scale-codec",
  "scale-info",
  "serde",
+ "sp-common",
  "sp-io",
  "sp-runtime",
  "sp-std",
@@ -7233,6 +7235,16 @@ dependencies = [
  "sp-runtime",
  "sp-state-machine",
  "thiserror",
+]
+
+[[package]]
+name = "sp-common"
+version = "0.2.0"
+dependencies = [
+ "frame-support",
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
 ]
 
 [[package]]
