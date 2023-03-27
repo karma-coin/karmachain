@@ -71,7 +71,6 @@ pub fn development_config() -> Result<ChainSpec, String> {
 				vec![
 					(get_account_id_from_seed::<sr25519::Public>("Alice"), 1, CommunityRole::Admin),
 					(get_account_id_from_seed::<sr25519::Public>("Bob"), 1, CommunityRole::Member),
-					(get_account_id_from_seed::<sr25519::Public>("Alice"), 2, CommunityRole::Admin),
 				],
 				true,
 			)
@@ -146,7 +145,6 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 				vec![
 					(get_account_id_from_seed::<sr25519::Public>("Alice"), 1, CommunityRole::Admin),
 					(get_account_id_from_seed::<sr25519::Public>("Bob"), 1, CommunityRole::Member),
-					(get_account_id_from_seed::<sr25519::Public>("Alice"), 2, CommunityRole::Admin),
 				],
 				true,
 			)
