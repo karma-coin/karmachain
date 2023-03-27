@@ -70,10 +70,9 @@ pub struct BlockchainStats {
 	pub update_user_transactions_count: u64,
 	/// Amount of rewards paid to causes
 	pub causes_rewards_amount: u64,
-
 	// TODO: how can know KC cost?
 	// Estimated KC to USD exchange rate
-    // double exchange_rate = 19;
+	// double exchange_rate = 19;
 }
 
 #[derive(Encode, Decode)]
