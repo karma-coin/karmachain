@@ -32,8 +32,8 @@ pub mod pallet {
 		type CommunityNameLimit: Get<u32>;
 		/// Max length of `Community`'s description
 		type CommunityDescLimit: Get<u32>;
-		/// Max length of `Community`'s emoji
-		type CommunityEmojiLimit: Get<u32>;
+		/// Max length of emoji
+		type EmojiLimit: Get<u32>;
 		/// Max length of `Community`'s urls
 		type CommunityUrlLimit: Get<u32>;
 		/// The currency mechanism.
@@ -89,20 +89,25 @@ pub mod pallet {
 	#[pallet::genesis_build]
 	impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
 		fn build(&self) {
-			let bounded_char_traits: BoundedVec<CharTrait<T::CharNameLimit>, T::MaxCharTrait> =
-				self.char_traits
-					.clone()
-					.into_iter()
-					.map(|(id, name, emoji)| {
-						CharTrait {
-							id,
-							name: name.try_into().expect("Max length of character trait name should be lower than T::CharNameLimit"),
-							emoji: emoji.try_into().expect("Max length of character trait name should be lower than 4"),
-						}
-					})
-					.collect::<Vec<_>>()
-					.try_into()
-					.expect("Initial number of char_traits should be lower than T::MaxCharTrait");
+			let bounded_char_traits: BoundedVec<
+				CharTrait<T::CharNameLimit, T::EmojiLimit>,
+				T::MaxCharTrait,
+			> = self
+				.char_traits
+				.clone()
+				.into_iter()
+				.map(|(id, name, emoji)| CharTrait {
+					id,
+					name: name.try_into().expect(
+						"Max length of character trait name should be lower than T::CharNameLimit",
+					),
+					emoji: emoji
+						.try_into()
+						.expect("Max length of character trait name should be lower than 4"),
+				})
+				.collect::<Vec<_>>()
+				.try_into()
+				.expect("Initial number of char_traits should be lower than T::MaxCharTrait");
 			CharTraits::<T>::put(bounded_char_traits);
 
 			NoCharTraitId::<T>::put(self.no_char_trait_id);
@@ -114,7 +119,7 @@ pub mod pallet {
 				Community<
 					T::CommunityNameLimit,
 					T::CommunityDescLimit,
-					T::CommunityEmojiLimit,
+					T::EmojiLimit,
 					T::CommunityUrlLimit,
 				>,
 				T::MaxCommunities,
@@ -176,8 +181,11 @@ pub mod pallet {
 		StorageValue<_, CharTraitId, ResultQuery<Error<T>::NonExistentStorageValue>>;
 
 	#[pallet::storage]
-	pub type CharTraits<T: Config> =
-		StorageValue<_, BoundedVec<CharTrait<T::CharNameLimit>, T::MaxCharTrait>, ValueQuery>;
+	pub type CharTraits<T: Config> = StorageValue<
+		_,
+		BoundedVec<CharTrait<T::CharNameLimit, T::EmojiLimit>, T::MaxCharTrait>,
+		ValueQuery,
+	>;
 
 	#[pallet::storage]
 	pub type NoCommunityId<T: Config> =
@@ -190,7 +198,7 @@ pub mod pallet {
 			Community<
 				T::CommunityNameLimit,
 				T::CommunityDescLimit,
-				T::CommunityEmojiLimit,
+				T::EmojiLimit,
 				T::CommunityUrlLimit,
 			>,
 			T::MaxCommunities,
