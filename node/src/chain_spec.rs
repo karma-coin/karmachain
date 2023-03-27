@@ -304,6 +304,7 @@ fn testnet_genesis(
 					"https://www.instagram.com/gratefulgiraffes".into(),
 					"".into(),
 					"https://discord.gg/7FMTXavy8N".into(),
+					vec![10, 4, 3, 11, 15, 18, 39, 42, 60],
 					true,
 				),
 			],

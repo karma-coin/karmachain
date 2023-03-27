@@ -64,6 +64,7 @@ pub mod pallet {
 			String,
 			String,
 			String,
+			Vec<CharTraitId>,
 			bool,
 		)>,
 		pub community_membership: Vec<(T::AccountId, CommunityId, CommunityRole)>,
@@ -121,13 +122,14 @@ pub mod pallet {
 					T::CommunityDescLimit,
 					T::EmojiLimit,
 					T::CommunityUrlLimit,
+					T::MaxCharTrait,
 				>,
 				T::MaxCommunities,
 			> = self
 				.communities
 				.clone()
 				.into_iter()
-				.map(|(id, name, desc, emoji, website_url, twitter_url, insta_url, face_url, discord_url, closed)| {
+				.map(|(id, name, desc, emoji, website_url, twitter_url, insta_url, face_url, discord_url, char_traits, closed)| {
 					Community {
 						id,
 						name: name.try_into().expect("Max length of community name should be lower than T::CommunityNameLimit"),
@@ -138,6 +140,7 @@ pub mod pallet {
 						insta_url: insta_url.try_into().expect("Max length of community insta url should be lower than T::CommunityUrlLimit"),
 						face_url: face_url.try_into().expect("Max length of community face url should be lower than T::CommunityUrlLimit"),
 						discord_url: discord_url.try_into().expect("Max length of community discord url should be lower than T::CommunityUrlLimit"),
+						char_traits: char_traits.try_into().expect("Max length of community character traits should be lower that T::MaxCharTrait"),
 						closed,
 					}
 				})
@@ -200,6 +203,7 @@ pub mod pallet {
 				T::CommunityDescLimit,
 				T::EmojiLimit,
 				T::CommunityUrlLimit,
+				T::MaxCharTrait,
 			>,
 			T::MaxCommunities,
 		>,
@@ -240,6 +244,8 @@ pub mod pallet {
 		NonExistentStorageValue,
 		/// Account didn't found.
 		NotFound,
+		/// No such character trait
+		CharTraitNotFound,
 		/// No such community
 		CommunityNotFound,
 		/// Payer non a member of the community
@@ -319,11 +325,14 @@ impl<T: pallet::Config> Pallet<T> {
 			return Ok(())
 		}
 
-		let is_community_closed = Communities::<T>::get()
-			.iter()
+		let community = Communities::<T>::get()
+			.into_iter()
 			.find(|v| v.id == community_id)
-			.map(|v| v.closed)
 			.ok_or(Error::<T>::CommunityNotFound)?;
+
+		ensure!(community.char_traits.contains(&char_trait_id), Error::<T>::CharTraitNotFound,);
+
+		let is_community_closed = community.closed;
 
 		let payer_membership =
 			CommunityMembership::<T>::get(payer, community_id).unwrap_or_default();
