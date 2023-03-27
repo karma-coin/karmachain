@@ -1,5 +1,16 @@
 use crate::*;
 
+/// The BABE epoch configuration at genesis.
+pub const BABE_GENESIS_EPOCH_CONFIG: sp_consensus_babe::BabeEpochConfiguration =
+	sp_consensus_babe::BabeEpochConfiguration {
+		// 1 in 4 blocks (on average, not counting collisions) will be primary babe blocks.
+		// The choice of is done in accordance to the slot duration and expected target
+		// block time, for safely resisting network delays of maximum two seconds.
+		// <https://research.web3.foundation/en/latest/polkadot/BABE/Babe/#6-practical-results>
+		c: (1, 4),
+		allowed_slots: sp_consensus_babe::AllowedSlots::PrimaryAndSecondaryVRFSlots,
+	};
+
 parameter_types! {
 	pub EpochDuration: u64 = EPOCH_DURATION_IN_SLOTS as u64;
 	pub const ExpectedBlockTime: u64 = MILLISECS_PER_BLOCK;

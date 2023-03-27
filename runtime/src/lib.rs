@@ -59,7 +59,7 @@ pub mod types;
 pub mod validators_rewards;
 
 pub use crate::{
-	pallets::{babe::EpochDuration, election_provider_multi_phase::*, identity::*, system::*,},
+	pallets::{babe::*, election_provider_multi_phase::*, identity::*, system::*},
 	types::*,
 };
 
@@ -105,17 +105,6 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	transaction_version: 1,
 	state_version: 1,
 };
-
-/// The BABE epoch configuration at genesis.
-pub const BABE_GENESIS_EPOCH_CONFIG: sp_consensus_babe::BabeEpochConfiguration =
-	sp_consensus_babe::BabeEpochConfiguration {
-		// 1 in 4 blocks (on average, not counting collisions) will be primary babe blocks.
-		// The choice of is done in accordance to the slot duration and expected target
-		// block time, for safely resisting network delays of maximum two seconds.
-		// <https://research.web3.foundation/en/latest/polkadot/BABE/Babe/#6-practical-results>
-		c: (1, 4),
-		allowed_slots: sp_consensus_babe::AllowedSlots::PrimaryAndSecondaryVRFSlots,
-	};
 
 /// This determines the average expected block time that we are targeting.
 /// Blocks will be produced at a minimum duration defined by `SLOT_DURATION`.
