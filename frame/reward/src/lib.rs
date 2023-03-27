@@ -1,6 +1,9 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
+mod types;
+
 pub use pallet::*;
+pub use types::*;
 
 #[frame_support::pallet]
 pub mod pallet {
