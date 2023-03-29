@@ -188,13 +188,13 @@ impl<T: Config> IdentityProvider<T::AccountId, T::NameLimit, T::NumberLimit> for
 	fn identity_by_name(
 		name: BoundedVec<u8, T::NameLimit>,
 	) -> Option<IdentityInfo<T::AccountId, T::NameLimit, T::NumberLimit>> {
-		<NameFor<T>>::get(&name).and_then(Self::identity_by_id)
+		<NameFor<T>>::get(name).and_then(Self::identity_by_id)
 	}
 
 	fn identity_by_number(
 		number: BoundedVec<u8, T::NumberLimit>,
 	) -> Option<IdentityInfo<T::AccountId, T::NameLimit, T::NumberLimit>> {
-		<NumberFor<T>>::get(&number).and_then(Self::identity_by_id)
+		<NumberFor<T>>::get(number).and_then(Self::identity_by_id)
 	}
 }
 

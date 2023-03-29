@@ -1,8 +1,8 @@
-use frame_support::{assert_ok, assert_noop, BoundedVec};
+use frame_support::{assert_noop, assert_ok, BoundedVec};
 use karmachain_node_runtime::*;
 use pallet_identity_rpc_runtime_api::runtime_decl_for_IdentityApi::IdentityApiV1;
 use sp_core::{sr25519, Pair, Public};
-use sp_runtime::traits::{Verify, IdentifyAccount};
+use sp_runtime::traits::{IdentifyAccount, Verify};
 
 /// Generate a crypto pair from seed.
 fn get_from_seed<TPublic: Public>(seed: &str) -> <TPublic::Pair as Pair>::Public {
