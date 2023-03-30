@@ -21,9 +21,9 @@ parameter_types! {
 	// 40 UNITs fixed deposit..
 	pub const SignedDepositBase: Balance = 40 * KCOINS; // TODO: setup this values
 	// 0.01 UNITs per KB of solution data.
-	pub const SignedDepositByte: Balance = 1 * KCOINS / 100; // TODO: setup this values
+	pub const SignedDepositByte: Balance = KCOINS / 100; // TODO: setup this values
 	// Each good submission will get 1 UNITs as reward
-	pub SignedRewardBase: Balance = 1 * KCOINS; // TODO: setup this values
+	pub SignedRewardBase: Balance = KCOINS; // TODO: setup this values
 	pub BetterUnsignedThreshold: Perbill = Perbill::from_rational(5u32, 10_000);
 
 	// 4 hour session, 1 hour unsigned phase, 32 offchain executions.
@@ -77,10 +77,10 @@ impl pallet_election_provider_multi_phase::MinerConfig for Runtime {
 	type Solution = NposCompactSolution16;
 	/// Maximum number of votes per voter in the snapshots.
 	type MaxVotesPerVoter = <
-		<Self as pallet_election_provider_multi_phase::Config>::DataProvider
-		as
-		frame_election_provider_support::ElectionDataProvider
-	>::MaxVotesPerVoter;
+        <Self as pallet_election_provider_multi_phase::Config>::DataProvider
+        as
+        frame_election_provider_support::ElectionDataProvider
+    >::MaxVotesPerVoter;
 	/// Something that can compute the weight of a solution.
 	///
 	/// This weight estimate is then used to trim the solution, based on [`MinerConfig::MaxWeight`].
@@ -89,10 +89,10 @@ impl pallet_election_provider_multi_phase::MinerConfig for Runtime {
 	/// weight estimate function is wired to this call's weight.
 	fn solution_weight(v: u32, t: u32, a: u32, d: u32) -> Weight {
 		<
-			<Self as pallet_election_provider_multi_phase::Config>::WeightInfo
-			as
-			pallet_election_provider_multi_phase::WeightInfo
-		>::submit_unsigned(v, t, a, d)
+            <Self as pallet_election_provider_multi_phase::Config>::WeightInfo
+            as
+            pallet_election_provider_multi_phase::WeightInfo
+        >::submit_unsigned(v, t, a, d)
 	}
 }
 
@@ -162,8 +162,8 @@ impl pallet_election_provider_multi_phase::Config for Runtime {
 	type BetterSignedThreshold = ();
 	/// The repeat threshold of the offchain worker.
 	///
-	/// For example, if it is 5, that means that at least 5 blocks will elapse between attempts		///
-	/// to submit the worker's solution.
+	/// For example, if it is 5, that means that at least 5 blocks will elapse between attempts
+	/// /// to submit the worker's solution.
 	type OffchainRepeat = OffchainRepeat;
 	/// The priority of the unsigned transaction submitted in the unsigned-phase
 	type MinerTxPriority = NposSolutionPriority;

@@ -53,18 +53,7 @@ pub mod pallet {
 		pub spender_char_trait_id: CharTraitId,
 		pub ambassador_char_trait_id: CharTraitId,
 
-		pub communities: Vec<(
-			CommunityId,
-			Vec<u8>,
-			Vec<u8>,
-			Vec<u8>,
-			Vec<u8>,
-			Vec<u8>,
-			Vec<u8>,
-			Vec<u8>,
-			Vec<u8>,
-			bool,
-		)>,
+		pub communities: Vec<GenesisCommunity>,
 		pub community_membership: Vec<(T::AccountId, CommunityId, CommunityRole)>,
 		pub no_community_id: CommunityId,
 	}
@@ -85,6 +74,7 @@ pub mod pallet {
 		}
 	}
 
+	#[allow(clippy::type_complexity)]
 	#[pallet::genesis_build]
 	impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
 		fn build(&self) {
