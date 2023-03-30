@@ -1,3 +1,14 @@
+//! Provides the logic and rules for the blockchain network to function properly. It defines the
+//! state transition function, which is responsible for modifying the state of the blockchain
+//! network based on the incoming transactions. The primary purpose of the runtime is to manage the
+//! state transitions of the blockchain network. This includes updating the account balances,
+//! storing data. The runtime also handles the validation of transactions and blocks, ensuring that
+//! they comply with the consensus rules defined by the network.
+//!
+//! The runtime provides a framework for building and customizing blockchain networks by allowing
+//! developers to add their own logic and functionality to the network. This modularity is achieved
+//! through the use of Substrate runtime pallets.
+
 #![cfg_attr(not(feature = "std"), no_std)]
 // `construct_runtime!` does a lot of recursion and requires us to increase the limit to 256.
 #![recursion_limit = "256"]
