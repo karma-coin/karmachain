@@ -1,6 +1,8 @@
 use codec::{Decode, Encode, MaxEncodedLen};
 use frame_support::{traits::Get, BoundedVec, CloneNoBound, RuntimeDebugNoBound};
 use scale_info::TypeInfo;
+use sp_std::vec::Vec;
+use sp_common::*;
 
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
@@ -8,6 +10,20 @@ use serde::{Deserialize, Serialize};
 pub type CharTraitId = u32;
 pub type CommunityId = u32;
 pub type Score = u32;
+
+pub type GenesisCommunity = (
+	CommunityId,
+	String,
+	String,
+	String,
+	String,
+	String,
+	String,
+	String,
+	String,
+	Vec<CharTraitId>,
+	bool,
+);
 
 #[derive(CloneNoBound, Encode, Decode, MaxEncodedLen, TypeInfo, RuntimeDebugNoBound)]
 #[codec(mel_bound())]
@@ -30,10 +46,7 @@ pub enum CommunityRole {
 
 impl CommunityRole {
 	pub fn is_admin(&self) -> bool {
-		match self {
-			Self::Admin => true,
-			_ => false,
-		}
+		matches!(self, Self::Admin)
 	}
 }
 
