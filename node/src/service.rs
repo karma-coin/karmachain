@@ -21,7 +21,7 @@ impl sc_executor::NativeExecutionDispatch for ExecutorDispatch {
 	type ExtendHostFunctions = ();
 
 	fn dispatch(method: &str, data: &[u8]) -> Option<Vec<u8>> {
-		karmachain_node_runtime::api::dispatch(method, data)
+		karmachain_node_runtime::api::api::dispatch(method, data)
 	}
 
 	fn native_version() -> sc_executor::NativeVersion {
