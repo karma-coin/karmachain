@@ -15,6 +15,7 @@ pub use pallet::*;
 pub mod pallet {
 	use super::*;
 	use frame_system::pallet_prelude::*;
+	use sp_common::*;
 
 	#[pallet::config]
 	pub trait Config:
@@ -31,8 +32,8 @@ pub mod pallet {
 		type CommunityNameLimit: Get<u32>;
 		/// Max length of `Community`'s description
 		type CommunityDescLimit: Get<u32>;
-		/// Max length of `Community`'s emoji
-		type CommunityEmojiLimit: Get<u32>;
+		/// Max length of emoji
+		type EmojiLimit: Get<u32>;
 		/// Max length of `Community`'s urls
 		type CommunityUrlLimit: Get<u32>;
 		/// The currency mechanism.
@@ -47,24 +48,13 @@ pub mod pallet {
 
 	#[pallet::genesis_config]
 	pub struct GenesisConfig<T: Config> {
-		pub char_traits: Vec<(CharTraitId, Vec<u8>)>,
+		pub char_traits: Vec<(CharTraitId, String, String)>,
 		pub no_char_trait_id: CharTraitId,
 		pub signup_char_trait_id: CharTraitId,
 		pub spender_char_trait_id: CharTraitId,
 		pub ambassador_char_trait_id: CharTraitId,
 
-		pub communities: Vec<(
-			CommunityId,
-			Vec<u8>,
-			Vec<u8>,
-			Vec<u8>,
-			Vec<u8>,
-			Vec<u8>,
-			Vec<u8>,
-			Vec<u8>,
-			Vec<u8>,
-			bool,
-		)>,
+		pub communities: Vec<GenesisCommunity>,
 		pub community_membership: Vec<(T::AccountId, CommunityId, CommunityRole)>,
 		pub no_community_id: CommunityId,
 	}
@@ -85,17 +75,29 @@ pub mod pallet {
 		}
 	}
 
+	#[allow(clippy::type_complexity)]
 	#[pallet::genesis_build]
 	impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
 		fn build(&self) {
-			let bounded_char_traits: BoundedVec<CharTrait<T::CharNameLimit>, T::MaxCharTrait> =
-				self.char_traits
-					.clone()
-					.into_iter()
-					.flat_map(|(id, name)| name.try_into().map(|name| CharTrait { id, name }))
-					.collect::<Vec<_>>()
-					.try_into()
-					.expect("Initial number of char_traits should be lower than T::MaxCharTrait");
+			let bounded_char_traits: BoundedVec<
+				CharTrait<T::CharNameLimit, T::EmojiLimit>,
+				T::MaxCharTrait,
+			> = self
+				.char_traits
+				.clone()
+				.into_iter()
+				.map(|(id, name, emoji)| CharTrait {
+					id,
+					name: name.try_into().expect(
+						"Max length of character trait name should be lower than T::CharNameLimit",
+					),
+					emoji: emoji
+						.try_into()
+						.expect("Max length of character trait name should be lower than 4"),
+				})
+				.collect::<Vec<_>>()
+				.try_into()
+				.expect("Initial number of char_traits should be lower than T::MaxCharTrait");
 			CharTraits::<T>::put(bounded_char_traits);
 
 			NoCharTraitId::<T>::put(self.no_char_trait_id);
@@ -107,15 +109,16 @@ pub mod pallet {
 				Community<
 					T::CommunityNameLimit,
 					T::CommunityDescLimit,
-					T::CommunityEmojiLimit,
+					T::EmojiLimit,
 					T::CommunityUrlLimit,
+					T::MaxCharTrait,
 				>,
 				T::MaxCommunities,
 			> = self
 				.communities
 				.clone()
 				.into_iter()
-				.map(|(id, name, desc, emoji, website_url, twitter_url, insta_url, face_url, discord_url, closed)| {
+				.map(|(id, name, desc, emoji, website_url, twitter_url, insta_url, face_url, discord_url, char_traits, closed)| {
 					Community {
 						id,
 						name: name.try_into().expect("Max length of community name should be lower than T::CommunityNameLimit"),
@@ -126,6 +129,7 @@ pub mod pallet {
 						insta_url: insta_url.try_into().expect("Max length of community insta url should be lower than T::CommunityUrlLimit"),
 						face_url: face_url.try_into().expect("Max length of community face url should be lower than T::CommunityUrlLimit"),
 						discord_url: discord_url.try_into().expect("Max length of community discord url should be lower than T::CommunityUrlLimit"),
+						char_traits: char_traits.try_into().expect("Max length of community character traits should be lower that T::MaxCharTrait"),
 						closed,
 					}
 				})
@@ -169,8 +173,11 @@ pub mod pallet {
 		StorageValue<_, CharTraitId, ResultQuery<Error<T>::NonExistentStorageValue>>;
 
 	#[pallet::storage]
-	pub type CharTraits<T: Config> =
-		StorageValue<_, BoundedVec<CharTrait<T::CharNameLimit>, T::MaxCharTrait>, ValueQuery>;
+	pub type CharTraits<T: Config> = StorageValue<
+		_,
+		BoundedVec<CharTrait<T::CharNameLimit, T::EmojiLimit>, T::MaxCharTrait>,
+		ValueQuery,
+	>;
 
 	#[pallet::storage]
 	pub type NoCommunityId<T: Config> =
@@ -183,8 +190,9 @@ pub mod pallet {
 			Community<
 				T::CommunityNameLimit,
 				T::CommunityDescLimit,
-				T::CommunityEmojiLimit,
+				T::EmojiLimit,
 				T::CommunityUrlLimit,
+				T::MaxCharTrait,
 			>,
 			T::MaxCommunities,
 		>,
@@ -225,6 +233,8 @@ pub mod pallet {
 		NonExistentStorageValue,
 		/// Account didn't found.
 		NotFound,
+		/// No such character trait
+		CharTraitNotFound,
 		/// No such community
 		CommunityNotFound,
 		/// Payer non a member of the community
@@ -304,11 +314,14 @@ impl<T: pallet::Config> Pallet<T> {
 			return Ok(())
 		}
 
-		let is_community_closed = Communities::<T>::get()
-			.iter()
+		let community = Communities::<T>::get()
+			.into_iter()
 			.find(|v| v.id == community_id)
-			.map(|v| v.closed)
 			.ok_or(Error::<T>::CommunityNotFound)?;
+
+		ensure!(community.char_traits.contains(&char_trait_id), Error::<T>::CharTraitNotFound,);
+
+		let is_community_closed = community.closed;
 
 		let payer_membership =
 			CommunityMembership::<T>::get(payer, community_id).unwrap_or_default();
