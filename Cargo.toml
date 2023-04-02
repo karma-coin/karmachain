@@ -7,6 +7,7 @@ members = [
     "frame/identity/rpc",
     "frame/identity/rpc/runtime-api",
     "frame/reward",
+    "primitives/common",
     "primitives/rpc",
 ]
 [profile.release]
