@@ -16,6 +16,8 @@ sp-io = { version = "7.0.0", default-features = false, git = "https://github.com
 sp-runtime = { version = "7.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.37" }
 sp-std = { version = "5.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.37" }
 
+pallet-identity = { version = "0.1.0", default-features = false, path = "../identity" }
+
 [features]
 default = ["std"]
 std = [
@@ -26,6 +28,8 @@ std = [
 	"sp-io/std",
 	"sp-runtime/std",
 	"sp-std/std",
+	
+	"pallet-identity/std",
 ]
 runtime-benchmarks = [
 	"frame-support/runtime-benchmarks",

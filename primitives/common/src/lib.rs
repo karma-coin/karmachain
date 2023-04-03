@@ -55,7 +55,7 @@ impl Serialize for String {
 	where
 		S: Serializer,
 	{
-		serializer.serialize_str(std::str::from_utf8(&self.0).map_err(|e| ser::Error::custom(e))?)
+		serializer.serialize_str(std::str::from_utf8(&self.0).map_err(ser::Error::custom)?)
 	}
 }
 
