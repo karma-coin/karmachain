@@ -3068,6 +3068,7 @@ dependencies = [
  "pallet-grandpa",
  "pallet-identity",
  "pallet-identity-rpc-runtime-api",
+ "pallet-reward",
  "pallet-session",
  "pallet-staking",
  "pallet-sudo",

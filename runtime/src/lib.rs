@@ -122,6 +122,7 @@ construct_runtime!(
 		// Include the custom logic from the pallet-template in the runtime.
 		Identity: pallet_identity,
 		Appreciation: pallet_appreciation,
+		Reward: pallet_reward,
 	}
 );
 

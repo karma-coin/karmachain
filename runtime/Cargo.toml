@@ -60,6 +60,7 @@ frame-system-benchmarking = { version = "4.0.0-dev", default-features = false, g
 # Local Dependencies
 pallet-appreciation = { version = "0.1.0", default-features = false, path = "../frame/appreciation" }
 pallet-identity = { version = "0.1.0", default-features = false, path = "../frame/identity" }
+pallet-reward = { version = "0.1.0", default-features = false, path = "../frame/reward" }
 
 [dev-dependencies]
 sp-io = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.37" }
@@ -106,7 +107,8 @@ std = [
 	"sp-consensus-babe/std",
 
 	"pallet-appreciation/std",
-	"pallet-identity/std"
+	"pallet-identity/std",
+	"pallet-reward/std",
 ]
 runtime-benchmarks = [
 	"frame-benchmarking/runtime-benchmarks",

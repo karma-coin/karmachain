@@ -13,13 +13,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b263c728-8417-4478-9a4b-c5c20951187c" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/karmachain.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/karmachain.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frame/reward/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/frame/reward/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frame/reward/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/frame/reward/src/lib.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frame/reward/src/types.rs" beforeDir="false" afterPath="$PROJECT_DIR$/frame/reward/src/types.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/primitives/common/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/primitives/common/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/node/src/chain_spec.rs" beforeDir="false" afterPath="$PROJECT_DIR$/node/src/chain_spec.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/runtime/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/runtime/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/runtime/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/runtime/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/runtime/src/pallets/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/runtime/src/pallets/mod.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -138,7 +137,7 @@
       <workItem from="1679318931529" duration="1197000" />
       <workItem from="1679382332377" duration="598000" />
       <workItem from="1680425557997" duration="2943000" />
-      <workItem from="1680501515273" duration="294000" />
+      <workItem from="1680501515273" duration="1584000" />
     </task>
     <servers />
   </component>
