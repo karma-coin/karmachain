@@ -15,10 +15,9 @@
     <list default="true" id="b263c728-8417-4478-9a4b-c5c20951187c" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node/src/chain_spec.rs" beforeDir="false" afterPath="$PROJECT_DIR$/node/src/chain_spec.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/runtime/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/runtime/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/runtime/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/runtime/src/lib.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/runtime/src/pallets/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/runtime/src/pallets/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frame/identity/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/frame/identity/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frame/identity/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/frame/identity/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/runtime/src/pallets/identity.rs" beforeDir="false" afterPath="$PROJECT_DIR$/runtime/src/pallets/identity.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
