@@ -91,9 +91,9 @@ pub mod pallet {
 					name: name.try_into().expect(
 						"Max length of character trait name should be lower than T::CharNameLimit",
 					),
-					emoji: emoji
-						.try_into()
-						.expect("Max length of character trait name should be lower than 4"),
+					emoji: emoji.try_into().expect(
+						"Max length of character trait name should be lower than T::EmojiLimit",
+					),
 				})
 				.collect::<Vec<_>>()
 				.try_into()
