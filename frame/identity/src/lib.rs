@@ -163,6 +163,7 @@ pub trait IdentityProvider<
 	NumberLimit: Get<u32>,
 >
 {
+	fn exist_by_number(number: &BoundedVec<u8, NumberLimit>) -> bool;
 	fn identity_by_id(
 		account_id: AccountId,
 	) -> Option<IdentityInfo<AccountId, NameLimit, NumberLimit>>;
@@ -175,6 +176,10 @@ pub trait IdentityProvider<
 }
 
 impl<T: Config> IdentityProvider<T::AccountId, T::NameLimit, T::NumberLimit> for Pallet<T> {
+	fn exist_by_number(number: &BoundedVec<u8, T::NumberLimit>) -> bool {
+		<NumberFor<T>>::get(number).is_some()
+	}
+
 	fn identity_by_id(
 		account_id: T::AccountId,
 	) -> Option<IdentityInfo<T::AccountId, T::NameLimit, T::NumberLimit>> {

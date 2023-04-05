@@ -44,6 +44,7 @@ pub type SignedExtra = (
 	frame_system::CheckNonce<Runtime>,
 	frame_system::CheckWeight<Runtime>,
 	pallet_transaction_payment::ChargeTransactionPayment<Runtime>,
+	extensions::check_account::CheckAccount,
 );
 
 /// Unchecked extrinsic type as expected by this runtime.

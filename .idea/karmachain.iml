@@ -8,6 +8,13 @@
       <sourceFolder url="file://$MODULE_DIR$/frame/identity/rpc/runtime-api/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/frame/identity/rpc/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/frame/identity/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/client/transaction-pool/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/client/transaction-pool/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/client/transaction-pool/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/frame/appreciation/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/primitives/common/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/primitives/rpc/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/runtime/tests" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />

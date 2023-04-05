@@ -4,7 +4,7 @@
 
 use crate::service::FullClient;
 
-use karmachain_node_runtime as runtime;
+use karmachain_node_runtime::{self as runtime, extensions};
 use runtime::{AccountId, Balance, BalancesCall, SystemCall};
 use sc_cli::Result;
 use sc_client_api::BlockBackend;
@@ -121,6 +121,7 @@ pub fn create_benchmark_extrinsic(
 		frame_system::CheckNonce::<runtime::Runtime>::from(nonce),
 		frame_system::CheckWeight::<runtime::Runtime>::new(),
 		pallet_transaction_payment::ChargeTransactionPayment::<runtime::Runtime>::from(0),
+		extensions::check_account::CheckAccount::new(),
 	);
 
 	let raw_payload = runtime::SignedPayload::from_raw(
@@ -132,6 +133,7 @@ pub fn create_benchmark_extrinsic(
 			runtime::VERSION.transaction_version,
 			genesis_hash,
 			best_hash,
+			(),
 			(),
 			(),
 			(),
