@@ -11,12 +11,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b263c728-8417-4478-9a4b-c5c20951187c" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/karmachain.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/karmachain.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frame/identity/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/frame/identity/src/lib.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node/src/benchmarking.rs" beforeDir="false" afterPath="$PROJECT_DIR$/node/src/benchmarking.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/runtime/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/runtime/src/lib.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/runtime/src/types.rs" beforeDir="false" afterPath="$PROJECT_DIR$/runtime/src/types.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/runtime/src/extensions/check_account.rs" beforeDir="false" afterPath="$PROJECT_DIR$/runtime/src/extensions/check_account.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

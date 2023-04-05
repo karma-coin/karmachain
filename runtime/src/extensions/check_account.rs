@@ -68,14 +68,21 @@ impl SignedExtension for CheckAccount {
 		_len: usize,
 	) -> TransactionValidity {
 		match call {
+			// In case this is `appreciation` transaction
 			RuntimeCall::Appreciation(pallet_appreciation::Call::appreciation { to, .. }) =>
+			// Check if the user is registered
 				if <Runtime as pallet_appreciation::Config>::IdentityProvider::exist_by_number(to) {
+					// User already is registered, can execute transaction
 					Ok(ValidTransaction::default())
 				} else {
+					// User is not registered need to provide tag to wait,
+					// until `new_user` transaction provide this tag
 					let requires = vec![Encode::encode(&(to))];
 					Ok(ValidTransaction { requires, ..Default::default() })
 				},
+			// In case this is `new_user` transaction
 			RuntimeCall::Identity(pallet_identity::Call::new_user { number, .. }) => {
+				// This transaction provides tag, that may unlock some `appreciation` transactions
 				let provides = vec![Encode::encode(&(number))];
 				Ok(ValidTransaction { provides, ..Default::default() })
 			},
