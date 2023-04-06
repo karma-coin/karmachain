@@ -11,7 +11,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b263c728-8417-4478-9a4b-c5c20951187c" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frame/appreciation/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/frame/appreciation/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frame/identity/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/frame/identity/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frame/identity/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/frame/identity/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/primitives/common/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/primitives/common/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/runtime/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/runtime/Cargo.toml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/runtime/src/extensions/check_account.rs" beforeDir="false" afterPath="$PROJECT_DIR$/runtime/src/extensions/check_account.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/runtime/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/runtime/src/lib.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -20,6 +28,9 @@
   </component>
   <component name="ClangdSettings">
     <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="MacroExpansionManager">
     <option name="directoryName" value="iqrxyehr" />
@@ -42,8 +53,11 @@
     "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "WebServerToolWindowFactoryState": "false",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
     "dart.analysis.tool.window.visible": "false",
     "git-widget-placeholder": "transaction-pool",
     "last_opened_file_path": "/Users/danilkyrieiev/Documents/inc4/karmaco/karmachain/client/transaction-pool",
@@ -93,6 +107,10 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
+    <list>
+      <item itemvalue="Cargo.All Tests" />
+      <item itemvalue="Cargo.Test validators_rewards::tests" />
+    </list>
     <recent_temporary>
       <list>
         <item itemvalue="Cargo.All Tests" />
@@ -125,6 +143,8 @@
       <workItem from="1679310189207" duration="614000" />
       <workItem from="1679318931529" duration="1197000" />
       <workItem from="1679382332377" duration="598000" />
+      <workItem from="1680724323833" duration="1592000" />
+      <workItem from="1680774603809" duration="5440000" />
     </task>
     <servers />
   </component>

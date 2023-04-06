@@ -9,6 +9,12 @@ use sp_runtime::{
 };
 use sp_std::{default::Default, marker::PhantomData, vec};
 
+pub type AccountIdentityTag = AccountIdentity<
+	<Runtime as frame_system::Config>::AccountId,
+	<Runtime as pallet_identity::Config>::NameLimit,
+	<Runtime as pallet_identity::Config>::NumberLimit,
+>;
+
 #[derive(Encode, Decode, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(skip_type_params(T))]
 pub struct CheckAccount(PhantomData<Runtime>);
@@ -36,7 +42,7 @@ impl SignedExtension for CheckAccount {
 	type Call = RuntimeCall;
 	type AdditionalSigned = ();
 	type Pre = ();
-	const IDENTIFIER: &'static str = "CheckNonce";
+	const IDENTIFIER: &'static str = "CheckAccount";
 
 	fn additional_signed(&self) -> sp_std::result::Result<(), TransactionValidityError> {
 		Ok(())
@@ -51,7 +57,8 @@ impl SignedExtension for CheckAccount {
 	) -> Result<(), TransactionValidityError> {
 		match call {
 			RuntimeCall::Appreciation(pallet_appreciation::Call::appreciation { to, .. }) =>
-				if <Runtime as pallet_appreciation::Config>::IdentityProvider::exist_by_number(to) {
+				if <Runtime as pallet_appreciation::Config>::IdentityProvider::exist_by_identity(to)
+				{
 					Ok(())
 				} else {
 					Err(InvalidTransaction::Custom(u8::MAX).into())
@@ -71,7 +78,8 @@ impl SignedExtension for CheckAccount {
 			// In case this is `appreciation` transaction
 			RuntimeCall::Appreciation(pallet_appreciation::Call::appreciation { to, .. }) =>
 			// Check if the user is registered
-				if <Runtime as pallet_appreciation::Config>::IdentityProvider::exist_by_number(to) {
+				if <Runtime as pallet_appreciation::Config>::IdentityProvider::exist_by_identity(to)
+				{
 					// User already is registered, can execute transaction
 					Ok(ValidTransaction::default())
 				} else {
@@ -81,9 +89,23 @@ impl SignedExtension for CheckAccount {
 					Ok(ValidTransaction { requires, ..Default::default() })
 				},
 			// In case this is `new_user` transaction
-			RuntimeCall::Identity(pallet_identity::Call::new_user { number, .. }) => {
+			RuntimeCall::Identity(pallet_identity::Call::new_user {
+				account_id,
+				number,
+				name,
+				..
+			}) => {
+				let account_id_tag: AccountIdentityTag =
+					AccountIdentity::AccountId(account_id.clone());
+				let number_tag: AccountIdentityTag = AccountIdentity::PhoneNumber(number.clone());
+				let name_tag: AccountIdentityTag = AccountIdentity::Name(name.clone());
+
 				// This transaction provides tag, that may unlock some `appreciation` transactions
-				let provides = vec![Encode::encode(&(number))];
+				let provides = vec![
+					Encode::encode(&account_id_tag),
+					Encode::encode(&number_tag),
+					Encode::encode(&name_tag),
+				];
 				Ok(ValidTransaction { provides, ..Default::default() })
 			},
 			_ => Ok(ValidTransaction::default()),

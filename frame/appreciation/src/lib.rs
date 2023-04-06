@@ -4,7 +4,8 @@ use frame_support::{
 	traits::{Currency, ExistenceRequirement, Get},
 	BoundedVec,
 };
-use pallet_identity::{IdentityProvider, OnNewUser};
+use pallet_identity::OnNewUser;
+use sp_common::identity::{AccountIdentity, IdentityProvider};
 
 mod types;
 
@@ -200,7 +201,7 @@ pub mod pallet {
 	>;
 
 	#[pallet::storage]
-	pub(super) type CommunityMembership<T: Config> = StorageDoubleMap<
+	pub type CommunityMembership<T: Config> = StorageDoubleMap<
 		_,
 		Blake2_128Concat,
 		T::AccountId,
@@ -211,7 +212,7 @@ pub mod pallet {
 	>;
 
 	#[pallet::storage]
-	pub(super) type TraitScores<T: Config> = StorageNMap<
+	pub type TraitScores<T: Config> = StorageNMap<
 		_,
 		(
 			NMapKey<Blake2_128Concat, T::AccountId>,
@@ -250,15 +251,13 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
 		pub fn appreciation(
 			origin: OriginFor<T>,
-			to: BoundedVec<u8, T::NumberLimit>,
+			to: AccountIdentity<T::AccountId, T::NameLimit, T::NumberLimit>,
 			amount: T::Balance,
 			community_id: Option<CommunityId>,
 			char_trait_id: Option<CharTraitId>,
 		) -> DispatchResult {
 			let payer = ensure_signed(origin)?;
-			let payee = T::IdentityProvider::identity_by_number(to)
-				.ok_or(Error::<T>::NotFound)?
-				.account_id;
+			let payee = Self::get_account_id(to).ok_or(Error::<T>::NotFound)?;
 			let community_id = community_id.unwrap_or(NoCommunityId::<T>::get()?);
 			let char_trait_id = char_trait_id.unwrap_or(NoCharTraitId::<T>::get()?);
 
@@ -274,6 +273,18 @@ pub mod pallet {
 }
 
 impl<T: pallet::Config> Pallet<T> {
+	fn get_account_id(
+		to: AccountIdentity<T::AccountId, T::NameLimit, T::NumberLimit>,
+	) -> Option<T::AccountId> {
+		match to {
+			AccountIdentity::AccountId(account_id) => Some(account_id),
+			AccountIdentity::PhoneNumber(number) =>
+				T::IdentityProvider::identity_by_number(number).map(|v| v.account_id),
+			AccountIdentity::Name(name) =>
+				T::IdentityProvider::identity_by_name(name).map(|v| v.account_id),
+		}
+	}
+
 	pub fn increment_trait_score(
 		account_id: &T::AccountId,
 		community_id: CommunityId,

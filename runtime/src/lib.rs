@@ -57,10 +57,10 @@ pub use frame_support::{
 pub use frame_system::Call as SystemCall;
 use frame_system::EnsureRoot;
 pub use pallet_balances::Call as BalancesCall;
-use pallet_identity::IdentityProvider;
 use pallet_staking::UseValidatorsMap;
 pub use pallet_timestamp::Call as TimestampCall;
 use pallet_transaction_payment::{ConstFeeMultiplier, CurrencyAdapter, Multiplier};
+use sp_common::identity::{AccountIdentity, IdentityProvider};
 pub use sp_runtime::{Perbill, Permill};
 
 pub mod api;
