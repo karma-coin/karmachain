@@ -223,6 +223,16 @@ pub mod pallet {
 		OptionQuery,
 	>;
 
+	#[pallet::storage]
+	pub type Referrals<T: Config> = StorageDoubleMap<
+		_,
+		Blake2_128Concat,
+		T::AccountId,
+		Blake2_128Concat,
+		AccountIdentity<T::AccountId, T::NameLimit, T::NumberLimit>,
+		(),
+	>;
+
 	#[pallet::event]
 	pub enum Event<T: Config> {}
 
@@ -257,11 +267,12 @@ pub mod pallet {
 			char_trait_id: Option<CharTraitId>,
 		) -> DispatchResult {
 			let payer = ensure_signed(origin)?;
+			let referral = Referrals::<T>::take(&payer, &to).is_some();
 			let payee = Self::get_account_id(to).ok_or(Error::<T>::NotFound)?;
 			let community_id = community_id.unwrap_or(NoCommunityId::<T>::get()?);
 			let char_trait_id = char_trait_id.unwrap_or(NoCharTraitId::<T>::get()?);
 
-			Self::process_appreciation(&payer, &payee, community_id, char_trait_id)?;
+			Self::process_appreciation(&payer, &payee, community_id, char_trait_id, referral)?;
 
 			T::Currency::transfer(&payer, &payee, amount, ExistenceRequirement::KeepAlive)?;
 
@@ -300,6 +311,7 @@ impl<T: pallet::Config> Pallet<T> {
 		payee: &T::AccountId,
 		community_id: CommunityId,
 		char_trait_id: CharTraitId,
+		referral: bool,
 	) -> DispatchResult {
 		if NoCharTraitId::<T>::get()? == char_trait_id {
 			return Ok(())
@@ -308,8 +320,7 @@ impl<T: pallet::Config> Pallet<T> {
 		// TODO: whether to check `char_trait_id` for existence?
 
 		// TODO: if this transfer lead to user signup set `true`
-		let sign_ups = false;
-		if sign_ups {
+		if referral {
 			// Give payer karma points for helping to grow the network
 			Self::increment_trait_score(
 				payer,
