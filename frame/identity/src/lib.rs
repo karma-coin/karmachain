@@ -18,7 +18,7 @@ use sp_common::identity::{AccountIdentity, IdentityInfo, IdentityProvider};
 #[scale_info(skip_type_params(NameLimit, PhoneNumberLimit))]
 pub struct IdentityStore<NameLimit: Get<u32>, PhoneNumberLimit: Get<u32>> {
 	name: BoundedVec<u8, NameLimit>,
-	number: BoundedVec<u8, PhoneNumberLimit>,
+	phone_number: BoundedVec<u8, PhoneNumberLimit>,
 }
 
 #[frame_support::pallet]
@@ -91,7 +91,7 @@ pub mod pallet {
 		StorageMap<_, Blake2_128Concat, BoundedVec<u8, T::NameLimit>, T::AccountId>;
 
 	#[pallet::storage]
-	pub type NumberFor<T: Config> =
+	pub type PhoneNumberFor<T: Config> =
 		StorageMap<_, Blake2_128Concat, BoundedVec<u8, T::PhoneNumberLimit>, T::AccountId>;
 
 	#[pallet::storage]
@@ -123,7 +123,7 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			account_id: T::AccountId,
 			name: BoundedVec<u8, T::NameLimit>,
-			number: BoundedVec<u8, T::PhoneNumberLimit>,
+			phone_number: BoundedVec<u8, T::PhoneNumberLimit>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			ensure!(PhoneVerifiers::<T>::get().contains(&who), Error::<T>::NotAllowed);
@@ -136,13 +136,13 @@ pub mod pallet {
 				return Err(Error::<T>::UserNameTaken.into())
 			}
 
-			if NumberFor::<T>::contains_key(&number) {
+			if PhoneNumberFor::<T>::contains_key(&phone_number) {
 				return Err(Error::<T>::PhoneNumberTaken.into())
 			}
 
 			NameFor::<T>::insert(&name, account_id.clone());
-			NumberFor::<T>::insert(&number, account_id.clone());
-			IdentityOf::<T>::insert(&account_id, IdentityStore { name, number });
+			PhoneNumberFor::<T>::insert(&phone_number, account_id.clone());
+			IdentityOf::<T>::insert(&account_id, IdentityStore { name, phone_number });
 
 			T::OnNewUser::on_new_user(&account_id)?;
 
@@ -157,7 +157,7 @@ impl<T: Config> IdentityProvider<T::AccountId, T::NameLimit, T::PhoneNumberLimit
 	) -> bool {
 		match account_identity {
 			AccountIdentity::AccountId(account_id) => IdentityOf::<T>::get(account_id).is_some(),
-			AccountIdentity::PhoneNumber(number) => NumberFor::<T>::get(number).is_some(),
+			AccountIdentity::PhoneNumber(number) => PhoneNumberFor::<T>::get(number).is_some(),
 			AccountIdentity::Name(name) => NameFor::<T>::get(name).is_some(),
 		}
 	}
@@ -168,7 +168,7 @@ impl<T: Config> IdentityProvider<T::AccountId, T::NameLimit, T::PhoneNumberLimit
 		<IdentityOf<T>>::get(&account_id).map(|v| IdentityInfo {
 			account_id,
 			name: v.name,
-			number: v.number,
+			number: v.phone_number,
 		})
 	}
 
@@ -181,7 +181,7 @@ impl<T: Config> IdentityProvider<T::AccountId, T::NameLimit, T::PhoneNumberLimit
 	fn identity_by_number(
 		number: BoundedVec<u8, T::PhoneNumberLimit>,
 	) -> Option<IdentityInfo<T::AccountId, T::NameLimit, T::PhoneNumberLimit>> {
-		<NumberFor<T>>::get(number).and_then(Self::identity_by_id)
+		<PhoneNumberFor<T>>::get(number).and_then(Self::identity_by_id)
 	}
 }
 
