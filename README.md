@@ -27,6 +27,27 @@ Use Rust's native `cargo` command to build and launch the template node:
 cargo run --release -- --dev
 ```
 
+#### Run local node 
+
+Firstly you need to create chain specification file or use existed one:
+
+```sh
+cargo run -- build-spec --dev > chainSpec.json
+```
+
+Now you can modify `chainSpec.json` to change blockchain genesis params.
+ * balances - here can specify genesis balance for specific account
+ * sudo - set sudo account
+ * identity - set phone verifiers account
+ * appreciation - set character traits, communities etc.
+
+Then to run local node use next command, because of this is dev environment use 
+alice session keys and account as validator:
+
+```shell
+ cargo run -- --chain=chainSpec.json --alice --validator
+```
+
 ### Build
 
 The `cargo run` command will perform an initial build. Use the following command to build the node
