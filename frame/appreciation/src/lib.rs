@@ -40,7 +40,11 @@ pub mod pallet {
 		/// The currency mechanism.
 		type Currency: Currency<Self::AccountId, Balance = Self::Balance>;
 
-		type IdentityProvider: IdentityProvider<Self::AccountId, Self::NameLimit, Self::NumberLimit>;
+		type IdentityProvider: IdentityProvider<
+			Self::AccountId,
+			Self::NameLimit,
+			Self::PhoneNumberLimit,
+		>;
 	}
 
 	#[pallet::pallet]
@@ -229,12 +233,21 @@ pub mod pallet {
 		Blake2_128Concat,
 		T::AccountId,
 		Blake2_128Concat,
-		AccountIdentity<T::AccountId, T::NameLimit, T::NumberLimit>,
+		AccountIdentity<T::AccountId, T::NameLimit, T::PhoneNumberLimit>,
 		(),
 	>;
 
 	#[pallet::event]
-	pub enum Event<T: Config> {}
+	#[pallet::generate_deposit(pub(super) fn deposit_event)]
+	pub enum Event<T: Config> {
+		NewCommunityAdmin {
+			community_id: CommunityId,
+			community_name: BoundedVec<u8, T::CommunityNameLimit>,
+			account_id: T::AccountId,
+			username: BoundedVec<u8, T::NameLimit>,
+			phone_number: BoundedVec<u8, T::PhoneNumberLimit>,
+		},
+	}
 
 	#[pallet::error]
 	pub enum Error<T> {
@@ -253,6 +266,8 @@ pub mod pallet {
 		/// Closed community - only community admin can invite new members
 		/// and only members can appreciate each other in the community
 		CommunityClosed,
+		///
+		NotEnoughPermission,
 	}
 
 	#[pallet::call]
@@ -261,7 +276,7 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
 		pub fn appreciation(
 			origin: OriginFor<T>,
-			to: AccountIdentity<T::AccountId, T::NameLimit, T::NumberLimit>,
+			to: AccountIdentity<T::AccountId, T::NameLimit, T::PhoneNumberLimit>,
 			amount: T::Balance,
 			community_id: Option<CommunityId>,
 			char_trait_id: Option<CharTraitId>,
@@ -280,12 +295,51 @@ pub mod pallet {
 
 			Ok(())
 		}
+
+		#[pallet::call_index(1)]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
+		pub fn set_admin(
+			origin: OriginFor<T>,
+			community_id: CommunityId,
+			new_admin: AccountIdentity<T::AccountId, T::NameLimit, T::PhoneNumberLimit>,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+			ensure!(
+				matches!(
+					CommunityMembership::<T>::get(who, community_id),
+					Some(CommunityRole::Admin)
+				),
+				Error::<T>::NotEnoughPermission
+			);
+
+			let community = Communities::<T>::get()
+				.into_iter()
+				.find(|community| community.id == community_id)
+				.ok_or(Error::<T>::NotFound)?;
+			let new_admin_identity =
+				T::IdentityProvider::get_identity_info(new_admin).ok_or(Error::<T>::NotFound)?;
+			CommunityMembership::<T>::insert(
+				&new_admin_identity.account_id,
+				community_id,
+				CommunityRole::Admin,
+			);
+
+			Self::deposit_event(Event::<T>::NewCommunityAdmin {
+				community_id: community.id,
+				community_name: community.name,
+				account_id: new_admin_identity.account_id,
+				username: new_admin_identity.name,
+				phone_number: new_admin_identity.number,
+			});
+
+			Ok(())
+		}
 	}
 }
 
 impl<T: pallet::Config> Pallet<T> {
 	fn get_account_id(
-		to: AccountIdentity<T::AccountId, T::NameLimit, T::NumberLimit>,
+		to: AccountIdentity<T::AccountId, T::NameLimit, T::PhoneNumberLimit>,
 	) -> Option<T::AccountId> {
 		match to {
 			AccountIdentity::AccountId(account_id) => Some(account_id),

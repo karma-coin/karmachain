@@ -12,7 +12,7 @@ use sp_std::{default::Default, marker::PhantomData, vec};
 pub type AccountIdentityTag = AccountIdentity<
 	<Runtime as frame_system::Config>::AccountId,
 	<Runtime as pallet_identity::Config>::NameLimit,
-	<Runtime as pallet_identity::Config>::NumberLimit,
+	<Runtime as pallet_identity::Config>::PhoneNumberLimit,
 >;
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, TypeInfo)]

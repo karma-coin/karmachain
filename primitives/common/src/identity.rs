@@ -16,13 +16,13 @@ use sp_std::fmt::Debug;
 	EqNoBound,
 )]
 #[codec(mel_bound())]
-#[scale_info(skip_type_params(NumberLimit, NameLimit))]
-pub enum AccountIdentity<AccountId, NameLimit: Get<u32>, NumberLimit: Get<u32>>
+#[scale_info(skip_type_params(PhoneNumberLimit, NameLimit))]
+pub enum AccountIdentity<AccountId, NameLimit: Get<u32>, PhoneNumberLimit: Get<u32>>
 where
 	AccountId: Encode + Decode + MaxEncodedLen + Eq + Debug + Clone,
 {
 	AccountId(AccountId),
-	PhoneNumber(BoundedVec<u8, NumberLimit>),
+	PhoneNumber(BoundedVec<u8, PhoneNumberLimit>),
 	Name(BoundedVec<u8, NameLimit>),
 }
 
@@ -30,32 +30,42 @@ where
 pub struct IdentityInfo<
 	AccountId: Debug + Clone + PartialEq,
 	NameLimit: Get<u32>,
-	NumberLimit: Get<u32>,
+	PhoneNumberLimit: Get<u32>,
 > {
 	pub account_id: AccountId,
 	pub name: BoundedVec<u8, NameLimit>,
-	pub number: BoundedVec<u8, NumberLimit>,
+	pub number: BoundedVec<u8, PhoneNumberLimit>,
 }
 
 pub trait IdentityProvider<
 	AccountId: Encode + Decode + MaxEncodedLen + Eq + Debug + Clone,
 	NameLimit: Get<u32>,
-	NumberLimit: Get<u32>,
+	PhoneNumberLimit: Get<u32>,
 >
 {
 	fn exist_by_identity(
-		account_identity: &AccountIdentity<AccountId, NameLimit, NumberLimit>,
+		account_identity: &AccountIdentity<AccountId, NameLimit, PhoneNumberLimit>,
 	) -> bool;
+
+	fn get_identity_info(
+		account_identity: AccountIdentity<AccountId, NameLimit, PhoneNumberLimit>,
+	) -> Option<IdentityInfo<AccountId, NameLimit, PhoneNumberLimit>> {
+		match account_identity {
+			AccountIdentity::AccountId(account_id) => Self::identity_by_id(account_id),
+			AccountIdentity::Name(name) => Self::identity_by_name(name),
+			AccountIdentity::PhoneNumber(phone_number) => Self::identity_by_number(phone_number),
+		}
+	}
 
 	fn identity_by_id(
 		account_id: AccountId,
-	) -> Option<IdentityInfo<AccountId, NameLimit, NumberLimit>>;
+	) -> Option<IdentityInfo<AccountId, NameLimit, PhoneNumberLimit>>;
 
 	fn identity_by_name(
 		name: BoundedVec<u8, NameLimit>,
-	) -> Option<IdentityInfo<AccountId, NameLimit, NumberLimit>>;
+	) -> Option<IdentityInfo<AccountId, NameLimit, PhoneNumberLimit>>;
 
 	fn identity_by_number(
-		number: BoundedVec<u8, NumberLimit>,
-	) -> Option<IdentityInfo<AccountId, NameLimit, NumberLimit>>;
+		number: BoundedVec<u8, PhoneNumberLimit>,
+	) -> Option<IdentityInfo<AccountId, NameLimit, PhoneNumberLimit>>;
 }
