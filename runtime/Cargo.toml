@@ -61,6 +61,8 @@ frame-system-benchmarking = { version = "4.0.0-dev", default-features = false, g
 pallet-appreciation = { version = "4.0.0-dev", default-features = false, path = "../frame/appreciation" }
 pallet-identity = { version = "4.0.0-dev", default-features = false, path = "../frame/identity" }
 
+sp-common = { version = "0.2.0", default-features = false, path = "../primitives/common" }
+
 [dev-dependencies]
 sp-io = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.37" }
 

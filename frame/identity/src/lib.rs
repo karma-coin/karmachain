@@ -6,9 +6,10 @@ use frame_support::{
 	RuntimeDebugNoBound,
 };
 use scale_info::TypeInfo;
-use sp_std::{fmt::Debug, prelude::*, vec};
+use sp_std::{prelude::*, vec};
 
 pub use pallet::*;
+use sp_common::identity::{AccountIdentity, IdentityInfo, IdentityProvider};
 
 #[derive(
 	CloneNoBound, Encode, Decode, Eq, MaxEncodedLen, PartialEqNoBound, RuntimeDebugNoBound, TypeInfo,
@@ -146,35 +147,17 @@ pub mod pallet {
 	}
 }
 
-#[derive(RuntimeDebugNoBound, CloneNoBound, PartialEqNoBound, Eq)]
-pub struct IdentityInfo<
-	AccountId: Debug + Clone + PartialEq,
-	NameLimit: Get<u32>,
-	NumberLimit: Get<u32>,
-> {
-	pub account_id: AccountId,
-	pub name: BoundedVec<u8, NameLimit>,
-	pub number: BoundedVec<u8, NumberLimit>,
-}
-
-pub trait IdentityProvider<
-	AccountId: Debug + Clone + PartialEq,
-	NameLimit: Get<u32>,
-	NumberLimit: Get<u32>,
->
-{
-	fn identity_by_id(
-		account_id: AccountId,
-	) -> Option<IdentityInfo<AccountId, NameLimit, NumberLimit>>;
-	fn identity_by_name(
-		name: BoundedVec<u8, NameLimit>,
-	) -> Option<IdentityInfo<AccountId, NameLimit, NumberLimit>>;
-	fn identity_by_number(
-		number: BoundedVec<u8, NumberLimit>,
-	) -> Option<IdentityInfo<AccountId, NameLimit, NumberLimit>>;
-}
-
 impl<T: Config> IdentityProvider<T::AccountId, T::NameLimit, T::NumberLimit> for Pallet<T> {
+	fn exist_by_identity(
+		account_identity: &AccountIdentity<T::AccountId, T::NameLimit, T::NumberLimit>,
+	) -> bool {
+		match account_identity {
+			AccountIdentity::AccountId(account_id) => IdentityOf::<T>::get(account_id).is_some(),
+			AccountIdentity::PhoneNumber(number) => NumberFor::<T>::get(number).is_some(),
+			AccountIdentity::Name(name) => NameFor::<T>::get(name).is_some(),
+		}
+	}
+
 	fn identity_by_id(
 		account_id: T::AccountId,
 	) -> Option<IdentityInfo<T::AccountId, T::NameLimit, T::NumberLimit>> {
