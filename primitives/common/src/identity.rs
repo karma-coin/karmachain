@@ -47,6 +47,16 @@ pub trait IdentityProvider<
 		account_identity: &AccountIdentity<AccountId, NameLimit, PhoneNumberLimit>,
 	) -> bool;
 
+	fn get_identity_info(
+		account_identity: AccountIdentity<AccountId, NameLimit, PhoneNumberLimit>,
+	) -> Option<IdentityInfo<AccountId, NameLimit, PhoneNumberLimit>> {
+		match account_identity {
+			AccountIdentity::AccountId(account_id) => Self::identity_by_id(account_id),
+			AccountIdentity::Name(name) => Self::identity_by_name(name),
+			AccountIdentity::PhoneNumber(phone_number) => Self::identity_by_number(phone_number),
+		}
+	}
+
 	fn identity_by_id(
 		account_id: AccountId,
 	) -> Option<IdentityInfo<AccountId, NameLimit, PhoneNumberLimit>>;
