@@ -284,7 +284,7 @@ impl_runtime_apis! {
 		fn get_user_info_by_number(
 			number: Vec<u8>,
 		) -> Option<pallet_identity_rpc_runtime_api::UserInfo<AccountId>> {
-			let number: BoundedVec<u8, NumberLimit> = number.try_into().ok()?;
+			let number: BoundedVec<u8, PhoneNumberLimit> = number.try_into().ok()?;
 			Identity::identity_by_number(number).map(|identity_info| {
 				let nonce = System::account_nonce(&identity_info.account_id);
 				let balance = Balances::free_balance(&identity_info.account_id);

@@ -15,10 +15,10 @@ use sp_common::identity::{AccountIdentity, IdentityInfo, IdentityProvider};
 	CloneNoBound, Encode, Decode, Eq, MaxEncodedLen, PartialEqNoBound, RuntimeDebugNoBound, TypeInfo,
 )]
 #[codec(mel_bound())]
-#[scale_info(skip_type_params(NameLimit, NumberLimit))]
-pub struct IdentityStore<NameLimit: Get<u32>, NumberLimit: Get<u32>> {
+#[scale_info(skip_type_params(NameLimit, PhoneNumberLimit))]
+pub struct IdentityStore<NameLimit: Get<u32>, PhoneNumberLimit: Get<u32>> {
 	name: BoundedVec<u8, NameLimit>,
-	number: BoundedVec<u8, NumberLimit>,
+	number: BoundedVec<u8, PhoneNumberLimit>,
 }
 
 #[frame_support::pallet]
@@ -34,7 +34,7 @@ pub mod pallet {
 		/// Max length of name
 		type NameLimit: Get<u32>;
 		/// Max length of number
-		type NumberLimit: Get<u32>;
+		type PhoneNumberLimit: Get<u32>;
 		/// Max number of phone verifiers allowed
 		type MaxPhoneVerifiers: Get<u32>;
 		/// Handler for when a new user has just been registered
@@ -79,8 +79,12 @@ pub mod pallet {
 	}
 
 	#[pallet::storage]
-	pub type IdentityOf<T: Config> =
-		StorageMap<_, Blake2_128Concat, T::AccountId, IdentityStore<T::NameLimit, T::NumberLimit>>;
+	pub type IdentityOf<T: Config> = StorageMap<
+		_,
+		Blake2_128Concat,
+		T::AccountId,
+		IdentityStore<T::NameLimit, T::PhoneNumberLimit>,
+	>;
 
 	#[pallet::storage]
 	pub type NameFor<T: Config> =
@@ -88,7 +92,7 @@ pub mod pallet {
 
 	#[pallet::storage]
 	pub type NumberFor<T: Config> =
-		StorageMap<_, Blake2_128Concat, BoundedVec<u8, T::NumberLimit>, T::AccountId>;
+		StorageMap<_, Blake2_128Concat, BoundedVec<u8, T::PhoneNumberLimit>, T::AccountId>;
 
 	#[pallet::storage]
 	pub type PhoneVerifiers<T: Config> =
@@ -119,7 +123,7 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			account_id: T::AccountId,
 			name: BoundedVec<u8, T::NameLimit>,
-			number: BoundedVec<u8, T::NumberLimit>,
+			number: BoundedVec<u8, T::PhoneNumberLimit>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			ensure!(PhoneVerifiers::<T>::get().contains(&who), Error::<T>::NotAllowed);
@@ -147,9 +151,9 @@ pub mod pallet {
 	}
 }
 
-impl<T: Config> IdentityProvider<T::AccountId, T::NameLimit, T::NumberLimit> for Pallet<T> {
+impl<T: Config> IdentityProvider<T::AccountId, T::NameLimit, T::PhoneNumberLimit> for Pallet<T> {
 	fn exist_by_identity(
-		account_identity: &AccountIdentity<T::AccountId, T::NameLimit, T::NumberLimit>,
+		account_identity: &AccountIdentity<T::AccountId, T::NameLimit, T::PhoneNumberLimit>,
 	) -> bool {
 		match account_identity {
 			AccountIdentity::AccountId(account_id) => IdentityOf::<T>::get(account_id).is_some(),
@@ -160,7 +164,7 @@ impl<T: Config> IdentityProvider<T::AccountId, T::NameLimit, T::NumberLimit> for
 
 	fn identity_by_id(
 		account_id: T::AccountId,
-	) -> Option<IdentityInfo<T::AccountId, T::NameLimit, T::NumberLimit>> {
+	) -> Option<IdentityInfo<T::AccountId, T::NameLimit, T::PhoneNumberLimit>> {
 		<IdentityOf<T>>::get(&account_id).map(|v| IdentityInfo {
 			account_id,
 			name: v.name,
@@ -170,13 +174,13 @@ impl<T: Config> IdentityProvider<T::AccountId, T::NameLimit, T::NumberLimit> for
 
 	fn identity_by_name(
 		name: BoundedVec<u8, T::NameLimit>,
-	) -> Option<IdentityInfo<T::AccountId, T::NameLimit, T::NumberLimit>> {
+	) -> Option<IdentityInfo<T::AccountId, T::NameLimit, T::PhoneNumberLimit>> {
 		<NameFor<T>>::get(name).and_then(Self::identity_by_id)
 	}
 
 	fn identity_by_number(
-		number: BoundedVec<u8, T::NumberLimit>,
-	) -> Option<IdentityInfo<T::AccountId, T::NameLimit, T::NumberLimit>> {
+		number: BoundedVec<u8, T::PhoneNumberLimit>,
+	) -> Option<IdentityInfo<T::AccountId, T::NameLimit, T::PhoneNumberLimit>> {
 		<NumberFor<T>>::get(number).and_then(Self::identity_by_id)
 	}
 }

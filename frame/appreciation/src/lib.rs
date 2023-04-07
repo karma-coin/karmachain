@@ -40,7 +40,11 @@ pub mod pallet {
 		/// The currency mechanism.
 		type Currency: Currency<Self::AccountId, Balance = Self::Balance>;
 
-		type IdentityProvider: IdentityProvider<Self::AccountId, Self::NameLimit, Self::NumberLimit>;
+		type IdentityProvider: IdentityProvider<
+			Self::AccountId,
+			Self::NameLimit,
+			Self::PhoneNumberLimit,
+		>;
 	}
 
 	#[pallet::pallet]
@@ -229,7 +233,7 @@ pub mod pallet {
 		Blake2_128Concat,
 		T::AccountId,
 		Blake2_128Concat,
-		AccountIdentity<T::AccountId, T::NameLimit, T::NumberLimit>,
+		AccountIdentity<T::AccountId, T::NameLimit, T::PhoneNumberLimit>,
 		(),
 	>;
 
@@ -261,7 +265,7 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
 		pub fn appreciation(
 			origin: OriginFor<T>,
-			to: AccountIdentity<T::AccountId, T::NameLimit, T::NumberLimit>,
+			to: AccountIdentity<T::AccountId, T::NameLimit, T::PhoneNumberLimit>,
 			amount: T::Balance,
 			community_id: Option<CommunityId>,
 			char_trait_id: Option<CharTraitId>,
@@ -285,7 +289,7 @@ pub mod pallet {
 
 impl<T: pallet::Config> Pallet<T> {
 	fn get_account_id(
-		to: AccountIdentity<T::AccountId, T::NameLimit, T::NumberLimit>,
+		to: AccountIdentity<T::AccountId, T::NameLimit, T::PhoneNumberLimit>,
 	) -> Option<T::AccountId> {
 		match to {
 			AccountIdentity::AccountId(account_id) => Some(account_id),
