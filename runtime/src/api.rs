@@ -319,6 +319,16 @@ impl_runtime_apis! {
 		}
 	}
 
+	impl pallet_transaction_indexer_rpc_runtime_api::TransactionsApi<Block, AccountId> for Runtime {
+		fn get_transactions(account_id: AccountId) -> Vec<(BlockNumber, u32)> {
+			TransactionIndexer::accounts_tx(account_id).unwrap_or_default()
+		}
+
+		fn get_transaction(tx_hash: <Block as BlockT>::Hash) -> Option<(BlockNumber, u32)> {
+			TransactionIndexer::tx_block_and_index(tx_hash)
+		}
+	}
+
 	#[cfg(feature = "runtime-benchmarks")]
 	impl frame_benchmarking::Benchmark<Block> for Runtime {
 		fn benchmark_metadata(extra: bool) -> (

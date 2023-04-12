@@ -52,6 +52,8 @@ sp-consensus-babe = { version = "0.10.0-dev", default-features = false, git = "h
 frame-system-rpc-runtime-api = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.37" }
 pallet-transaction-payment-rpc-runtime-api = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.37" }
 pallet-identity-rpc-runtime-api = { version = "4.0.0-dev", default-features = false, path = "../frame/identity/rpc/runtime-api" }
+pallet-transaction-indexer-rpc-runtime-api = { version = "0.2.0", default-features = false, path = "../frame/transaction-indexer/rpc/runtime-api" }
+
 
 # Used for runtime benchmarking
 frame-benchmarking = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", optional = true , branch = "polkadot-v0.9.37" }
@@ -60,6 +62,7 @@ frame-system-benchmarking = { version = "4.0.0-dev", default-features = false, g
 # Local Dependencies
 pallet-appreciation = { version = "4.0.0-dev", default-features = false, path = "../frame/appreciation" }
 pallet-identity = { version = "4.0.0-dev", default-features = false, path = "../frame/identity" }
+pallet-transaction-indexer = { version = "0.2.0", default-features = false, path = "../frame/transaction-indexer" }
 
 sp-common = { version = "0.2.0", default-features = false, path = "../primitives/common" }
 
@@ -108,7 +111,8 @@ std = [
 	"sp-consensus-babe/std",
 
 	"pallet-appreciation/std",
-	"pallet-identity/std"
+	"pallet-identity/std",
+	"pallet-transaction-indexer/std",
 ]
 runtime-benchmarks = [
 	"frame-benchmarking/runtime-benchmarks",

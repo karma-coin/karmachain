@@ -12,4 +12,5 @@ pub mod staking;
 pub mod sudo;
 pub mod system;
 pub mod timestamp;
+pub mod transaction_indexer;
 pub mod transaction_payment;
