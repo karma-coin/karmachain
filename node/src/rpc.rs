@@ -9,6 +9,7 @@ use std::sync::Arc;
 
 use jsonrpsee::RpcModule;
 use karmachain_node_runtime::{opaque::Block, AccountId, Balance, Index};
+use sc_client_api::BlockBackend;
 use sc_transaction_pool_api::TransactionPool;
 use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder;
@@ -34,13 +35,16 @@ where
 	C: ProvideRuntimeApi<Block>,
 	C: HeaderBackend<Block> + HeaderMetadata<Block, Error = BlockChainError> + 'static,
 	C: Send + Sync + 'static,
+	C: BlockBackend<Block>,
 	C::Api: substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Index>,
 	C::Api: pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>,
 	C::Api: BlockBuilder<Block>,
 	C::Api: pallet_identity_rpc::IdentityRuntimeApi<Block, AccountId>,
+	C::Api: pallet_transaction_indexer_rpc::TransactionsRuntimeApi<Block, AccountId>,
 	P: TransactionPool + 'static,
 {
 	use pallet_identity_rpc::{Identity, IdentityApiServer};
+	use pallet_transaction_indexer_rpc::{TransactionIndexer, TransactionsApiServer};
 	use pallet_transaction_payment_rpc::{TransactionPayment, TransactionPaymentApiServer};
 	use substrate_frame_rpc_system::{System, SystemApiServer};
 
@@ -49,7 +53,8 @@ where
 
 	module.merge(System::new(client.clone(), pool, deny_unsafe).into_rpc())?;
 	module.merge(TransactionPayment::new(client.clone()).into_rpc())?;
-	module.merge(Identity::new(client).into_rpc())?;
+	module.merge(Identity::new(client.clone()).into_rpc())?;
+	module.merge(TransactionIndexer::new(client).into_rpc())?;
 
 	Ok(module)
 }
