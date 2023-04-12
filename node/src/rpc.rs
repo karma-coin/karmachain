@@ -8,7 +8,7 @@
 use std::sync::Arc;
 
 use jsonrpsee::RpcModule;
-use karmachain_node_runtime::{opaque::Block, AccountId, Balance, Index};
+use karmachain_node_runtime::{opaque::Block, AccountId, Balance, Index, Signature};
 use sc_client_api::BlockBackend;
 use sc_transaction_pool_api::TransactionPool;
 use sp_api::ProvideRuntimeApi;
@@ -54,7 +54,7 @@ where
 	module.merge(System::new(client.clone(), pool, deny_unsafe).into_rpc())?;
 	module.merge(TransactionPayment::new(client.clone()).into_rpc())?;
 	module.merge(Identity::new(client.clone()).into_rpc())?;
-	module.merge(TransactionIndexer::new(client).into_rpc())?;
+	module.merge(TransactionIndexer::<_, (_, Signature)>::new(client).into_rpc())?;
 
 	Ok(module)
 }

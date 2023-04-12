@@ -16,7 +16,7 @@ pub use pallet::*;
 pub mod pallet {
 	use super::*;
 	use frame_system::pallet_prelude::*;
-	use sp_common::*;
+	use sp_common::{traits::TransactionIndexer, *};
 
 	#[pallet::config]
 	pub trait Config:
@@ -291,6 +291,9 @@ pub mod pallet {
 
 			T::Currency::transfer(&payer, &payee, amount, ExistenceRequirement::KeepAlive)?;
 
+			T::TransactionIndexer::index_transaction(payer)?;
+			T::TransactionIndexer::index_transaction(payee)?;
+
 			// TODO: events
 
 			Ok(())
@@ -306,7 +309,7 @@ pub mod pallet {
 			let who = ensure_signed(origin)?;
 			ensure!(
 				matches!(
-					CommunityMembership::<T>::get(who, community_id),
+					CommunityMembership::<T>::get(&who, community_id),
 					Some(CommunityRole::Admin)
 				),
 				Error::<T>::NotEnoughPermission
@@ -323,6 +326,9 @@ pub mod pallet {
 				community_id,
 				CommunityRole::Admin,
 			);
+
+			T::TransactionIndexer::index_transaction(who)?;
+			T::TransactionIndexer::index_transaction(new_admin_identity.account_id.clone())?;
 
 			Self::deposit_event(Event::<T>::NewCommunityAdmin {
 				community_id: community.id,

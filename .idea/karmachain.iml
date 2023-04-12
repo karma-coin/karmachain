@@ -15,6 +15,11 @@
       <sourceFolder url="file://$MODULE_DIR$/primitives/common/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/primitives/rpc/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/runtime/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/client/rpc-api/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/client/rpc/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/frame/transaction-indexer/rpc/runtime-api/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/frame/transaction-indexer/rpc/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/frame/transaction-indexer/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />

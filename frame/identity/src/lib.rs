@@ -26,6 +26,7 @@ pub mod pallet {
 	use super::*;
 	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
+	use sp_common::traits::TransactionIndexer;
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
@@ -39,6 +40,8 @@ pub mod pallet {
 		type MaxPhoneVerifiers: Get<u32>;
 		/// Handler for when a new user has just been registered
 		type OnNewUser: OnNewUser<Self::AccountId>;
+		/// Index transaction
+		type TransactionIndexer: TransactionIndexer<Self::AccountId>;
 	}
 
 	#[pallet::pallet]
@@ -145,6 +148,9 @@ pub mod pallet {
 			IdentityOf::<T>::insert(&account_id, IdentityStore { name, phone_number });
 
 			T::OnNewUser::on_new_user(&account_id)?;
+
+			// Save transaction
+			T::TransactionIndexer::index_transaction(account_id)?;
 
 			Ok(())
 		}

@@ -3072,6 +3072,7 @@ dependencies = [
  "pallet-appreciation",
  "pallet-identity-rpc",
  "pallet-staking",
+ "pallet-transaction-indexer-rpc",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc",
  "sc-basic-authorship",
@@ -3133,6 +3134,8 @@ dependencies = [
  "pallet-staking",
  "pallet-sudo",
  "pallet-timestamp",
+ "pallet-transaction-indexer",
+ "pallet-transaction-indexer-rpc-runtime-api",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
  "parity-scale-codec",
@@ -4713,6 +4716,49 @@ dependencies = [
  "sp-runtime",
  "sp-std",
  "sp-timestamp",
+]
+
+[[package]]
+name = "pallet-transaction-indexer"
+version = "0.2.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-common",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-transaction-indexer-rpc"
+version = "0.2.0"
+dependencies = [
+ "jsonrpsee",
+ "pallet-transaction-indexer-rpc-runtime-api",
+ "parity-scale-codec",
+ "sc-client-api",
+ "sp-api",
+ "sp-blockchain",
+ "sp-core",
+ "sp-rpc 0.1.0",
+ "sp-runtime",
+ "sp-weights",
+]
+
+[[package]]
+name = "pallet-transaction-indexer-rpc-runtime-api"
+version = "0.2.0"
+dependencies = [
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-api",
+ "sp-rpc 0.1.0",
+ "sp-runtime",
+ "sp-weights",
 ]
 
 [[package]]
