@@ -1,0 +1,219 @@
+{
+	"info": {
+		"_postman_id": "868332e3-af74-4afb-aefb-cfc7ab0cb1af",
+		"name": "Karmachain rpc",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "26819383"
+	},
+	"item": [
+		{
+			"name": "Identity",
+			"item": [
+				{
+					"name": "Get user info by name",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"identity_getUserInfoByName\",\n    \"params\": {\n        \"name\": [\n            0,\n            0,\n        ]\n    }\n}"
+						},
+						"url": {
+							"raw": "http://localhost:9933/?",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9933",
+							"path": [
+								""
+							],
+							"query": [
+								{
+									"key": "",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get user info by account",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"identity_getUserInfoByAccount\",\n    \"params\": {\n        \"account_id\": \"5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY\"\n    }\n}"
+						},
+						"url": {
+							"raw": "http://localhost:9933/?",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9933",
+							"path": [
+								""
+							],
+							"query": [
+								{
+									"key": "",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get user info by number",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"identity_getUserInfoByNumber\",\n    \"params\": {\n        \"number\": [\n            78,\n            105,\n            99,\n            107,\n            110,\n            97,\n            109,\n            101\n        ]\n    }\n}"
+						},
+						"url": {
+							"raw": "http://localhost:9933/?",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9933",
+							"path": [
+								""
+							],
+							"query": [
+								{
+									"key": "",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "RPC methods",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"rpc_methods\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:9933/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9933",
+					"path": [
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get transaction",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"transaction_get_transaction\",\n    \"params\": {\n        \"tx_hash\": \"0xbcb2178a5c24131f6cd3c575436e2b3e4cef28cdf3fc2cb8267f100f9db3033e\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:9933/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9933",
+					"path": [
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get transactions",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"transaction_get_transaction\",\n    \"params\": {\n        \"tx_hash\": \"0xbcb2178a5c24131f6cd3c575436e2b3e4cef28cdf3fc2cb8267f100f9db3033e\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:9933/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9933",
+					"path": [
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
