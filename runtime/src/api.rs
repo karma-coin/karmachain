@@ -1,4 +1,5 @@
 use crate::*;
+use frame_system::Phase;
 
 // To learn more about runtime versioning, see:
 // https://docs.substrate.io/main-docs/build/upgrade#runtime-versioning
@@ -319,13 +320,19 @@ impl_runtime_apis! {
 		}
 	}
 
-	impl pallet_transaction_indexer_rpc_runtime_api::TransactionsApi<Block, AccountId> for Runtime {
+	impl pallet_transaction_indexer_rpc_runtime_api::TransactionsApi<Block, AccountId, RuntimeEvent> for Runtime {
 		fn get_transactions(account_id: AccountId) -> Vec<(BlockNumber, u32)> {
 			TransactionIndexer::accounts_tx(account_id).unwrap_or_default()
 		}
 
 		fn get_transaction(tx_hash: <Block as BlockT>::Hash) -> Option<(BlockNumber, u32)> {
 			TransactionIndexer::tx_block_and_index(tx_hash)
+		}
+
+		fn get_transaction_events(tx_index: u32) -> Vec<RuntimeEvent> {
+			System::read_events_no_consensus()
+				.filter(|v| matches!(v.phase, Phase::ApplyExtrinsic(index) if index == tx_index))
+				.map(|v| v.event).collect()
 		}
 	}
 

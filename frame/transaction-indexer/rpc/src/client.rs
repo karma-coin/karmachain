@@ -19,7 +19,7 @@ use std::sync::Arc;
 use pallet_transaction_indexer_rpc_runtime_api::TransactionsApi as TransactionsRuntimeApi;
 use sp_rpc::{
 	GetTransactionResponse, GetTransactionsResponse, SignedTransaction,
-	SignedTransactionWithStatus, TransactionEvent, TransactionStatus,
+	SignedTransactionWithStatus, TransactionStatus,
 };
 
 pub struct TransactionIndexer<C, P> {
@@ -34,11 +34,12 @@ impl<C, P> TransactionIndexer<C, P> {
 	}
 }
 
-impl<C, Block, Signature> TransactionIndexer<C, (Block, Signature)>
+impl<C, Block, AccountId, Signature, TransactionEvent>
+	TransactionIndexer<C, (AccountId, Block, Signature, TransactionEvent)>
 where
-	Signature: Codec + Send
-		+ Sync
-		+ 'static,
+	Signature: Codec + Send + Sync + 'static,
+	TransactionEvent: Codec + Send + Sync + 'static,
+	AccountId: Codec + Clone + Send + Sync + 'static,
 	Block: BlockT,
 	C: BlockBackend<Block>
 		+ ProvideRuntimeApi<Block>
@@ -46,8 +47,9 @@ where
 		+ Send
 		+ Sync
 		+ 'static,
+	C::Api: TransactionsRuntimeApi<Block, AccountId, TransactionEvent>,
 {
-	fn get_tx_by_indexes<AccountId>(
+	fn get_tx_by_indexes(
 		&self,
 		block_number: <Block::Header as Header>::Number,
 		tx_index: u32,
@@ -95,21 +97,22 @@ where
 			from: None,
 			to: None,
 		};
-		// TODO: get events from Runtime (use runtime_api to access frame_system::EventsStorage and
-		// parameter at)
-		let events = Default::default();
+
+		let events = self.client.runtime_api()
+			.get_transaction_events(&BlockId::number(block_number), tx_index)
+			.map_err(|e| map_err(e, "Failed to get transaction events"))?;
 
 		Ok((tx, events))
 	}
 }
 
-impl<C, Block, AccountId, Signature> TransactionsApiServer<AccountId, Block::Hash, Signature>
-	for TransactionIndexer<C, (Block, Signature)>
+impl<C, Block, AccountId, Signature, TransactionEvent>
+	TransactionsApiServer<AccountId, Block::Hash, Signature, TransactionEvent>
+	for TransactionIndexer<C, (AccountId, Block, Signature, TransactionEvent)>
 where
-	Signature: Codec + Send
-		+ Sync
-		+ 'static,
-	AccountId: Codec + Clone,
+	Signature: Codec + Send + Sync + 'static,
+	TransactionEvent: Codec + Send + Sync + 'static,
+	AccountId: Codec + Clone + Send + Sync + 'static,
 	Block: BlockT,
 	C: BlockBackend<Block>
 		+ ProvideRuntimeApi<Block>
@@ -117,13 +120,13 @@ where
 		+ Send
 		+ Sync
 		+ 'static,
-	C::Api: TransactionsRuntimeApi<Block, AccountId>,
+	C::Api: TransactionsRuntimeApi<Block, AccountId, TransactionEvent>,
 {
 	fn get_transactions(
 		&self,
 		account_id: AccountId,
 		at: Option<Block::Hash>,
-	) -> RpcResult<GetTransactionsResponse<AccountId, Signature>> {
+	) -> RpcResult<GetTransactionsResponse<AccountId, Signature, TransactionEvent>> {
 		let api = self.client.runtime_api();
 		let at = BlockId::hash(at.unwrap_or_else(|| self.client.info().best_hash));
 
@@ -146,7 +149,7 @@ where
 		&self,
 		tx_hash: Block::Hash,
 		at: Option<Block::Hash>,
-	) -> RpcResult<GetTransactionResponse<AccountId, Signature>> {
+	) -> RpcResult<GetTransactionResponse<AccountId, Signature, TransactionEvent>> {
 		let api = self.client.runtime_api();
 		let at = BlockId::hash(at.unwrap_or_else(|| self.client.info().best_hash));
 

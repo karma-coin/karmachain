@@ -60,9 +60,3 @@ pub enum TransactionStatus {
 	Rejected,
 	OnChain,
 }
-
-#[derive(Encode, Decode, Default)]
-#[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
-pub struct TransactionEvent {
-	// TODO:
-}

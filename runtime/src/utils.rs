@@ -34,3 +34,15 @@ impl pallet_staking::EraPayout<Balance> for EraPayout<Staking> {
 		(payout, rest)
 	}
 }
+
+// Impls Serialize for event type
+#[cfg(feature = "std")]
+impl serde::Serialize for RuntimeEvent {
+	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+	where
+		S: serde::Serializer,
+	{
+		// Serialize the `RuntimeEvent` type as a string
+		serializer.serialize_str(&format!("{:?}", self))
+	}
+}
