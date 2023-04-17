@@ -50,12 +50,15 @@ where
 		Signature,
 	>,
 	C::Api: runtime_api::transactions::TransactionIndexer<Block, AccountId>,
-	C::Api: runtime_api::transactions::EventsProvider<Block, RuntimeEvent>,
+	C::Api: runtime_api::events::EventProvider<Block, RuntimeEvent>,
 	P: TransactionPool + 'static,
 {
 	use pallet_identity_rpc::{Identity, IdentityApiServer};
 	use pallet_transaction_payment_rpc::{TransactionPayment, TransactionPaymentApiServer};
-	use rpc_api::transactions::{client::TransactionsIndexer, TransactionsIndexerApiServer};
+	use rpc_api::{
+		events::{client::EventsProvider, EventsProviderApiServer},
+		transactions::{client::TransactionsIndexer, TransactionsIndexerApiServer}
+	};
 	use substrate_frame_rpc_system::{System, SystemApiServer};
 
 	let mut module = RpcModule::new(());
@@ -65,6 +68,7 @@ where
 	module.merge(TransactionPayment::new(client.clone()).into_rpc())?;
 	module.merge(Identity::new(client.clone()).into_rpc())?;
 	module.merge(TransactionsIndexer::new(client.clone()).into_rpc())?;
+	module.merge(EventsProvider::new(client.clone()).into_rpc())?;
 
 	Ok(module)
 }

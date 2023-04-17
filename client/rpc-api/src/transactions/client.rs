@@ -7,7 +7,10 @@ use jsonrpsee::{
 	core::RpcResult,
 	types::{error::CallError, ErrorObject},
 };
-use runtime_api::transactions::{EventsProvider, TransactionIndexer, TransactionInfoProvider};
+use runtime_api::{
+	events::EventProvider,
+	transactions::{TransactionIndexer, TransactionInfoProvider},
+};
 use sc_client_api::BlockBackend;
 use sp_api::ProvideRuntimeApi;
 use sp_blockchain::HeaderBackend;
@@ -45,7 +48,7 @@ where
 		+ 'static,
 	C::Api: TransactionInfoProvider<Block, Block::Extrinsic, AccountId, Signature>,
 	C::Api: TransactionIndexer<Block, AccountId>,
-	C::Api: EventsProvider<Block, Event>,
+	C::Api: EventProvider<Block, Event>,
 {
 	fn get_tx(
 		&self,

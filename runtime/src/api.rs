@@ -376,7 +376,7 @@ impl_runtime_apis! {
 		}
 	}
 
-	impl runtime_api::transactions::EventsProvider<Block, RuntimeEvent> for Runtime {
+	impl runtime_api::events::EventProvider<Block, RuntimeEvent> for Runtime {
 		fn get_block_events() -> Vec<RuntimeEvent> {
 			// Just ask pallet System for events
 			System::read_events_no_consensus().map(|v| v.event).collect()
