@@ -15,15 +15,9 @@ pub type AccountIdentityTag = AccountIdentity<
 	<Runtime as pallet_identity::Config>::PhoneNumberLimit,
 >;
 
-#[derive(Encode, Decode, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(Encode, Decode, Default, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(skip_type_params(T))]
 pub struct CheckAccount(PhantomData<Runtime>);
-
-impl CheckAccount {
-	pub fn new() -> Self {
-		Self(Default::default())
-	}
-}
 
 impl sp_std::fmt::Debug for CheckAccount {
 	#[cfg(feature = "std")]

@@ -54,7 +54,7 @@ pub struct SignedTransactionWithStatus<AccountId, Signature> {
 #[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
 pub enum TransactionStatus {
 	#[default]
-	Unknown = 0,
+	Unknown = 0_isize,
 	NotSubmitted,
 	Submitted,
 	Rejected,

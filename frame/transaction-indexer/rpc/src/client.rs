@@ -18,8 +18,8 @@ use std::sync::Arc;
 
 use pallet_transaction_indexer_rpc_runtime_api::TransactionsApi as TransactionsRuntimeApi;
 use sp_rpc::{
-	GetTransactionResponse, GetTransactionsResponse, SignedTransaction,
-	SignedTransactionWithStatus, TransactionStatus,
+	GetBlockchainEventsResponse, GetTransactionResponse, GetTransactionsResponse,
+	SignedTransaction, SignedTransactionWithStatus, TransactionStatus,
 };
 
 /// Something that implement `TransactionsApiServer`
@@ -122,7 +122,7 @@ where
 /// The `C::Api` should provide `TransactionsRuntimeApi` in order to get account transactions for
 /// `get_transactions` method and transaction block number to get transaction details from block
 impl<C, Block, AccountId, Signature, TransactionEvent>
-	TransactionsApiServer<AccountId, Block::Hash, Signature, TransactionEvent>
+	TransactionsApiServer<AccountId, Block, Signature, TransactionEvent>
 	for TransactionIndexer<C, (AccountId, Block, Signature, TransactionEvent)>
 where
 	Signature: Codec + Send + Sync + 'static,
@@ -181,5 +181,21 @@ where
 		let (transaction, tx_events) = self.get_tx_by_indexes(block_number, tx_index)?;
 
 		Ok(GetTransactionResponse { transaction, tx_events })
+	}
+
+	fn get_blockchain_events(
+		&self,
+		from_block_height: u32,
+		to_block_height: u32,
+	) -> RpcResult<GetBlockchainEventsResponse<TransactionEvent>> {
+		let api = self.client.runtime_api();
+
+		let tx_events = (from_block_height..=to_block_height)
+			.map(|block_number| BlockId::number(block_number.into()))
+			.map(|block_id| api.get_block_events(&block_id))
+			.collect::<Result<Vec<_>, _>>()
+			.map_err(|e| map_err(e, "Failed to get block events"))?;
+
+		Ok(GetBlockchainEventsResponse { tx_events: tx_events.into_iter().flatten().collect() })
 	}
 }

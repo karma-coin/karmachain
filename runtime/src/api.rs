@@ -329,6 +329,11 @@ impl_runtime_apis! {
 			TransactionIndexer::tx_block_and_index(tx_hash)
 		}
 
+		fn get_block_events() -> Vec<RuntimeEvent> {
+			// Just ask pallet System for events
+			System::read_events_no_consensus().map(|v| v.event).collect()
+		}
+
 		fn get_transaction_events(tx_index: u32) -> Vec<RuntimeEvent> {
 			// Just ask pallet System for events and then filter by extrinsic index
 			// in order to get only that transaction events

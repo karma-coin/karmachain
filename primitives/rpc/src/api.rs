@@ -24,3 +24,9 @@ pub struct GetTransactionResponse<AccountId, Signature, TransactionEvent> {
 	pub transaction: SignedTransactionWithStatus<AccountId, Signature>,
 	pub tx_events: Vec<TransactionEvent>,
 }
+
+#[derive(Encode, Decode)]
+#[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
+pub struct GetBlockchainEventsResponse<TransactionEvent> {
+	pub tx_events: Vec<TransactionEvent>,
+}
