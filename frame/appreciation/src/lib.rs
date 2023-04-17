@@ -227,15 +227,10 @@ pub mod pallet {
 		OptionQuery,
 	>;
 
+	/// Store accounts that can be possibly referred by someone in this block,
+	/// clear in the and of the block (`on_finalize`)
 	#[pallet::storage]
-	pub type Referrals<T: Config> = StorageDoubleMap<
-		_,
-		Blake2_128Concat,
-		T::AccountId,
-		Blake2_128Concat,
-		AccountIdentity<T::AccountId, T::NameLimit, T::PhoneNumberLimit>,
-		(),
-	>;
+	pub type Referrals<T: Config> = StorageMap<_, Blake2_128Concat, T::AccountId, ()>;
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
@@ -270,6 +265,14 @@ pub mod pallet {
 		NotEnoughPermission,
 	}
 
+	#[pallet::hooks]
+	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
+		/// Clear Referrals storage
+		fn on_finalize(_n: T::BlockNumber) {
+			let _result = Referrals::<T>::clear(u32::MAX, None);
+		}
+	}
+
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		#[pallet::call_index(0)]
@@ -282,8 +285,8 @@ pub mod pallet {
 			char_trait_id: Option<CharTraitId>,
 		) -> DispatchResult {
 			let payer = ensure_signed(origin)?;
-			let referral = Referrals::<T>::take(&payer, &to).is_some();
 			let payee = Self::get_account_id(to).ok_or(Error::<T>::NotFound)?;
+			let referral = Referrals::<T>::take(&payee).is_some();
 			let community_id = community_id.unwrap_or(NoCommunityId::<T>::get()?);
 			let char_trait_id = char_trait_id.unwrap_or(NoCharTraitId::<T>::get()?);
 
@@ -373,7 +376,6 @@ impl<T: pallet::Config> Pallet<T> {
 
 		// TODO: whether to check `char_trait_id` for existence?
 
-		// TODO: if this transfer lead to user signup set `true`
 		if referral {
 			// Give payer karma points for helping to grow the network
 			Self::increment_trait_score(
@@ -470,9 +472,12 @@ impl<T: pallet::Config> Pallet<T> {
 
 impl<T: Config> OnNewUser<T::AccountId> for Pallet<T> {
 	fn on_new_user(who: &T::AccountId) -> DispatchResult {
+		// Set this account as possibly referred
+		Referrals::<T>::insert(&who, ());
+
+		// Signup reward
 		let no_community_id = NoCommunityId::<T>::get()?;
 		let signup_char_trait_id = SignupCharTraitId::<T>::get()?;
-
 		Self::increment_trait_score(who, no_community_id, signup_char_trait_id);
 
 		Ok(())
