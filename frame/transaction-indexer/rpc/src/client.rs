@@ -22,6 +22,7 @@ use sp_rpc::{
 	SignedTransactionWithStatus, TransactionStatus,
 };
 
+/// Something that implement `TransactionsApiServer`
 pub struct TransactionIndexer<C, P> {
 	/// Shared reference to the client.
 	client: Arc<C>,
@@ -54,6 +55,7 @@ where
 		block_number: <Block::Header as Header>::Number,
 		tx_index: u32,
 	) -> RpcResult<(SignedTransactionWithStatus<AccountId, Signature>, Vec<TransactionEvent>)> {
+		// Convert block number to block hash
 		let block_hash = self
 			.client
 			.block_hash(block_number)
@@ -65,6 +67,8 @@ where
 					Option::<()>::None,
 				))
 			})?;
+
+		// Get block transactions by block hash
 		let txs = self
 			.client
 			.block_body(block_hash)
@@ -98,14 +102,25 @@ where
 			to: None,
 		};
 
-		let events = self.client.runtime_api()
+		// Get block events, important in order to get block events we need to request storage
+		// at block number in which this block was produced
+		let events = self
+			.client
+			.runtime_api()
 			.get_transaction_events(&BlockId::number(block_number), tx_index)
 			.map_err(|e| map_err(e, "Failed to get transaction events"))?;
 
 		Ok((tx, events))
 	}
 }
-
+/// Implementing transaction RPC. Current implementation requires pallet transaction indexer in the
+/// Runtime in order to index transaction by account. Also current implementation uses that
+/// transaction can be identified by block number and transaction index in that block
+///
+/// The `C` type parameter represents client. C is expected to be a type that implements the
+/// BlockBackend in order to get Block details to extract transaction details
+/// The `C::Api` should provide `TransactionsRuntimeApi` in order to get account transactions for
+/// `get_transactions` method and transaction block number to get transaction details from block
 impl<C, Block, AccountId, Signature, TransactionEvent>
 	TransactionsApiServer<AccountId, Block::Hash, Signature, TransactionEvent>
 	for TransactionIndexer<C, (AccountId, Block, Signature, TransactionEvent)>
@@ -153,6 +168,7 @@ where
 		let api = self.client.runtime_api();
 		let at = BlockId::hash(at.unwrap_or_else(|| self.client.info().best_hash));
 
+		// Get block number and transaction index by transaction hash
 		let (block_number, tx_index) = api
 			.get_transaction(&at, tx_hash)
 			.map_err(|e| map_err(e, "Failed to get transaction indexes"))?

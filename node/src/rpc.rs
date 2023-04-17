@@ -54,7 +54,9 @@ where
 	module.merge(System::new(client.clone(), pool, deny_unsafe).into_rpc())?;
 	module.merge(TransactionPayment::new(client.clone()).into_rpc())?;
 	module.merge(Identity::new(client.clone()).into_rpc())?;
-	module.merge(TransactionIndexer::<_, (AccountId, _, Signature, RuntimeEvent)>::new(client).into_rpc())?;
+	module.merge(
+		TransactionIndexer::<_, (AccountId, _, Signature, RuntimeEvent)>::new(client).into_rpc(),
+	)?;
 
 	Ok(module)
 }

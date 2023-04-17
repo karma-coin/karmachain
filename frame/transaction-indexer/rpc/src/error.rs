@@ -20,6 +20,7 @@ impl From<Error> for i32 {
 	}
 }
 
+// Convert custom error type to generic RPC error
 pub fn map_err(error: impl ToString, desc: &'static str) -> CallError {
 	CallError::Custom(ErrorObject::owned(Error::RuntimeError.into(), desc, Some(error.to_string())))
 }
