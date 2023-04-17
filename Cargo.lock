@@ -3072,9 +3072,10 @@ dependencies = [
  "pallet-appreciation",
  "pallet-identity-rpc",
  "pallet-staking",
- "pallet-transaction-indexer-rpc",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc",
+ "rpc-api",
+ "runtime-api",
  "sc-basic-authorship",
  "sc-cli",
  "sc-client-api",
@@ -3135,10 +3136,10 @@ dependencies = [
  "pallet-sudo",
  "pallet-timestamp",
  "pallet-transaction-indexer",
- "pallet-transaction-indexer-rpc-runtime-api",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
  "parity-scale-codec",
+ "runtime-api",
  "scale-info",
  "serde",
  "sp-api",
@@ -3150,6 +3151,7 @@ dependencies = [
  "sp-io",
  "sp-npos-elections",
  "sp-offchain",
+ "sp-rpc 0.2.0",
  "sp-runtime",
  "sp-session",
  "sp-staking",
@@ -4638,7 +4640,7 @@ dependencies = [
  "scale-info",
  "serde",
  "sp-api",
- "sp-rpc 0.1.0",
+ "sp-rpc 0.2.0",
  "sp-runtime",
  "sp-weights",
 ]
@@ -4731,35 +4733,6 @@ dependencies = [
  "sp-io",
  "sp-runtime",
  "sp-std",
-]
-
-[[package]]
-name = "pallet-transaction-indexer-rpc"
-version = "0.2.0"
-dependencies = [
- "jsonrpsee",
- "pallet-transaction-indexer-rpc-runtime-api",
- "parity-scale-codec",
- "sc-client-api",
- "sp-api",
- "sp-blockchain",
- "sp-core",
- "sp-rpc 0.1.0",
- "sp-runtime",
- "sp-weights",
-]
-
-[[package]]
-name = "pallet-transaction-indexer-rpc-runtime-api"
-version = "0.2.0"
-dependencies = [
- "parity-scale-codec",
- "scale-info",
- "serde",
- "sp-api",
- "sp-rpc 0.1.0",
- "sp-runtime",
- "sp-weights",
 ]
 
 [[package]]
@@ -5697,6 +5670,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "rpc-api"
+version = "0.2.0"
+dependencies = [
+ "jsonrpsee",
+ "parity-scale-codec",
+ "runtime-api",
+ "sc-client-api",
+ "sp-api",
+ "sp-blockchain",
+ "sp-rpc 0.2.0",
+ "sp-runtime",
+]
+
+[[package]]
 name = "rtcp"
 version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5744,6 +5731,19 @@ dependencies = [
  "serde",
  "thiserror",
  "webrtc-util",
+]
+
+[[package]]
+name = "runtime-api"
+version = "0.2.0"
+dependencies = [
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-api",
+ "sp-rpc 0.2.0",
+ "sp-runtime",
+ "sp-weights",
 ]
 
 [[package]]
@@ -7644,7 +7644,7 @@ dependencies = [
 
 [[package]]
 name = "sp-rpc"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "parity-scale-codec",
  "scale-info",

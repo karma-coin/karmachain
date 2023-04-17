@@ -1,5 +1,8 @@
 use crate::*;
+use codec::{Decode, Encode};
 use frame_system::Phase;
+use sp_rpc::{SignedTransaction, SignedTransactionWithStatus, TransactionStatus};
+use sp_runtime::traits::StaticLookup;
 
 // To learn more about runtime versioning, see:
 // https://docs.substrate.io/main-docs/build/upgrade#runtime-versioning
@@ -320,15 +323,60 @@ impl_runtime_apis! {
 		}
 	}
 
-	impl pallet_transaction_indexer_rpc_runtime_api::TransactionsApi<Block, AccountId, RuntimeEvent> for Runtime {
-		fn get_transactions(account_id: AccountId) -> Vec<(BlockNumber, u32)> {
+	impl runtime_api::transactions::TransactionInfoProvider<Block, opaque::UncheckedExtrinsic, AccountId, Signature> for Runtime
+	{
+		fn get_transaction_info(opaque_extrinsic: opaque::UncheckedExtrinsic) -> Option<SignedTransactionWithStatus<AccountId, Signature>> {
+			use pallet_identity_rpc_runtime_api::runtime_decl_for_IdentityApi::IdentityApi;
+
+			// Convert `OpaqueExtrinsic` into bytes and then decode `UncheckedExtrinsic` from that bytes
+			let transaction_body = opaque_extrinsic.clone().encode();
+			let mut bytes = transaction_body.as_slice();
+			let extrinsic = UncheckedExtrinsic::decode(&mut bytes).ok()?;
+
+			let (address, signature) = extrinsic.signature
+				.map(|(address, signature, _extra)| (address, signature))
+				.unzip();
+
+			// Convert `Address` into `AccountId`
+			let signer = address
+				.map(|v| <Runtime as frame_system::Config>::Lookup::lookup(v))
+				.transpose()
+				.ok()?;
+
+			// Get info about transaction sender and receiver
+			let from = signer.clone().and_then(Self::get_user_info_by_account);
+			let to = extrinsic.function.get_recipient().and_then(|account_identity| {
+				match account_identity {
+					AccountIdentity::AccountId(account_id) => Self::get_user_info_by_account(account_id),
+					AccountIdentity::Name(name) => Self::get_user_info_by_name(name.into()),
+					AccountIdentity::PhoneNumber(phone_number) => Self::get_user_info_by_number(phone_number.into()),
+				}
+			});
+
+			Some(SignedTransactionWithStatus {
+				signed_transaction: SignedTransaction {
+					signer,
+					transaction_body,
+					signature,
+				},
+				status: TransactionStatus::OnChain,
+				from,
+				to,
+			})
+		}
+	}
+
+	impl runtime_api::transactions::TransactionIndexer<Block, AccountId> for Runtime {
+		fn get_transactions_by_account(account_id: AccountId) -> Vec<(BlockNumber, u32)> {
 			TransactionIndexer::accounts_tx(account_id).unwrap_or_default()
 		}
 
-		fn get_transaction(tx_hash: <Block as BlockT>::Hash) -> Option<(BlockNumber, u32)> {
+		fn get_transaction(tx_hash: Hash) -> Option<(BlockNumber, u32)> {
 			TransactionIndexer::tx_block_and_index(tx_hash)
 		}
+	}
 
+	impl runtime_api::transactions::EventsProvider<Block, RuntimeEvent> for Runtime {
 		fn get_block_events() -> Vec<RuntimeEvent> {
 			// Just ask pallet System for events
 			System::read_events_no_consensus().map(|v| v.event).collect()
@@ -336,7 +384,7 @@ impl_runtime_apis! {
 
 		fn get_transaction_events(tx_index: u32) -> Vec<RuntimeEvent> {
 			// Just ask pallet System for events and then filter by extrinsic index
-			// in order to get only that transaction events
+			 // in order to get only that transaction events
 			System::read_events_no_consensus()
 				.filter(|v| matches!(v.phase, Phase::ApplyExtrinsic(index) if index == tx_index))
 				.map(|v| v.event).collect()

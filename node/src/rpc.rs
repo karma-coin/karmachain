@@ -8,7 +8,10 @@
 use std::sync::Arc;
 
 use jsonrpsee::RpcModule;
-use karmachain_node_runtime::{opaque::Block, AccountId, Balance, Index, RuntimeEvent, Signature};
+use karmachain_node_runtime::{
+	opaque::{Block, UncheckedExtrinsic},
+	AccountId, Balance, Index, RuntimeEvent, Signature,
+};
 use sc_client_api::BlockBackend;
 use sc_transaction_pool_api::TransactionPool;
 use sp_api::ProvideRuntimeApi;
@@ -40,12 +43,19 @@ where
 	C::Api: pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>,
 	C::Api: BlockBuilder<Block>,
 	C::Api: pallet_identity_rpc::IdentityRuntimeApi<Block, AccountId>,
-	C::Api: pallet_transaction_indexer_rpc::TransactionsRuntimeApi<Block, AccountId, RuntimeEvent>,
+	C::Api: runtime_api::transactions::TransactionInfoProvider<
+		Block,
+		UncheckedExtrinsic,
+		AccountId,
+		Signature,
+	>,
+	C::Api: runtime_api::transactions::TransactionIndexer<Block, AccountId>,
+	C::Api: runtime_api::transactions::EventsProvider<Block, RuntimeEvent>,
 	P: TransactionPool + 'static,
 {
 	use pallet_identity_rpc::{Identity, IdentityApiServer};
-	use pallet_transaction_indexer_rpc::{TransactionIndexer, TransactionsApiServer};
 	use pallet_transaction_payment_rpc::{TransactionPayment, TransactionPaymentApiServer};
+	use rpc_api::transactions::{client::TransactionsIndexer, TransactionsIndexerApiServer};
 	use substrate_frame_rpc_system::{System, SystemApiServer};
 
 	let mut module = RpcModule::new(());
@@ -54,9 +64,7 @@ where
 	module.merge(System::new(client.clone(), pool, deny_unsafe).into_rpc())?;
 	module.merge(TransactionPayment::new(client.clone()).into_rpc())?;
 	module.merge(Identity::new(client.clone()).into_rpc())?;
-	module.merge(
-		TransactionIndexer::<_, (AccountId, _, Signature, RuntimeEvent)>::new(client).into_rpc(),
-	)?;
+	module.merge(TransactionsIndexer::new(client.clone()).into_rpc())?;
 
 	Ok(module)
 }

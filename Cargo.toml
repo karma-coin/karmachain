@@ -2,13 +2,13 @@
 members = [
     "node",
     "runtime",
+    "client/rpc-api",
+    "client/runtime-api",
     "frame/appreciation",
     "frame/identity",
     "frame/identity/rpc",
     "frame/identity/rpc/runtime-api",
     "frame/transaction-indexer",
-    "frame/transaction-indexer/rpc",
-    "frame/transaction-indexer/rpc/runtime-api",
     "primitives/common",
     "primitives/rpc",
 ]
