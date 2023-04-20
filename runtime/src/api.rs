@@ -335,7 +335,7 @@ impl_runtime_apis! {
 			use pallet_identity_rpc_runtime_api::runtime_decl_for_IdentityApi::IdentityApi;
 
 			// Convert `OpaqueExtrinsic` into bytes and then decode `UncheckedExtrinsic` from that bytes
-			let transaction_body = opaque_extrinsic.clone().encode();
+			let transaction_body = opaque_extrinsic.encode();
 			let mut bytes = transaction_body.as_slice();
 			let extrinsic = UncheckedExtrinsic::decode(&mut bytes).ok()?;
 
@@ -345,7 +345,7 @@ impl_runtime_apis! {
 
 			// Convert `Address` into `AccountId`
 			let signer = address
-				.map(|v| <Runtime as frame_system::Config>::Lookup::lookup(v))
+				.map(<Runtime as frame_system::Config>::Lookup::lookup)
 				.transpose()
 				.ok()?;
 
@@ -400,12 +400,12 @@ impl_runtime_apis! {
 	impl runtime_api::chain::BlockInfoProvider<Block, SignedBlock<Block>, AccountId, Hash> for Runtime {
 		fn get_block_info(block: SignedBlock<Block>) -> RpcBlock<AccountId, Hash> {
 
-			let time = Timestamp::now().into();
+			let time = Timestamp::now();
 			let author = Authorship::author();
 			let height = block.block.header.number;
 			let transaction_hashes = block.block.extrinsics
 				.iter()
-				.map(|tx| <Runtime as frame_system::Config>::Hashing::hash_of(tx))
+				.map(<Runtime as frame_system::Config>::Hashing::hash_of)
 				.collect();
 			let fees = System::read_events_no_consensus()
 				.filter_map(|v| match v.event {
@@ -450,7 +450,7 @@ impl_runtime_apis! {
 			let referral_rewards_amount = pallet_reward::ReferralRewardTotalAllocated::<Runtime>::get();
 			let validator_rewards_count = 0;
 			let validator_rewards_amount = (0..Staking::current_era().unwrap_or_default())
-				.map(|era| era_payout(era))
+				.map(era_payout)
 				.sum();
 			let causes_rewards_amount = 0;
 

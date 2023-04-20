@@ -187,7 +187,7 @@ impl<T: Config> Pallet<T> {
 		AccountRewardInfo::<T>::set(who, account_reward_info);
 
 		// Increase total allocated amount of the reward and deposit the reward to user
-		SignupRewardTotalAllocated::<T>::mutate(|value| *value = *value + amount);
+		SignupRewardTotalAllocated::<T>::mutate(|value| *value += amount);
 		T::Currency::deposit_creating(who, amount);
 
 		Ok(())
@@ -203,7 +203,7 @@ impl<T: Config> Pallet<T> {
 		AccountRewardInfo::<T>::set(who, account_reward_info);
 
 		// Increase total allocated amount of the reward and deposit the reward to user
-		ReferralRewardTotalAllocated::<T>::mutate(|value| *value = *value + amount);
+		ReferralRewardTotalAllocated::<T>::mutate(|value| *value += amount);
 		T::Currency::deposit_creating(who, amount);
 
 		Ok(())
@@ -219,7 +219,7 @@ impl<T: Config> Pallet<T> {
 		AccountRewardInfo::<T>::set(who, account_reward_info);
 
 		// Increase total allocated amount of the reward and deposit the reward to user
-		KarmaRewardTotalAllocated::<T>::mutate(|value| *value = *value + amount);
+		KarmaRewardTotalAllocated::<T>::mutate(|value| *value += amount);
 		T::Currency::deposit_creating(who, amount);
 
 		Ok(())
