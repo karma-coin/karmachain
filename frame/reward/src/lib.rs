@@ -170,7 +170,7 @@ pub mod pallet {
 			//  .sort_by_score()
 			// 	.take(KarmaRewardTopNUsers::<T>::get())
 			//  .for_each(|who| Self::issue_karma_reward(who, reward))
-			todo!()
+			// TODO:
 		}
 	}
 }
