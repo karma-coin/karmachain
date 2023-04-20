@@ -8,6 +8,7 @@ use sp_runtime::traits::{BlockNumberProvider, Hash};
 #[frame_support::pallet]
 pub mod pallet {
 	use frame_support::pallet_prelude::*;
+	use frame_system::pallet_prelude::BlockNumberFor;
 	use sp_std::vec::Vec;
 
 	#[pallet::pallet]
@@ -18,7 +19,10 @@ pub mod pallet {
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
 	pub trait Config:
-		frame_system::Config + pallet_balances::Config + pallet_identity::Config
+		frame_system::Config
+		+ pallet_balances::Config
+		+ pallet_identity::Config
+		+ pallet_appreciation::Config
 	{
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
@@ -33,6 +37,18 @@ pub mod pallet {
 	pub type AccountTransactions<T: Config> =
 		StorageMap<_, Blake2_128Concat, T::AccountId, Vec<(T::BlockNumber, u32)>>;
 
+	#[pallet::storage]
+	pub type TransactionsCount<T: Config> = StorageValue<_, u64, ValueQuery>;
+
+	#[pallet::storage]
+	pub type PaymentTransactionsCount<T: Config> = StorageValue<_, u64, ValueQuery>;
+
+	#[pallet::storage]
+	pub type AppreciationTransactionsCount<T: Config> = StorageValue<_, u64, ValueQuery>;
+
+	#[pallet::storage]
+	pub type UpdateUserTransactionsCount<T: Config> = StorageValue<_, u64, ValueQuery>;
+
 	// Pallets use events to inform users when important changes are made.
 	// https://docs.substrate.io/main-docs/build/events-errors/
 	#[pallet::event]
@@ -43,6 +59,14 @@ pub mod pallet {
 	pub enum Error<T> {
 		/// Attempted to call `store` outside of block execution.
 		BadContext,
+	}
+
+	#[pallet::hooks]
+	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
+		fn on_finalize(_n: BlockNumberFor<T>) {
+			let extrinsic_count: u64 = frame_system::Pallet::<T>::extrinsic_count().into();
+			TransactionsCount::<T>::mutate(|value| *value += extrinsic_count);
+		}
 	}
 }
 
@@ -75,7 +99,7 @@ impl<T: Config> sp_common::hooks::Hooks<T::AccountId, T::Balance, T::NameLimit, 
 	}
 
 	fn on_update_user() -> DispatchResult {
-		// TODO:
+		UpdateUserTransactionsCount::<T>::mutate(|value| *value += 1);
 		Ok(())
 	}
 
@@ -84,10 +108,20 @@ impl<T: Config> sp_common::hooks::Hooks<T::AccountId, T::Balance, T::NameLimit, 
 		payee: T::AccountId,
 		_amount: T::Balance,
 		_community_id: CommunityId,
-		_char_trait_id: CharTraitId,
+		char_trait_id: CharTraitId,
 	) -> DispatchResult {
 		Self::index_transaction(payer)?;
-		Self::index_transaction(payee)
+		Self::index_transaction(payee)?;
+
+		let no_char_trait_id = pallet_appreciation::Pallet::<T>::no_char_trait_id()?;
+
+		if char_trait_id == no_char_trait_id {
+			PaymentTransactionsCount::<T>::mutate(|value| *value += 1);
+		} else {
+			AppreciationTransactionsCount::<T>::mutate(|value| *value += 1);
+		}
+
+		Ok(())
 	}
 
 	fn on_set_admin(who: T::AccountId, new_admin: T::AccountId) -> DispatchResult {

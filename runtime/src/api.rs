@@ -434,10 +434,10 @@ impl_runtime_apis! {
 
 		fn get_blockchain_data() -> BlockchainStats {
 			let tip_height = System::block_number().into();
-			let transaction_count = 0; // TODO:
-			let payment_transaction_count = 0; // TODO:
-			let appreciations_transactions_count = 0; // TODO:
-			let update_user_transactions_count = 0; // TODO:
+			let transaction_count = pallet_transaction_indexer::TransactionsCount::<Runtime>::get();
+			let payment_transaction_count = pallet_transaction_indexer::PaymentTransactionsCount::<Runtime>::get();
+			let appreciations_transactions_count = pallet_transaction_indexer::AppreciationTransactionsCount::<Runtime>::get();
+			let update_user_transactions_count = pallet_transaction_indexer::UpdateUserTransactionsCount::<Runtime>::get();
 			let users_count = pallet_identity::IdentityOf::<Runtime>::count().into();
 			let fees_amount = 0; // TODO:
 			let minted_amount = Reward::total_rewarded();

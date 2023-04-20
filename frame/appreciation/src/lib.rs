@@ -165,6 +165,7 @@ pub mod pallet {
 	}
 
 	#[pallet::storage]
+	#[pallet::getter(fn no_char_trait_id)]
 	pub type NoCharTraitId<T: Config> =
 		StorageValue<_, CharTraitId, ResultQuery<Error<T>::NonExistentStorageValue>>;
 
