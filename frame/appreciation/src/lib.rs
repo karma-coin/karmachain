@@ -4,19 +4,25 @@ use frame_support::{
 	traits::{Currency, ExistenceRequirement, Get},
 	BoundedVec,
 };
-use pallet_identity::OnNewUser;
-use sp_common::identity::{AccountIdentity, IdentityProvider};
+use sp_common::{
+	hooks::Hooks,
+	identity::{AccountIdentity, IdentityProvider},
+};
 
 mod types;
 
 pub use crate::types::*;
 pub use pallet::*;
+use sp_common::types::{CharTraitId, CommunityId};
 
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
 	use frame_system::pallet_prelude::*;
-	use sp_common::{traits::TransactionIndexer, *};
+	use sp_common::{
+		types::{CharTraitId, CommunityId},
+		*,
+	};
 
 	#[pallet::config]
 	pub trait Config:
@@ -292,9 +298,7 @@ pub mod pallet {
 
 			T::Currency::transfer(&payer, &payee, amount, ExistenceRequirement::KeepAlive)?;
 
-			T::TransactionIndexer::index_transaction(payer)?;
-			T::TransactionIndexer::index_transaction(payee)?;
-
+			T::Hooks::on_appreciation(payer, payee, amount, community_id, char_trait_id)?;
 			// TODO: events
 
 			Ok(())
@@ -328,8 +332,7 @@ pub mod pallet {
 				CommunityRole::Admin,
 			);
 
-			T::TransactionIndexer::index_transaction(who)?;
-			T::TransactionIndexer::index_transaction(new_admin_identity.account_id.clone())?;
+			T::Hooks::on_set_admin(who, new_admin_identity.account_id.clone())?;
 
 			Self::deposit_event(Event::<T>::NewCommunityAdmin {
 				community_id: community.id,
@@ -475,12 +478,17 @@ impl<T: pallet::Config> Pallet<T> {
 	}
 }
 
-impl<T: Config> OnNewUser<T::AccountId> for Pallet<T> {
-	fn on_new_user(who: &T::AccountId) -> DispatchResult {
+impl<T: Config> Hooks<T::AccountId, T::Balance, T::NameLimit, T::PhoneNumberLimit> for Pallet<T> {
+	fn on_new_user(
+		_verifier: T::AccountId,
+		who: T::AccountId,
+		_name: BoundedVec<u8, T::NameLimit>,
+		_phone_number: BoundedVec<u8, T::PhoneNumberLimit>,
+	) -> DispatchResult {
 		let no_community_id = NoCommunityId::<T>::get()?;
 		let signup_char_trait_id = SignupCharTraitId::<T>::get()?;
 
-		Self::increment_trait_score(who, no_community_id, signup_char_trait_id);
+		Self::increment_trait_score(&who, no_community_id, signup_char_trait_id);
 
 		Ok(())
 	}

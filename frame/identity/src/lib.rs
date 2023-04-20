@@ -26,10 +26,10 @@ pub mod pallet {
 	use super::*;
 	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
-	use sp_common::traits::TransactionIndexer;
+	use sp_common::hooks::Hooks;
 
 	#[pallet::config]
-	pub trait Config: frame_system::Config {
+	pub trait Config: frame_system::Config + pallet_balances::Config {
 		/// The overarching event type.
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 		/// Max length of name
@@ -39,9 +39,7 @@ pub mod pallet {
 		/// Max number of phone verifiers allowed
 		type MaxPhoneVerifiers: Get<u32>;
 		/// Handler for when a new user has just been registered
-		type OnNewUser: OnNewUser<Self::AccountId>;
-		/// Index transaction
-		type TransactionIndexer: TransactionIndexer<Self::AccountId>;
+		type Hooks: Hooks<Self::AccountId, Self::Balance, Self::NameLimit, Self::PhoneNumberLimit>;
 	}
 
 	#[pallet::pallet]
@@ -146,12 +144,12 @@ pub mod pallet {
 
 			NameFor::<T>::insert(&name, account_id.clone());
 			PhoneNumberFor::<T>::insert(&phone_number, account_id.clone());
-			IdentityOf::<T>::insert(&account_id, IdentityStore { name, phone_number });
+			IdentityOf::<T>::insert(
+				&account_id,
+				IdentityStore { name: name.clone(), phone_number: phone_number.clone() },
+			);
 
-			T::OnNewUser::on_new_user(&account_id)?;
-
-			// Save transaction
-			T::TransactionIndexer::index_transaction(account_id)?;
+			T::Hooks::on_new_user(who, account_id, name, phone_number)?;
 
 			Ok(())
 		}
@@ -189,27 +187,5 @@ impl<T: Config> IdentityProvider<T::AccountId, T::NameLimit, T::PhoneNumberLimit
 		number: BoundedVec<u8, T::PhoneNumberLimit>,
 	) -> Option<IdentityInfo<T::AccountId, T::NameLimit, T::PhoneNumberLimit>> {
 		<PhoneNumberFor<T>>::get(number).and_then(Self::identity_by_id)
-	}
-}
-
-pub trait OnNewUser<AccountId> {
-	/// A new account `who` has been registered.
-	fn on_new_user(who: &AccountId) -> DispatchResult;
-}
-
-impl<AccountId> OnNewUser<AccountId> for () {
-	fn on_new_user(_who: &AccountId) -> DispatchResult {
-		Ok(())
-	}
-}
-
-impl<AccountId, T0, T1> OnNewUser<AccountId> for (T0, T1)
-where
-	T0: OnNewUser<AccountId>,
-	T1: OnNewUser<AccountId>,
-{
-	fn on_new_user(who: &AccountId) -> DispatchResult {
-		T0::on_new_user(who)?;
-		T1::on_new_user(who)
 	}
 }

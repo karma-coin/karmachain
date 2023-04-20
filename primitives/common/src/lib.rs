@@ -1,7 +1,9 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
+pub mod hooks;
 pub mod identity;
 pub mod traits;
+pub mod types;
 
 use codec::{Decode, Encode};
 use frame_support::{traits::Get, BoundedVec};

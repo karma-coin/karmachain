@@ -6,8 +6,7 @@ pub use pallet::*;
 pub use types::*;
 
 use frame_support::{pallet_prelude::*, traits::Currency};
-
-use pallet_identity::OnNewUser;
+use sp_common::hooks::Hooks as KarmaHooks;
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -16,7 +15,9 @@ pub mod pallet {
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
-	pub trait Config: frame_system::Config + pallet_balances::Config {
+	pub trait Config:
+		frame_system::Config + pallet_balances::Config + pallet_identity::Config
+	{
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 		/// The currency mechanism.
 		type Currency: Currency<Self::AccountId, Balance = Self::Balance>;
@@ -234,8 +235,15 @@ impl<T: Config> Pallet<T> {
 	}
 }
 
-impl<T: Config> OnNewUser<T::AccountId> for Pallet<T> {
-	fn on_new_user(who: &T::AccountId) -> DispatchResult {
+impl<T: Config> KarmaHooks<T::AccountId, T::Balance, T::NameLimit, T::PhoneNumberLimit>
+	for Pallet<T>
+{
+	fn on_new_user(
+		_verifier: T::AccountId,
+		who: T::AccountId,
+		_name: BoundedVec<u8, T::NameLimit>,
+		_phone_number: BoundedVec<u8, T::PhoneNumberLimit>,
+	) -> DispatchResult {
 		let total_allocated = SignupRewardTotalAllocated::<T>::get();
 
 		let reward = if total_allocated < SignupRewardPhase1Alloc::<T>::get() {
@@ -246,7 +254,7 @@ impl<T: Config> OnNewUser<T::AccountId> for Pallet<T> {
 			SignupRewardPhase3Amount::<T>::get()
 		};
 
-		Self::issue_signup_reward(who, reward)?;
+		Self::issue_signup_reward(&who, reward)?;
 		Ok(())
 	}
 }

@@ -16,7 +16,5 @@ impl pallet_identity::Config for Runtime {
 
 	type MaxPhoneVerifiers = MaxPhoneVerifiers;
 
-	type OnNewUser = (Appreciation, Reward);
-
-	type TransactionIndexer = TransactionIndexer;
+	type Hooks = (Appreciation, (Reward, TransactionIndexer));
 }

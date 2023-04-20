@@ -14,7 +14,7 @@ use sp_runtime::{
 	Perbill,
 };
 
-use sp_common::String;
+use sp_common::{types::CommunityId, String};
 
 // The URL for the telemetry server.
 // const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
