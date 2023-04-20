@@ -1,8 +1,9 @@
-use crate::*;
+use crate::{validators_rewards::era_payout, *};
 use codec::{Decode, Encode};
 use frame_system::Phase;
 use sp_rpc::{
-	Block as RpcBlock, SignedTransaction, SignedTransactionWithStatus, TransactionStatus,
+	Block as RpcBlock, BlockchainStats, CharTrait, GenesisData, PhoneVerifier, SignedTransaction,
+	SignedTransactionWithStatus, TransactionStatus,
 };
 use sp_runtime::{
 	generic::SignedBlock,
@@ -428,6 +429,127 @@ impl_runtime_apis! {
 				// reward: todo!(),
 				// minted: todo!(),
 				digest,
+			}
+		}
+
+		fn get_blockchain_data() -> BlockchainStats {
+			let tip_height = System::block_number().into();
+			let transaction_count = 0; // TODO:
+			let payment_transaction_count = 0; // TODO:
+			let appreciations_transactions_count = 0; // TODO:
+			let update_user_transactions_count = 0; // TODO:
+			let users_count = pallet_identity::IdentityOf::<Runtime>::count().into();
+			let fees_amount = 0; // TODO:
+			let minted_amount = Reward::total_rewarded();
+			let circulation = Reward::total_rewarded();
+			let fee_subs_count = 0; // TODO:
+			let fee_subs_amount = pallet_reward::TxFeeSubsidiesTotalAllocated::<Runtime>::get();
+			let signup_rewards_count = 0; // TODO:
+			let signup_rewards_amount = pallet_reward::SignupRewardTotalAllocated::<Runtime>::get();
+			let referral_rewards_count = 0; // TODO:
+			let referral_rewards_amount = pallet_reward::ReferralRewardTotalAllocated::<Runtime>::get();
+			let validator_rewards_count = 0;
+			let validator_rewards_amount = (0..Staking::current_era().unwrap_or_default())
+				.map(|era| era_payout(era))
+				.sum();
+			let causes_rewards_amount = 0;
+
+			BlockchainStats {
+				last_block_time: MILLISECS_PER_BLOCK,
+				tip_height,
+				transaction_count,
+				payment_transaction_count,
+				appreciations_transactions_count,
+				update_user_transactions_count,
+				users_count,
+				fees_amount,
+				minted_amount,
+				circulation,
+				fee_subs_count,
+				fee_subs_amount,
+				signup_rewards_count,
+				signup_rewards_amount,
+				referral_rewards_count,
+				referral_rewards_amount,
+				validator_rewards_count,
+				validator_rewards_amount,
+				causes_rewards_amount,
+			}
+		}
+
+		fn get_genesis_data() -> GenesisData<AccountId> {
+			let net_id = 0; // TODO:
+			let net_name = vec![]; // TODO:
+			let genesis_time = 0; // TODO:
+
+			let signup_reward_phase1_alloc = pallet_reward::SignupRewardPhase1Alloc::<Runtime>::get();
+			let signup_reward_phase2_alloc = pallet_reward::SignupRewardPhase2Alloc::<Runtime>::get();
+
+			let signup_reward_phase1_amount = pallet_reward::SignupRewardPhase1Amount::<Runtime>::get();
+			let signup_reward_phase2_amount = pallet_reward::SignupRewardPhase2Amount::<Runtime>::get();
+			// TODO: Q: what `start` means?
+			let signup_reward_phase3_start = pallet_reward::SignupRewardPhase3Amount::<Runtime>::get();
+
+			let referral_reward_phase1_alloc = pallet_reward::ReferralRewardPhase1Alloc::<Runtime>::get();
+			let referral_reward_phase2_alloc = pallet_reward::ReferralRewardPhase2Alloc::<Runtime>::get();
+
+			let referral_reward_phase1_amount = pallet_reward::ReferralRewardPhase1Amount::<Runtime>::get();
+			let referral_reward_phase2_amount = pallet_reward::ReferralRewardPhase2Amount::<Runtime>::get();
+
+			let tx_fee_subsidy_max_per_user = pallet_reward::TxFeeSubsidyMaxPerUser::<Runtime>::get().into();
+			let tx_fee_subsidies_alloc = pallet_reward::TxFeeSubsidiesAlloc::<Runtime>::get();
+			let tx_fee_subsidy_max_amount = pallet_reward::TxFeeSubsidyMaxAmount::<Runtime>::get();
+
+			let block_reward_amount = 0; // TODO:
+			let block_reward_last_block = 0; // TODO:
+
+			let karma_reward_amount = pallet_reward::KarmaRewardAmount::<Runtime>::get();
+			let karma_reward_alloc = pallet_reward::MaxKarmaRewardAlloc::<Runtime>::get();
+			let karma_reward_top_n_users = pallet_reward::KarmaRewardTopNUsers::<Runtime>::get().into();
+
+			// let treasury_premint_amount = 0; // TODO:
+			// let treasury_account_id = todo!(); // TODO:
+			// let treasury_account_name = vec![]; // TODO:
+
+			let char_traits = Appreciation::char_traits()
+				.into_iter()
+				.map(|v| CharTrait {
+					id: v.id,
+					name: v.name.into(),
+					emoji: v.emoji.into(),
+				})
+				.collect();
+			let verifiers = Identity::verifiers()
+				.into_iter()
+				.map(|v| PhoneVerifier {
+					account_id: v,
+					name: vec![], // TODO:
+				})
+				.collect();
+
+			GenesisData {
+				net_id,
+				net_name,
+				genesis_time,
+				signup_reward_phase1_alloc,
+				signup_reward_phase2_alloc,
+				signup_reward_phase1_amount,
+				signup_reward_phase2_amount,
+				signup_reward_phase3_start,
+				referral_reward_phase1_alloc,
+				referral_reward_phase2_alloc,
+				referral_reward_phase1_amount,
+				referral_reward_phase2_amount,
+				tx_fee_subsidy_max_per_user,
+				tx_fee_subsidies_alloc,
+				tx_fee_subsidy_max_amount,
+				block_reward_amount,
+				block_reward_last_block,
+				karma_reward_amount,
+				karma_reward_alloc,
+				karma_reward_top_n_users,
+				char_traits,
+				verifiers,
 			}
 		}
 	}

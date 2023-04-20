@@ -178,6 +178,7 @@ pub mod pallet {
 		StorageValue<_, CharTraitId, ResultQuery<Error<T>::NonExistentStorageValue>>;
 
 	#[pallet::storage]
+	#[pallet::getter(fn char_traits)]
 	pub type CharTraits<T: Config> = StorageValue<
 		_,
 		BoundedVec<CharTrait<T::CharNameLimit, T::EmojiLimit>, T::MaxCharTrait>,

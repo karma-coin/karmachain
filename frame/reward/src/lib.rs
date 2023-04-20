@@ -223,6 +223,15 @@ impl<T: Config> Pallet<T> {
 
 		Ok(())
 	}
+
+	pub fn total_rewarded() -> T::Balance {
+		let signup_reward = SignupRewardTotalAllocated::<T>::get();
+		let referral_reward = ReferralRewardTotalAllocated::<T>::get();
+		let fee_subsidies = TxFeeSubsidiesTotalAllocated::<T>::get();
+		let karma_reward = KarmaRewardTotalAllocated::<T>::get();
+
+		signup_reward + referral_reward + fee_subsidies + karma_reward
+	}
 }
 
 impl<T: Config> OnNewUser<T::AccountId> for Pallet<T> {

@@ -11,7 +11,7 @@ use runtime_api::chain::BlockInfoProvider;
 use sc_client_api::BlockBackend;
 use sp_api::{BlockT, ProvideRuntimeApi};
 use sp_blockchain::HeaderBackend;
-use sp_rpc::Block as RpcBlock;
+use sp_rpc::{Block as RpcBlock, BlockchainStats, GenesisData};
 use sp_runtime::generic::{BlockId, SignedBlock};
 use std::sync::Arc;
 
@@ -67,5 +67,27 @@ where
 			.map_err(|e| map_err(e, "Failed to get block info"))?;
 
 		Ok(block_info)
+	}
+
+	fn get_blockchain_data(&self) -> RpcResult<BlockchainStats> {
+		let api = self.client.runtime_api();
+		let at = BlockId::hash(self.client.info().best_hash);
+
+		let blockchain_data = api
+			.get_blockchain_data(&at)
+			.map_err(|e| map_err(e, "Failed to get blockchain data"))?;
+
+		Ok(blockchain_data)
+	}
+
+	fn get_genesis_data(&self) -> RpcResult<GenesisData<AccountId>> {
+		let api = self.client.runtime_api();
+		let at = BlockId::hash(self.client.info().best_hash);
+
+		let genesis_data = api
+			.get_genesis_data(&at)
+			.map_err(|e| map_err(e, "Failed to get genesis data"))?;
+
+		Ok(genesis_data)
 	}
 }

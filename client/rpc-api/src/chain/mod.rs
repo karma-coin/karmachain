@@ -2,7 +2,7 @@ pub mod client;
 mod error;
 
 use jsonrpsee::{core::RpcResult, proc_macros::rpc};
-use sp_rpc::Block as RpcBlock;
+use sp_rpc::{Block as RpcBlock, BlockchainStats, GenesisData};
 use sp_runtime::traits::Block as BlockT;
 
 #[rpc(client, server)]
@@ -22,4 +22,12 @@ pub trait BlocksProviderApi<Block: BlockT, AccountId> {
 			.map(|block_number| self.get_block_info(block_number))
 			.collect()
 	}
+
+	/// RPC method provides information about current blockchain state
+	#[method(name = "get_blockchain_data")]
+	fn get_blockchain_data(&self) -> RpcResult<BlockchainStats>;
+
+	/// RPC method provides information about blockchain genesis config
+	#[method(name = "get_genesis_data")]
+	fn get_genesis_data(&self) -> RpcResult<GenesisData<AccountId>>;
 }

@@ -82,7 +82,7 @@ pub mod pallet {
 	}
 
 	#[pallet::storage]
-	pub type IdentityOf<T: Config> = StorageMap<
+	pub type IdentityOf<T: Config> = CountedStorageMap<
 		_,
 		Blake2_128Concat,
 		T::AccountId,
@@ -98,6 +98,7 @@ pub mod pallet {
 		StorageMap<_, Blake2_128Concat, BoundedVec<u8, T::PhoneNumberLimit>, T::AccountId>;
 
 	#[pallet::storage]
+	#[pallet::getter(fn verifiers)]
 	pub type PhoneVerifiers<T: Config> =
 		StorageValue<_, BoundedVec<T::AccountId, T::MaxPhoneVerifiers>, ValueQuery>;
 
