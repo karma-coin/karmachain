@@ -5,7 +5,7 @@ parameter_types! {
 	pub const CharNameLimit: u32 = 25;
 	pub const CommunityNameLimit: u32 = 25;
 	pub const CommunityDescLimit: u32 = 100;
-	pub const EmojiLimit: u32 = 4;
+	pub const EmojiLimit: u32 = 20;
 	pub const CommunityUrlLimit: u32 = 100;
 	pub const MaxCommunities: u32 = 1000;
 }

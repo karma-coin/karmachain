@@ -4,7 +4,8 @@ use frame_support::{
 	traits::{Currency, ExistenceRequirement, Get},
 	BoundedVec,
 };
-use pallet_identity::{IdentityProvider, OnNewUser};
+use pallet_identity::OnNewUser;
+use sp_common::identity::{AccountIdentity, IdentityProvider};
 
 mod types;
 
@@ -39,7 +40,11 @@ pub mod pallet {
 		/// The currency mechanism.
 		type Currency: Currency<Self::AccountId, Balance = Self::Balance>;
 
-		type IdentityProvider: IdentityProvider<Self::AccountId, Self::NameLimit, Self::NumberLimit>;
+		type IdentityProvider: IdentityProvider<
+			Self::AccountId,
+			Self::NameLimit,
+			Self::PhoneNumberLimit,
+		>;
 	}
 
 	#[pallet::pallet]
@@ -91,9 +96,9 @@ pub mod pallet {
 					name: name.try_into().expect(
 						"Max length of character trait name should be lower than T::CharNameLimit",
 					),
-					emoji: emoji
-						.try_into()
-						.expect("Max length of character trait name should be lower than 4"),
+					emoji: emoji.try_into().expect(
+						"Max length of character trait name should be lower than T::EmojiLimit",
+					),
 				})
 				.collect::<Vec<_>>()
 				.try_into()
@@ -200,7 +205,7 @@ pub mod pallet {
 	>;
 
 	#[pallet::storage]
-	pub(super) type CommunityMembership<T: Config> = StorageDoubleMap<
+	pub type CommunityMembership<T: Config> = StorageDoubleMap<
 		_,
 		Blake2_128Concat,
 		T::AccountId,
@@ -211,7 +216,7 @@ pub mod pallet {
 	>;
 
 	#[pallet::storage]
-	pub(super) type TraitScores<T: Config> = StorageNMap<
+	pub type TraitScores<T: Config> = StorageNMap<
 		_,
 		(
 			NMapKey<Blake2_128Concat, T::AccountId>,
@@ -222,8 +227,27 @@ pub mod pallet {
 		OptionQuery,
 	>;
 
+	#[pallet::storage]
+	pub type Referrals<T: Config> = StorageDoubleMap<
+		_,
+		Blake2_128Concat,
+		T::AccountId,
+		Blake2_128Concat,
+		AccountIdentity<T::AccountId, T::NameLimit, T::PhoneNumberLimit>,
+		(),
+	>;
+
 	#[pallet::event]
-	pub enum Event<T: Config> {}
+	#[pallet::generate_deposit(pub(super) fn deposit_event)]
+	pub enum Event<T: Config> {
+		NewCommunityAdmin {
+			community_id: CommunityId,
+			community_name: BoundedVec<u8, T::CommunityNameLimit>,
+			account_id: T::AccountId,
+			username: BoundedVec<u8, T::NameLimit>,
+			phone_number: BoundedVec<u8, T::PhoneNumberLimit>,
+		},
+	}
 
 	#[pallet::error]
 	pub enum Error<T> {
@@ -242,6 +266,8 @@ pub mod pallet {
 		/// Closed community - only community admin can invite new members
 		/// and only members can appreciate each other in the community
 		CommunityClosed,
+		///
+		NotEnoughPermission,
 	}
 
 	#[pallet::call]
@@ -250,19 +276,18 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
 		pub fn appreciation(
 			origin: OriginFor<T>,
-			to: BoundedVec<u8, T::NumberLimit>,
+			to: AccountIdentity<T::AccountId, T::NameLimit, T::PhoneNumberLimit>,
 			amount: T::Balance,
 			community_id: Option<CommunityId>,
 			char_trait_id: Option<CharTraitId>,
 		) -> DispatchResult {
 			let payer = ensure_signed(origin)?;
-			let payee = T::IdentityProvider::identity_by_number(to)
-				.ok_or(Error::<T>::NotFound)?
-				.account_id;
+			let referral = Referrals::<T>::take(&payer, &to).is_some();
+			let payee = Self::get_account_id(to).ok_or(Error::<T>::NotFound)?;
 			let community_id = community_id.unwrap_or(NoCommunityId::<T>::get()?);
 			let char_trait_id = char_trait_id.unwrap_or(NoCharTraitId::<T>::get()?);
 
-			Self::process_appreciation(&payer, &payee, community_id, char_trait_id)?;
+			Self::process_appreciation(&payer, &payee, community_id, char_trait_id, referral)?;
 
 			T::Currency::transfer(&payer, &payee, amount, ExistenceRequirement::KeepAlive)?;
 
@@ -270,10 +295,61 @@ pub mod pallet {
 
 			Ok(())
 		}
+
+		#[pallet::call_index(1)]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
+		pub fn set_admin(
+			origin: OriginFor<T>,
+			community_id: CommunityId,
+			new_admin: AccountIdentity<T::AccountId, T::NameLimit, T::PhoneNumberLimit>,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+			ensure!(
+				matches!(
+					CommunityMembership::<T>::get(who, community_id),
+					Some(CommunityRole::Admin)
+				),
+				Error::<T>::NotEnoughPermission
+			);
+
+			let community = Communities::<T>::get()
+				.into_iter()
+				.find(|community| community.id == community_id)
+				.ok_or(Error::<T>::NotFound)?;
+			let new_admin_identity =
+				T::IdentityProvider::get_identity_info(new_admin).ok_or(Error::<T>::NotFound)?;
+			CommunityMembership::<T>::insert(
+				&new_admin_identity.account_id,
+				community_id,
+				CommunityRole::Admin,
+			);
+
+			Self::deposit_event(Event::<T>::NewCommunityAdmin {
+				community_id: community.id,
+				community_name: community.name,
+				account_id: new_admin_identity.account_id,
+				username: new_admin_identity.name,
+				phone_number: new_admin_identity.number,
+			});
+
+			Ok(())
+		}
 	}
 }
 
 impl<T: pallet::Config> Pallet<T> {
+	fn get_account_id(
+		to: AccountIdentity<T::AccountId, T::NameLimit, T::PhoneNumberLimit>,
+	) -> Option<T::AccountId> {
+		match to {
+			AccountIdentity::AccountId(account_id) => Some(account_id),
+			AccountIdentity::PhoneNumber(number) =>
+				T::IdentityProvider::identity_by_number(number).map(|v| v.account_id),
+			AccountIdentity::Name(name) =>
+				T::IdentityProvider::identity_by_name(name).map(|v| v.account_id),
+		}
+	}
+
 	pub fn increment_trait_score(
 		account_id: &T::AccountId,
 		community_id: CommunityId,
@@ -289,6 +365,7 @@ impl<T: pallet::Config> Pallet<T> {
 		payee: &T::AccountId,
 		community_id: CommunityId,
 		char_trait_id: CharTraitId,
+		referral: bool,
 	) -> DispatchResult {
 		if NoCharTraitId::<T>::get()? == char_trait_id {
 			return Ok(())
@@ -297,8 +374,7 @@ impl<T: pallet::Config> Pallet<T> {
 		// TODO: whether to check `char_trait_id` for existence?
 
 		// TODO: if this transfer lead to user signup set `true`
-		let sign_ups = false;
-		if sign_ups {
+		if referral {
 			// Give payer karma points for helping to grow the network
 			Self::increment_trait_score(
 				payer,

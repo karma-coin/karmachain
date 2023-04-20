@@ -15,3 +15,6 @@
 # direnv files
 .envrc
 .direnv
+
+# IDE staff
+.idea

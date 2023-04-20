@@ -14,7 +14,7 @@ targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
 codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = ["derive"] }
-scale-info = { version = "2.1.1", default-features = false, features = ["derive"] }
+scale-info = { version = "2.5.0", default-features = false, features = ["derive"] }
 static_assertions = "1.1.0"
 log = { version = "0.4.17", default-features = false }
 
@@ -61,6 +61,8 @@ frame-system-benchmarking = { version = "4.0.0-dev", default-features = false, g
 pallet-appreciation = { version = "0.1.0", default-features = false, path = "../frame/appreciation" }
 pallet-identity = { version = "0.1.0", default-features = false, path = "../frame/identity" }
 pallet-reward = { version = "0.1.0", default-features = false, path = "../frame/reward" }
+
+sp-common = { version = "0.2.0", default-features = false, path = "../primitives/common" }
 
 [dev-dependencies]
 sp-io = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.37" }

@@ -58,7 +58,7 @@ fn new_user_happy_flow() {
 		let account_id = get_account_id_from_seed::<sr25519::Public>("Bob");
 		let name: BoundedVec<_, NameLimit> =
 			"user1234567890".as_bytes().to_vec().try_into().expect("Invelid name length");
-		let number: BoundedVec<_, NumberLimit> = "0123456789"
+		let number: BoundedVec<_, PhoneNumberLimit> = "0123456789"
 			.as_bytes()
 			.to_vec()
 			.try_into()
@@ -143,12 +143,12 @@ fn new_user_existing_user_name() {
 		let account_id_2 = get_account_id_from_seed::<sr25519::Public>("Charlie");
 		let name: BoundedVec<_, NameLimit> =
 			"user1234567890".as_bytes().to_vec().try_into().expect("Invelid name length");
-		let number_1: BoundedVec<_, NumberLimit> = "0123456789"
+		let number_1: BoundedVec<_, PhoneNumberLimit> = "0123456789"
 			.as_bytes()
 			.to_vec()
 			.try_into()
 			.expect("Invelid phone number length");
-		let number_2: BoundedVec<_, NumberLimit> = "9876543210"
+		let number_2: BoundedVec<_, PhoneNumberLimit> = "9876543210"
 			.as_bytes()
 			.to_vec()
 			.try_into()
@@ -188,7 +188,7 @@ fn new_user_existing_number() {
 			"user1234567890".as_bytes().to_vec().try_into().expect("Invelid name length");
 		let name_2: BoundedVec<_, NameLimit> =
 			"user9876543210".as_bytes().to_vec().try_into().expect("Invelid name length");
-		let number: BoundedVec<_, NumberLimit> = "0123456789"
+		let number: BoundedVec<_, PhoneNumberLimit> = "0123456789"
 			.as_bytes()
 			.to_vec()
 			.try_into()
