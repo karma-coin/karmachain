@@ -201,3 +201,14 @@ impl<AccountId> OnNewUser<AccountId> for () {
 		Ok(())
 	}
 }
+
+impl<AccountId, T0, T1> OnNewUser<AccountId> for (T0, T1)
+where
+	T0: OnNewUser<AccountId>,
+	T1: OnNewUser<AccountId>,
+{
+	fn on_new_user(who: &AccountId) -> DispatchResult {
+		T0::on_new_user(who)?;
+		T1::on_new_user(who)
+	}
+}

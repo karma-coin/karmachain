@@ -124,6 +124,7 @@ construct_runtime!(
 		Identity: pallet_identity,
 		Appreciation: pallet_appreciation,
 		TransactionIndexer: pallet_transaction_indexer,
+		Reward: pallet_reward,
 	}
 );
 
