@@ -4,7 +4,7 @@ use jsonrpsee::core::RpcResult;
 use runtime_api::events::EventProvider;
 use sp_api::{BlockT, ProvideRuntimeApi};
 use sp_blockchain::HeaderBackend;
-use sp_runtime::{generic::BlockId, traits::NumberFor};
+use sp_runtime::generic::BlockId;
 use std::sync::Arc;
 
 pub struct EventsProvider<C, P> {

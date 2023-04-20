@@ -2,7 +2,7 @@ pub mod client;
 mod error;
 
 use jsonrpsee::{core::RpcResult, proc_macros::rpc};
-use sp_runtime::traits::{Block as BlockT, NumberFor};
+use sp_runtime::traits::Block as BlockT;
 
 #[rpc(client, server)]
 pub trait EventsProviderApi<Block: BlockT, Event> {

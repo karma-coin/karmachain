@@ -1,8 +1,13 @@
 use crate::*;
 use codec::{Decode, Encode};
 use frame_system::Phase;
-use sp_rpc::{SignedTransaction, SignedTransactionWithStatus, TransactionStatus};
-use sp_runtime::traits::StaticLookup;
+use sp_rpc::{
+	Block as RpcBlock, SignedTransaction, SignedTransactionWithStatus, TransactionStatus,
+};
+use sp_runtime::{
+	generic::SignedBlock,
+	traits::{Hash as HashT, StaticLookup},
+};
 
 // To learn more about runtime versioning, see:
 // https://docs.substrate.io/main-docs/build/upgrade#runtime-versioning
@@ -388,6 +393,42 @@ impl_runtime_apis! {
 			System::read_events_no_consensus()
 				.filter(|v| matches!(v.phase, Phase::ApplyExtrinsic(index) if index == tx_index))
 				.map(|v| v.event).collect()
+		}
+	}
+
+	impl runtime_api::chain::BlockInfoProvider<Block, SignedBlock<Block>, AccountId, Hash> for Runtime {
+		fn get_block_info(block: SignedBlock<Block>) -> RpcBlock<AccountId, Hash> {
+
+			let time = Timestamp::now().into();
+			let author = Authorship::author();
+			let height = block.block.header.number;
+			let transaction_hashes = block.block.extrinsics
+				.iter()
+				.map(|tx| <Runtime as frame_system::Config>::Hashing::hash_of(tx))
+				.collect();
+			let fees = System::read_events_no_consensus()
+				.filter_map(|v| match v.event {
+					RuntimeEvent::TransactionPayment(pallet_transaction_payment::Event::TransactionFeePaid { actual_fee, .. }) => {
+						Some(actual_fee)
+					},
+					_ => None,
+				})
+				.sum::<u128>();
+			let signature = block.justifications.encode();
+
+			let digest = block.block.header.digest.encode();
+
+			RpcBlock {
+				time,
+				author,
+				height,
+				transaction_hashes,
+				fees,
+				signature,
+				// reward: todo!(),
+				// minted: todo!(),
+				digest,
+			}
 		}
 	}
 

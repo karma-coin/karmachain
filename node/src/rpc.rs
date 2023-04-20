@@ -10,7 +10,7 @@ use std::sync::Arc;
 use jsonrpsee::RpcModule;
 use karmachain_node_runtime::{
 	opaque::{Block, UncheckedExtrinsic},
-	AccountId, Balance, Index, RuntimeEvent, Signature,
+	AccountId, Balance, Index, RuntimeEvent, Signature, Hash,
 };
 use sc_client_api::BlockBackend;
 use sc_transaction_pool_api::TransactionPool;
@@ -19,6 +19,7 @@ use sp_block_builder::BlockBuilder;
 use sp_blockchain::{Error as BlockChainError, HeaderBackend, HeaderMetadata};
 
 pub use sc_rpc_api::DenyUnsafe;
+use sp_runtime::generic::SignedBlock;
 
 /// Full client dependencies.
 pub struct FullDeps<C, P> {
@@ -51,13 +52,16 @@ where
 	>,
 	C::Api: runtime_api::transactions::TransactionIndexer<Block, AccountId>,
 	C::Api: runtime_api::events::EventProvider<Block, RuntimeEvent>,
+	C::Api:
+		runtime_api::chain::BlockInfoProvider<Block, SignedBlock<Block>, AccountId, Hash>,
 	P: TransactionPool + 'static,
 {
 	use pallet_identity_rpc::{Identity, IdentityApiServer};
 	use pallet_transaction_payment_rpc::{TransactionPayment, TransactionPaymentApiServer};
 	use rpc_api::{
+		chain::{client::BlocksProvider, BlocksProviderApiServer},
 		events::{client::EventsProvider, EventsProviderApiServer},
-		transactions::{client::TransactionsIndexer, TransactionsIndexerApiServer}
+		transactions::{client::TransactionsIndexer, TransactionsIndexerApiServer},
 	};
 	use substrate_frame_rpc_system::{System, SystemApiServer};
 
@@ -69,6 +73,7 @@ where
 	module.merge(Identity::new(client.clone()).into_rpc())?;
 	module.merge(TransactionsIndexer::new(client.clone()).into_rpc())?;
 	module.merge(EventsProvider::new(client.clone()).into_rpc())?;
+	module.merge(BlocksProvider::new(client.clone()).into_rpc())?;
 
 	Ok(module)
 }

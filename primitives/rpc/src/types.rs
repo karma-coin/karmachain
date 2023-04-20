@@ -60,3 +60,17 @@ pub enum TransactionStatus {
 	Rejected,
 	OnChain,
 }
+
+#[derive(Encode, Decode, Default)]
+#[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
+pub struct Block<AccountId, Hash> {
+	pub time: u64,
+	pub author: Option<AccountId>,
+	pub height: u32,
+	pub transaction_hashes: Vec<Hash>,
+	pub fees: u128,
+	pub signature: Vec<u8>,
+	// pub reward: u128,
+	// pub minted: u128,
+	pub digest: Vec<u8>,
+}
