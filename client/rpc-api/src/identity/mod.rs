@@ -6,6 +6,7 @@ use sp_rpc::UserInfo;
 
 #[rpc(client, server)]
 pub trait IdentityApi<BlockHash, AccountId, NameLimit, PhoneNumberLimit> {
+	/// RPC method provides information about user account by `AccountId`
 	#[method(name = "identity_getUserInfoByAccount")]
 	fn get_user_info_by_account(
 		&self,
@@ -13,6 +14,7 @@ pub trait IdentityApi<BlockHash, AccountId, NameLimit, PhoneNumberLimit> {
 		at: Option<BlockHash>,
 	) -> RpcResult<Option<UserInfo<AccountId>>>;
 
+	/// RPC method provides information about user account by `Name`
 	#[method(name = "identity_getUserInfoByName")]
 	fn get_user_info_by_name(
 		&self,
@@ -20,6 +22,7 @@ pub trait IdentityApi<BlockHash, AccountId, NameLimit, PhoneNumberLimit> {
 		at: Option<BlockHash>,
 	) -> RpcResult<Option<UserInfo<AccountId>>>;
 
+	/// RPC method provides information about user account by `PhoneNumber`
 	#[method(name = "identity_getUserInfoByNumber")]
 	fn get_user_info_by_number(
 		&self,
@@ -27,6 +30,8 @@ pub trait IdentityApi<BlockHash, AccountId, NameLimit, PhoneNumberLimit> {
 		at: Option<BlockHash>,
 	) -> RpcResult<Option<UserInfo<AccountId>>>;
 
+	/// RPC method provides list of community members with information
+	/// about each member account
 	#[method(name = "community_get_all_users")]
 	fn get_all_users(
 		&self,
