@@ -10,7 +10,7 @@ use std::sync::Arc;
 use jsonrpsee::RpcModule;
 use karmachain_node_runtime::{
 	opaque::{Block, UncheckedExtrinsic},
-	AccountId, Balance, Hash, Index, RuntimeEvent, Signature,
+	AccountId, Balance, Hash, Index, NameLimit, PhoneNumberLimit, RuntimeEvent, Signature,
 };
 use sc_client_api::BlockBackend;
 use sc_transaction_pool_api::TransactionPool;
@@ -43,7 +43,7 @@ where
 	C::Api: substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Index>,
 	C::Api: pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>,
 	C::Api: BlockBuilder<Block>,
-	C::Api: pallet_identity_rpc::IdentityRuntimeApi<Block, AccountId>,
+	C::Api: runtime_api::identity::IdentityApi<Block, AccountId, NameLimit, PhoneNumberLimit>,
 	C::Api: runtime_api::transactions::TransactionInfoProvider<
 		Block,
 		UncheckedExtrinsic,
@@ -55,11 +55,11 @@ where
 	C::Api: runtime_api::chain::BlockInfoProvider<Block, SignedBlock<Block>, AccountId, Hash>,
 	P: TransactionPool + 'static,
 {
-	use pallet_identity_rpc::{Identity, IdentityApiServer};
 	use pallet_transaction_payment_rpc::{TransactionPayment, TransactionPaymentApiServer};
 	use rpc_api::{
 		chain::{client::BlocksProvider, BlocksProviderApiServer},
 		events::{client::EventsProvider, EventsProviderApiServer},
+		identity::{client::Identity, IdentityApiServer},
 		transactions::{client::TransactionsIndexer, TransactionsIndexerApiServer},
 	};
 	use substrate_frame_rpc_system::{System, SystemApiServer};

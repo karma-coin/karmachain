@@ -14,4 +14,5 @@ sp-blockchain = { version = "4.0.0-dev", git = "https://github.com/paritytech/su
 sc-client-api = { version = "4.0.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.37" }
 sp-runtime = { version = "7.0.0", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.37" }
 sp-rpc = { version = "0.2.0", path = "../../primitives/rpc" }
+sp-common = { version = "0.2.0", path = "../../primitives/common" }
 runtime-api = { version = "0.2.0", path = "../runtime-api" }

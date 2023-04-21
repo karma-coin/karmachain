@@ -52,7 +52,6 @@ sp-consensus-babe = { version = "0.10.0-dev", default-features = false, git = "h
 # Used for the node template's RPCs
 frame-system-rpc-runtime-api = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.37" }
 pallet-transaction-payment-rpc-runtime-api = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.37" }
-pallet-identity-rpc-runtime-api = { version = "0.1.0", default-features = false, path = "../frame/identity/rpc/runtime-api" }
 runtime-api = { version = "0.2.0", default-features = false, path = "../client/runtime-api" }
 
 # Used for runtime benchmarking

@@ -3070,7 +3070,6 @@ dependencies = [
  "jsonrpsee",
  "karmachain-node-runtime",
  "pallet-appreciation",
- "pallet-identity-rpc",
  "pallet-staking",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc",
@@ -3130,7 +3129,6 @@ dependencies = [
  "pallet-election-provider-multi-phase",
  "pallet-grandpa",
  "pallet-identity",
- "pallet-identity-rpc-runtime-api",
  "pallet-reward",
  "pallet-session",
  "pallet-staking",
@@ -4621,34 +4619,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-identity-rpc"
-version = "0.1.0"
-dependencies = [
- "jsonrpsee",
- "pallet-identity-rpc-runtime-api",
- "parity-scale-codec",
- "sp-api",
- "sp-blockchain",
- "sp-core",
- "sp-rpc 6.0.0",
- "sp-runtime",
- "sp-weights",
-]
-
-[[package]]
-name = "pallet-identity-rpc-runtime-api"
-version = "0.1.0"
-dependencies = [
- "parity-scale-codec",
- "scale-info",
- "serde",
- "sp-api",
- "sp-rpc 0.2.0",
- "sp-runtime",
- "sp-weights",
-]
-
-[[package]]
 name = "pallet-reward"
 version = "0.1.0"
 dependencies = [
@@ -5701,6 +5671,7 @@ dependencies = [
  "sc-client-api",
  "sp-api",
  "sp-blockchain",
+ "sp-common",
  "sp-rpc 0.2.0",
  "sp-runtime",
 ]
@@ -5763,6 +5734,7 @@ dependencies = [
  "scale-info",
  "serde",
  "sp-api",
+ "sp-common",
  "sp-rpc 0.2.0",
  "sp-runtime",
  "sp-weights",

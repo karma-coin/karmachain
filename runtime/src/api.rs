@@ -1,9 +1,10 @@
 use crate::{validators_rewards::era_payout, *};
 use codec::{Decode, Encode};
 use frame_system::Phase;
+use sp_common::types::CommunityId;
 use sp_rpc::{
-	Block as RpcBlock, BlockchainStats, CharTrait, GenesisData, PhoneVerifier, SignedTransaction,
-	SignedTransactionWithStatus, TransactionStatus,
+	Block as RpcBlock, BlockchainStats, CharTrait, CommunityMembership, GenesisData, PhoneVerifier,
+	SignedTransaction, SignedTransactionWithStatus, TraitScore, TransactionStatus, UserInfo,
 };
 use sp_runtime::{
 	generic::SignedBlock,
@@ -216,31 +217,31 @@ impl_runtime_apis! {
 		}
 	}
 
-	impl pallet_identity_rpc_runtime_api::IdentityApi<Block, AccountId> for Runtime {
+	impl runtime_api::identity::IdentityApi<Block, AccountId, NameLimit, PhoneNumberLimit> for Runtime {
 		fn get_user_info_by_account(
 			account_id: AccountId,
-		) -> Option<pallet_identity_rpc_runtime_api::UserInfo<AccountId>> {
+		) -> Option<UserInfo<AccountId>> {
 			Identity::identity_by_id(account_id).map(|identity_info| {
 				let nonce = System::account_nonce(&identity_info.account_id);
 				let balance = Balances::free_balance(&identity_info.account_id);
 				let trait_scores: Vec<_> = Appreciation::trait_scores_of(&identity_info.account_id)
 					.into_iter()
 					.map(|(community_id, trait_id, karma_score)| {
-						pallet_identity_rpc_runtime_api::TraitScore {
+						TraitScore {
 							trait_id, karma_score, community_id
 						}
 					})
 					.collect();
 				let community_membership: Vec<_> = Appreciation::community_membership_of(&identity_info.account_id)
 					.into_iter()
-					.map(|(community_id, karma_score, is_admin)| pallet_identity_rpc_runtime_api::CommunityMembership {
+					.map(|(community_id, karma_score, is_admin)| CommunityMembership {
 						community_id, karma_score, is_admin
 					})
 					.collect();
 
 				let karma_score = trait_scores.iter().map(|score| score.karma_score).sum::<u32>() + community_membership.len() as u32;
 
-				pallet_identity_rpc_runtime_api::UserInfo {
+				UserInfo {
 					account_id: identity_info.account_id,
 					nonce: nonce.into(),
 					user_name: identity_info.name.into(),
@@ -254,23 +255,22 @@ impl_runtime_apis! {
 		}
 
 		fn get_user_info_by_name(
-			name: Vec<u8>,
-		) -> Option<pallet_identity_rpc_runtime_api::UserInfo<AccountId>> {
-			let name: BoundedVec<u8, NameLimit> = name.try_into().ok()?;
+			name: BoundedVec<u8, NameLimit>,
+		) -> Option<UserInfo<AccountId>> {
 			Identity::identity_by_name(name).map(|identity_info| {
 				let nonce = System::account_nonce(&identity_info.account_id);
 				let balance = Balances::free_balance(&identity_info.account_id);
 				let trait_scores: Vec<_> = Appreciation::trait_scores_of(&identity_info.account_id)
 					.into_iter()
 					.map(|(community_id, trait_id, karma_score)| {
-						pallet_identity_rpc_runtime_api::TraitScore {
+						TraitScore {
 							trait_id, karma_score, community_id
 						}
 					})
 					.collect();
 				let community_membership: Vec<_> = Appreciation::community_membership_of(&identity_info.account_id)
 					.into_iter()
-					.map(|(community_id, karma_score, is_admin)| pallet_identity_rpc_runtime_api::CommunityMembership {
+					.map(|(community_id, karma_score, is_admin)| CommunityMembership {
 						community_id, karma_score, is_admin
 					})
 					.collect();
@@ -278,7 +278,7 @@ impl_runtime_apis! {
 				let karma_score = trait_scores.iter().map(|score| score.karma_score).sum::<u32>() + community_membership.len() as u32;
 
 
-				pallet_identity_rpc_runtime_api::UserInfo {
+				UserInfo {
 					account_id: identity_info.account_id,
 					nonce: nonce.into(),
 					user_name: identity_info.name.into(),
@@ -292,30 +292,29 @@ impl_runtime_apis! {
 		}
 
 		fn get_user_info_by_number(
-			number: Vec<u8>,
-		) -> Option<pallet_identity_rpc_runtime_api::UserInfo<AccountId>> {
-			let number: BoundedVec<u8, PhoneNumberLimit> = number.try_into().ok()?;
+			number: BoundedVec<u8, PhoneNumberLimit>,
+		) -> Option<UserInfo<AccountId>> {
 			Identity::identity_by_number(number).map(|identity_info| {
 				let nonce = System::account_nonce(&identity_info.account_id);
 				let balance = Balances::free_balance(&identity_info.account_id);
 				let trait_scores: Vec<_> = Appreciation::trait_scores_of(&identity_info.account_id)
 					.into_iter()
 					.map(|(community_id, trait_id, karma_score)| {
-						pallet_identity_rpc_runtime_api::TraitScore {
+						TraitScore {
 							trait_id, karma_score, community_id
 						}
 					})
 					.collect();
 				let community_membership: Vec<_> = Appreciation::community_membership_of(&identity_info.account_id)
 					.into_iter()
-					.map(|(community_id, karma_score, is_admin)| pallet_identity_rpc_runtime_api::CommunityMembership {
+					.map(|(community_id, karma_score, is_admin)| CommunityMembership {
 						community_id, karma_score, is_admin
 					})
 					.collect();
 
 				let karma_score = trait_scores.iter().map(|score| score.karma_score).sum::<u32>() + community_membership.len() as u32;
 
-				pallet_identity_rpc_runtime_api::UserInfo {
+				UserInfo {
 					account_id: identity_info.account_id,
 					nonce: nonce.into(),
 					user_name: identity_info.name.into(),
@@ -327,12 +326,21 @@ impl_runtime_apis! {
 				}
 			})
 		}
+
+		fn get_all_users(
+			community_id: CommunityId,
+		) -> Vec<UserInfo<AccountId>> {
+			pallet_appreciation::CommunityMembership::<Runtime>::iter()
+				.filter(|(_account_id, id, _role)| *id == community_id)
+				.flat_map(|(account_id, _, _)| Self::get_user_info_by_account(account_id))
+				.collect()
+		}
 	}
 
 	impl runtime_api::transactions::TransactionInfoProvider<Block, opaque::UncheckedExtrinsic, AccountId, Signature> for Runtime
 	{
 		fn get_transaction_info(opaque_extrinsic: opaque::UncheckedExtrinsic) -> Option<SignedTransactionWithStatus<AccountId, Signature>> {
-			use pallet_identity_rpc_runtime_api::runtime_decl_for_IdentityApi::IdentityApi;
+			use runtime_api::identity::runtime_decl_for_IdentityApi::IdentityApi;
 
 			// Convert `OpaqueExtrinsic` into bytes and then decode `UncheckedExtrinsic` from that bytes
 			let transaction_body = opaque_extrinsic.encode();
