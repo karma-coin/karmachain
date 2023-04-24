@@ -1,7 +1,7 @@
 use codec::Codec;
 use scale_info::prelude::vec::Vec;
 use sp_common::types::CommunityId;
-use sp_rpc::UserInfo;
+use sp_rpc::{Contact, UserInfo};
 use sp_runtime::{traits::Get, BoundedVec};
 
 sp_api::decl_runtime_apis! {
@@ -30,5 +30,11 @@ sp_api::decl_runtime_apis! {
 		fn get_all_users(
 			community_id: CommunityId,
 		) -> Vec<UserInfo<AccountId>>;
+
+		/// Get list of user by username prefix and community
+		fn get_contacts(
+			prefix: BoundedVec<u8, NameLimit>,
+			community_id: Option<CommunityId>,
+		) -> Vec<Contact<AccountId>>;
 	}
 }

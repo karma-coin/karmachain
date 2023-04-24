@@ -165,3 +165,13 @@ pub struct PhoneVerifier<AccountId> {
 	pub account_id: AccountId,
 	pub name: Vec<u8>,
 }
+
+#[derive(Encode, Decode)]
+#[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
+pub struct Contact<AccountId> {
+	pub user_name: Vec<u8>,
+	pub account_id: AccountId,
+	pub mobile_number: Vec<u8>,
+	pub community_membership: Vec<CommunityMembership>,
+	pub trait_scores: Vec<TraitScore>,
+}

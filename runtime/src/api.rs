@@ -3,8 +3,9 @@ use codec::{Decode, Encode};
 use frame_system::Phase;
 use sp_common::types::CommunityId;
 use sp_rpc::{
-	Block as RpcBlock, BlockchainStats, CharTrait, CommunityMembership, GenesisData, PhoneVerifier,
-	SignedTransaction, SignedTransactionWithStatus, TraitScore, TransactionStatus, UserInfo,
+	Block as RpcBlock, BlockchainStats, CharTrait, CommunityMembership, Contact, GenesisData,
+	PhoneVerifier, SignedTransaction, SignedTransactionWithStatus, TraitScore, TransactionStatus,
+	UserInfo,
 };
 use sp_runtime::{
 	generic::SignedBlock,
@@ -333,6 +334,48 @@ impl_runtime_apis! {
 			pallet_appreciation::CommunityMembership::<Runtime>::iter()
 				.filter(|(_account_id, id, _role)| *id == community_id)
 				.flat_map(|(account_id, _, _)| Self::get_user_info_by_account(account_id))
+				.collect()
+		}
+
+		fn get_contacts(
+			prefix: BoundedVec<u8, NameLimit>,
+			community_id: Option<CommunityId>,
+		) -> Vec<Contact<AccountId>> {
+			Identity::get_contacts(prefix)
+				.into_iter()
+				.filter(|(account_id, _)| {
+					// If `community_id` provided filter by it
+					community_id
+						.map(|community_id|
+							pallet_appreciation::CommunityMembership::<Runtime>::get(account_id, community_id)
+								.is_some()
+						)
+						.unwrap_or(true)
+				})
+				.map(|(account_id, identity_store)| {
+					let trait_scores: Vec<_> = Appreciation::trait_scores_of(&account_id)
+						.into_iter()
+						.map(|(community_id, trait_id, karma_score)| {
+							TraitScore {
+								trait_id, karma_score, community_id
+							}
+						})
+						.collect();
+					let community_membership: Vec<_> = Appreciation::community_membership_of(&account_id)
+						.into_iter()
+						.map(|(community_id, karma_score, is_admin)| CommunityMembership {
+							community_id, karma_score, is_admin
+						})
+						.collect();
+
+					Contact {
+						user_name: identity_store.name.into(),
+						account_id,
+						mobile_number: identity_store.phone_number.into(),
+						community_membership,
+						trait_scores,
+					}
+				})
 				.collect()
 		}
 	}

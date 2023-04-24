@@ -17,8 +17,8 @@ use sp_common::identity::{AccountIdentity, IdentityInfo, IdentityProvider};
 #[codec(mel_bound())]
 #[scale_info(skip_type_params(NameLimit, PhoneNumberLimit))]
 pub struct IdentityStore<NameLimit: Get<u32>, PhoneNumberLimit: Get<u32>> {
-	name: BoundedVec<u8, NameLimit>,
-	phone_number: BoundedVec<u8, PhoneNumberLimit>,
+	pub name: BoundedVec<u8, NameLimit>,
+	pub phone_number: BoundedVec<u8, PhoneNumberLimit>,
 }
 
 #[frame_support::pallet]
@@ -187,5 +187,16 @@ impl<T: Config> IdentityProvider<T::AccountId, T::NameLimit, T::PhoneNumberLimit
 		number: BoundedVec<u8, T::PhoneNumberLimit>,
 	) -> Option<IdentityInfo<T::AccountId, T::NameLimit, T::PhoneNumberLimit>> {
 		<PhoneNumberFor<T>>::get(number).and_then(Self::identity_by_id)
+	}
+}
+
+impl<T: Config> Pallet<T> {
+	/// Search for registered user who's username start with given `prefix`
+	pub fn get_contacts(
+		prefix: BoundedVec<u8, T::NameLimit>,
+	) -> Vec<(T::AccountId, IdentityStore<T::NameLimit, T::PhoneNumberLimit>)> {
+		IdentityOf::<T>::iter()
+			.filter(|(_key, value)| value.name.starts_with(&prefix))
+			.collect()
 	}
 }

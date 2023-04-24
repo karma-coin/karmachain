@@ -8,7 +8,7 @@ use runtime_api::identity::IdentityApi;
 use sp_api::ProvideRuntimeApi;
 use sp_blockchain::HeaderBackend;
 use sp_common::types::CommunityId;
-use sp_rpc::UserInfo;
+use sp_rpc::{Contact, UserInfo};
 use sp_runtime::{
 	generic::BlockId,
 	traits::{Block as BlockT, Get},
@@ -113,6 +113,32 @@ where
 		let at = BlockId::hash(at.unwrap_or_else(|| self.client.info().best_hash));
 
 		Ok(api.get_all_users(&at, community_id).map_err(|e| {
+			CallError::Custom(ErrorObject::owned(
+				0,
+				"Unable to query community members.",
+				Some(format!("{:?}", e)),
+			))
+		})?)
+	}
+
+	fn get_contacts(
+		&self,
+		prefix: Vec<u8>,
+		community_id: Option<CommunityId>,
+		at: Option<<Block as BlockT>::Hash>,
+	) -> RpcResult<Vec<Contact<AccountId>>> {
+		let api = self.client.runtime_api();
+		let at = BlockId::hash(at.unwrap_or_else(|| self.client.info().best_hash));
+
+		let prefix = prefix.try_into().map_err(|e| {
+			CallError::Custom(ErrorObject::owned(
+				0,
+				"Name length out of bounds.",
+				Some(format!("{:?}", e)),
+			))
+		})?;
+
+		Ok(api.get_contacts(&at, prefix, community_id).map_err(|e| {
 			CallError::Custom(ErrorObject::owned(
 				0,
 				"Unable to query community members.",

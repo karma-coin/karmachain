@@ -2,7 +2,7 @@ pub mod client;
 
 use jsonrpsee::{core::RpcResult, proc_macros::rpc};
 use sp_common::types::CommunityId;
-use sp_rpc::UserInfo;
+use sp_rpc::{Contact, UserInfo};
 
 #[rpc(client, server)]
 pub trait IdentityApi<BlockHash, AccountId, NameLimit, PhoneNumberLimit> {
@@ -38,4 +38,12 @@ pub trait IdentityApi<BlockHash, AccountId, NameLimit, PhoneNumberLimit> {
 		community_id: CommunityId,
 		at: Option<BlockHash>,
 	) -> RpcResult<Vec<UserInfo<AccountId>>>;
+
+	#[method(name = "community_get_contacts")]
+	fn get_contacts(
+		&self,
+		prefix: Vec<u8>,
+		community_id: Option<CommunityId>,
+		at: Option<BlockHash>,
+	) -> RpcResult<Vec<Contact<AccountId>>>;
 }
