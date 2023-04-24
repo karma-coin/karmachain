@@ -177,25 +177,25 @@ impl<T: Config> IdentityProvider<T::AccountId, T::Username, T::PhoneNumber> for 
 	}
 
 	fn identity_by_id(
-		account_id: T::AccountId,
+		account_id: &T::AccountId,
 	) -> Option<IdentityInfo<T::AccountId, T::Username, T::PhoneNumber>> {
-		<IdentityOf<T>>::get(&account_id).map(|v| IdentityInfo {
-			account_id,
+		<IdentityOf<T>>::get(account_id).map(|v| IdentityInfo {
+			account_id: account_id.clone(),
 			name: v.name,
 			number: v.phone_number,
 		})
 	}
 
 	fn identity_by_name(
-		name: T::Username,
+		name: &T::Username,
 	) -> Option<IdentityInfo<T::AccountId, T::Username, T::PhoneNumber>> {
-		<NameFor<T>>::get(name).and_then(Self::identity_by_id)
+		<NameFor<T>>::get(name).as_ref().and_then(Self::identity_by_id)
 	}
 
 	fn identity_by_number(
-		number: T::PhoneNumber,
+		number: &T::PhoneNumber,
 	) -> Option<IdentityInfo<T::AccountId, T::Username, T::PhoneNumber>> {
-		<PhoneNumberFor<T>>::get(number).and_then(Self::identity_by_id)
+		<PhoneNumberFor<T>>::get(number).as_ref().and_then(Self::identity_by_id)
 	}
 }
 

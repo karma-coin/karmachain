@@ -6,17 +6,20 @@ parameter_types! {
 	pub const MaxPhoneVerifiers: u32 = 5;
 }
 
+pub type Username = BoundedVec<u8, NameLimit>;
+pub type PhoneNumber = BoundedVec<u8, PhoneNumberLimit>;
+
 impl pallet_identity::Config for Runtime {
 	/// The overarching event type.
 	type RuntimeEvent = RuntimeEvent;
 	/// Max length of username
 	type UsernameLimit = NameLimit;
 	/// Username type
-	type Username = BoundedVec<u8, NameLimit>;
+	type Username = Username;
 	/// Max length of phone number
 	type PhoneNumberLimit = PhoneNumberLimit;
 	/// Phone number type
-	type PhoneNumber = BoundedVec<u8, PhoneNumberLimit>;
+	type PhoneNumber = PhoneNumber;
 	/// Max number of phone verifiers accounts
 	type MaxPhoneVerifiers = MaxPhoneVerifiers;
 

@@ -63,7 +63,7 @@ impl SignedExtension for CheckAccount {
 
 	fn validate(
 		&self,
-		who: &Self::AccountId,
+		_who: &Self::AccountId,
 		call: &Self::Call,
 		_info: &DispatchInfoOf<Self::Call>,
 		_len: usize,
@@ -77,7 +77,6 @@ impl SignedExtension for CheckAccount {
 					// User already is registered, can execute transaction
 					Ok(ValidTransaction::default())
 				} else {
-					pallet_appreciation::Referrals::<Runtime>::insert(who, to, ());
 					// User is not registered need to provide tag to wait,
 					// until `new_user` transaction provide this tag
 					let requires = vec![Encode::encode(&(to))];

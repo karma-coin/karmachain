@@ -13,7 +13,7 @@ where
 	) -> bool;
 
 	fn get_identity_info(
-		account_identity: AccountIdentity<AccountId, Username, PhoneNumber>,
+		account_identity: &AccountIdentity<AccountId, Username, PhoneNumber>,
 	) -> Option<IdentityInfo<AccountId, Username, PhoneNumber>> {
 		match account_identity {
 			AccountIdentity::AccountId(account_id) => Self::identity_by_id(account_id),
@@ -23,12 +23,12 @@ where
 	}
 
 	fn identity_by_id(
-		account_id: AccountId,
+		account_id: &AccountId,
 	) -> Option<IdentityInfo<AccountId, Username, PhoneNumber>>;
 
-	fn identity_by_name(name: Username) -> Option<IdentityInfo<AccountId, Username, PhoneNumber>>;
+	fn identity_by_name(name: &Username) -> Option<IdentityInfo<AccountId, Username, PhoneNumber>>;
 
 	fn identity_by_number(
-		number: PhoneNumber,
+		number: &PhoneNumber,
 	) -> Option<IdentityInfo<AccountId, Username, PhoneNumber>>;
 }

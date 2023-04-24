@@ -222,7 +222,7 @@ impl_runtime_apis! {
 		fn get_user_info_by_account(
 			account_id: AccountId,
 		) -> Option<UserInfo<AccountId>> {
-			Identity::identity_by_id(account_id).map(|identity_info| {
+			Identity::identity_by_id(&account_id).map(|identity_info| {
 				let nonce = System::account_nonce(&identity_info.account_id);
 				let balance = Balances::free_balance(&identity_info.account_id);
 				let trait_scores: Vec<_> = Appreciation::trait_scores_of(&identity_info.account_id)
@@ -258,7 +258,7 @@ impl_runtime_apis! {
 		fn get_user_info_by_name(
 			name: BoundedVec<u8, NameLimit>,
 		) -> Option<UserInfo<AccountId>> {
-			Identity::identity_by_name(name).map(|identity_info| {
+			Identity::identity_by_name(&name).map(|identity_info| {
 				let nonce = System::account_nonce(&identity_info.account_id);
 				let balance = Balances::free_balance(&identity_info.account_id);
 				let trait_scores: Vec<_> = Appreciation::trait_scores_of(&identity_info.account_id)
@@ -295,7 +295,7 @@ impl_runtime_apis! {
 		fn get_user_info_by_number(
 			number: BoundedVec<u8, PhoneNumberLimit>,
 		) -> Option<UserInfo<AccountId>> {
-			Identity::identity_by_number(number).map(|identity_info| {
+			Identity::identity_by_number(&number).map(|identity_info| {
 				let nonce = System::account_nonce(&identity_info.account_id);
 				let balance = Balances::free_balance(&identity_info.account_id);
 				let trait_scores: Vec<_> = Appreciation::trait_scores_of(&identity_info.account_id)
@@ -332,8 +332,8 @@ impl_runtime_apis! {
 			community_id: CommunityId,
 		) -> Vec<UserInfo<AccountId>> {
 			pallet_appreciation::CommunityMembership::<Runtime>::iter()
-				.filter(|(_account_id, id, _role)| *id == community_id)
-				.flat_map(|(account_id, _, _)| Self::get_user_info_by_account(account_id))
+				.filter(|(_, id, _)| *id == community_id)
+				.flat_map(|(phone_number, _, _)| Self::get_user_info_by_number(phone_number))
 				.collect()
 		}
 
@@ -343,11 +343,11 @@ impl_runtime_apis! {
 		) -> Vec<Contact<AccountId>> {
 			Identity::get_contacts(prefix)
 				.into_iter()
-				.filter(|(account_id, _)| {
+				.filter(|(_account_id, identity_store)| {
 					// If `community_id` provided filter by it
 					community_id
 						.map(|community_id|
-							pallet_appreciation::CommunityMembership::<Runtime>::get(account_id, community_id)
+							pallet_appreciation::CommunityMembership::<Runtime>::get(&identity_store.phone_number, community_id)
 								.is_some()
 						)
 						.unwrap_or(true)
