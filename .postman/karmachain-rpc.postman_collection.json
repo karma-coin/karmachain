@@ -57,7 +57,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"identity_getUserInfoByAccount\",\n    \"params\": {\n        \"account_id\": \"5Cfi7gqVNda2vKTFRN48jP95b6zXDoh2md2xLCamnggyLnma\"\n    }\n}"
+							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"identity_getUserInfoByAccount\",\n    \"params\": {\n        \"account_id\": \"5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty\"\n    }\n}"
 						},
 						"url": {
 							"raw": "http://localhost:9933/?",
@@ -93,6 +93,111 @@
 						"body": {
 							"mode": "raw",
 							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"identity_getUserInfoByNumber\",\n    \"params\": {\n        \"number\": [\n            1\n        ]\n    }\n}"
+						},
+						"url": {
+							"raw": "http://localhost:9933/?",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9933",
+							"path": [
+								""
+							],
+							"query": [
+								{
+									"key": "",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get all users",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"community_get_all_users\",\n    \"params\": {\n        \"community_id\": 0\n    }\n}"
+						},
+						"url": {
+							"raw": "http://localhost:9933/?",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9933",
+							"path": [
+								""
+							],
+							"query": [
+								{
+									"key": "",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get contacts",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"community_get_contacts\",\n    \"params\": {\n        \"prefix\": [0],\n        \"community_id\": null\n    }\n}"
+						},
+						"url": {
+							"raw": "http://localhost:9933/?",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9933",
+							"path": [
+								""
+							],
+							"query": [
+								{
+									"key": "",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get leader board",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"community_get_leader_board\",\n    \"params\": {}\n}"
 						},
 						"url": {
 							"raw": "http://localhost:9933/?",
