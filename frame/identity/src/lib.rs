@@ -139,16 +139,35 @@ pub mod pallet {
 			let who = ensure_signed(origin)?;
 			ensure!(PhoneVerifiers::<T>::get().contains(&who), Error::<T>::NotAllowed);
 
+			if PhoneNumberFor::<T>::contains_key(&phone_number) {
+				// If such phone number exists migrate those account
+				// balance, trait score, etc to this new account
+
+				// Remove old account date
+				// Save unwrap because of check above
+				let prev_account_id = PhoneNumberFor::<T>::take(&phone_number).unwrap();
+				let prev_identity_store = IdentityOf::<T>::take(&prev_account_id).unwrap();
+				NameFor::<T>::remove(&prev_identity_store.name);
+
+				// Save old nickname and new `AccountId`
+				NameFor::<T>::insert(&prev_identity_store.name, account_id.clone());
+				PhoneNumberFor::<T>::insert(&phone_number, account_id.clone());
+				IdentityOf::<T>::insert(
+					&account_id,
+					IdentityStore { name: prev_identity_store.name, phone_number },
+				);
+
+				// TODO: transfer balance
+
+				return Err(Error::<T>::PhoneNumberTaken.into())
+			}
+
 			if IdentityOf::<T>::contains_key(&account_id) {
 				return Err(Error::<T>::AlreadyRegistered.into())
 			}
 
 			if NameFor::<T>::contains_key(&name) {
 				return Err(Error::<T>::UserNameTaken.into())
-			}
-
-			if PhoneNumberFor::<T>::contains_key(&phone_number) {
-				return Err(Error::<T>::PhoneNumberTaken.into())
 			}
 
 			NameFor::<T>::insert(&name, account_id.clone());

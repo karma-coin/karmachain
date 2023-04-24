@@ -425,7 +425,9 @@ impl_runtime_apis! {
 
 	impl runtime_api::transactions::TransactionIndexer<Block, AccountId> for Runtime {
 		fn get_transactions_by_account(account_id: AccountId) -> Vec<(BlockNumber, u32)> {
-			TransactionIndexer::accounts_tx(account_id).unwrap_or_default()
+			Identity::identity_by_id(&account_id)
+				.and_then(|identity| TransactionIndexer::accounts_tx(identity.number))
+				.unwrap_or_default()
 		}
 
 		fn get_transaction(tx_hash: Hash) -> Option<(BlockNumber, u32)> {

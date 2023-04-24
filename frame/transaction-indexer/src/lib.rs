@@ -2,7 +2,10 @@
 
 use frame_support::dispatch::DispatchResult;
 pub use pallet::*;
-use sp_common::types::{CharTraitId, CommunityId};
+use sp_common::{
+	traits::IdentityProvider,
+	types::{CharTraitId, CommunityId},
+};
 use sp_runtime::traits::{BlockNumberProvider, Hash};
 
 #[frame_support::pallet]
@@ -35,7 +38,7 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn accounts_tx)]
 	pub type AccountTransactions<T: Config> =
-		StorageMap<_, Blake2_128Concat, T::AccountId, Vec<(T::BlockNumber, u32)>>;
+		StorageMap<_, Blake2_128Concat, T::PhoneNumber, Vec<(T::BlockNumber, u32)>>;
 
 	#[pallet::storage]
 	pub type TransactionsCount<T: Config> = StorageValue<_, u64, ValueQuery>;
@@ -59,6 +62,8 @@ pub mod pallet {
 	pub enum Error<T> {
 		/// Attempted to call `store` outside of block execution.
 		BadContext,
+		/// User date not found
+		NotFound,
 	}
 
 	#[pallet::hooks]
@@ -78,8 +83,12 @@ impl<T: Config> Pallet<T> {
 		let extrinsic_data = <frame_system::Pallet<T>>::extrinsic_data(extrinsic_index);
 		let hash = T::Hashing::hash(&extrinsic_data);
 
+		let who = T::IdentityProvider::identity_by_id(&account_id)
+			.ok_or(Error::<T>::NotFound)?
+			.number;
+
 		TxHashes::<T>::insert(hash, (block_number, extrinsic_index));
-		AccountTransactions::<T>::append(account_id, (block_number, extrinsic_index));
+		AccountTransactions::<T>::append(who, (block_number, extrinsic_index));
 
 		Ok(())
 	}
