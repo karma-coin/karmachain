@@ -235,14 +235,12 @@ impl<T: Config> Pallet<T> {
 	}
 }
 
-impl<T: Config> KarmaHooks<T::AccountId, T::Balance, T::NameLimit, T::PhoneNumberLimit>
-	for Pallet<T>
-{
+impl<T: Config> KarmaHooks<T::AccountId, T::Balance, T::Username, T::PhoneNumber> for Pallet<T> {
 	fn on_new_user(
 		_verifier: T::AccountId,
 		who: T::AccountId,
-		_name: BoundedVec<u8, T::NameLimit>,
-		_phone_number: BoundedVec<u8, T::PhoneNumberLimit>,
+		_name: T::Username,
+		_phone_number: T::PhoneNumber,
 	) -> DispatchResult {
 		let total_allocated = SignupRewardTotalAllocated::<T>::get();
 

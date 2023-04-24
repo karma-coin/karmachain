@@ -4,10 +4,7 @@ use frame_support::{
 	traits::{Currency, ExistenceRequirement, Get},
 	BoundedVec,
 };
-use sp_common::{
-	hooks::Hooks,
-	identity::{AccountIdentity, IdentityProvider},
-};
+use sp_common::{hooks::Hooks, identity::AccountIdentity, traits::IdentityProvider};
 
 mod types;
 
@@ -46,11 +43,7 @@ pub mod pallet {
 		/// The currency mechanism.
 		type Currency: Currency<Self::AccountId, Balance = Self::Balance>;
 
-		type IdentityProvider: IdentityProvider<
-			Self::AccountId,
-			Self::NameLimit,
-			Self::PhoneNumberLimit,
-		>;
+		type IdentityProvider: IdentityProvider<Self::AccountId, Self::Username, Self::PhoneNumber>;
 	}
 
 	#[pallet::pallet]
@@ -241,7 +234,7 @@ pub mod pallet {
 		Blake2_128Concat,
 		T::AccountId,
 		Blake2_128Concat,
-		AccountIdentity<T::AccountId, T::NameLimit, T::PhoneNumberLimit>,
+		AccountIdentity<T::AccountId, T::Username, T::PhoneNumber>,
 		(),
 	>;
 
@@ -252,8 +245,8 @@ pub mod pallet {
 			community_id: CommunityId,
 			community_name: BoundedVec<u8, T::CommunityNameLimit>,
 			account_id: T::AccountId,
-			username: BoundedVec<u8, T::NameLimit>,
-			phone_number: BoundedVec<u8, T::PhoneNumberLimit>,
+			username: T::Username,
+			phone_number: T::PhoneNumber,
 		},
 	}
 
@@ -284,7 +277,7 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
 		pub fn appreciation(
 			origin: OriginFor<T>,
-			to: AccountIdentity<T::AccountId, T::NameLimit, T::PhoneNumberLimit>,
+			to: AccountIdentity<T::AccountId, T::Username, T::PhoneNumber>,
 			amount: T::Balance,
 			community_id: Option<CommunityId>,
 			char_trait_id: Option<CharTraitId>,
@@ -310,7 +303,7 @@ pub mod pallet {
 		pub fn set_admin(
 			origin: OriginFor<T>,
 			community_id: CommunityId,
-			new_admin: AccountIdentity<T::AccountId, T::NameLimit, T::PhoneNumberLimit>,
+			new_admin: AccountIdentity<T::AccountId, T::Username, T::PhoneNumber>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			ensure!(
@@ -350,7 +343,7 @@ pub mod pallet {
 
 impl<T: pallet::Config> Pallet<T> {
 	fn get_account_id(
-		to: AccountIdentity<T::AccountId, T::NameLimit, T::PhoneNumberLimit>,
+		to: AccountIdentity<T::AccountId, T::Username, T::PhoneNumber>,
 	) -> Option<T::AccountId> {
 		match to {
 			AccountIdentity::AccountId(account_id) => Some(account_id),
@@ -479,12 +472,12 @@ impl<T: pallet::Config> Pallet<T> {
 	}
 }
 
-impl<T: Config> Hooks<T::AccountId, T::Balance, T::NameLimit, T::PhoneNumberLimit> for Pallet<T> {
+impl<T: Config> Hooks<T::AccountId, T::Balance, T::Username, T::PhoneNumber> for Pallet<T> {
 	fn on_new_user(
 		_verifier: T::AccountId,
 		who: T::AccountId,
-		_name: BoundedVec<u8, T::NameLimit>,
-		_phone_number: BoundedVec<u8, T::PhoneNumberLimit>,
+		_name: T::Username,
+		_phone_number: T::PhoneNumber,
 	) -> DispatchResult {
 		let no_community_id = NoCommunityId::<T>::get()?;
 		let signup_char_trait_id = SignupCharTraitId::<T>::get()?;

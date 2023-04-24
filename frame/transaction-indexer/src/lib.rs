@@ -1,6 +1,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use frame_support::{dispatch::DispatchResult, BoundedVec};
+use frame_support::dispatch::DispatchResult;
 pub use pallet::*;
 use sp_common::types::{CharTraitId, CommunityId};
 use sp_runtime::traits::{BlockNumberProvider, Hash};
@@ -85,14 +85,14 @@ impl<T: Config> Pallet<T> {
 	}
 }
 
-impl<T: Config> sp_common::hooks::Hooks<T::AccountId, T::Balance, T::NameLimit, T::PhoneNumberLimit>
+impl<T: Config> sp_common::hooks::Hooks<T::AccountId, T::Balance, T::Username, T::PhoneNumber>
 	for Pallet<T>
 {
 	fn on_new_user(
 		verifier: T::AccountId,
 		who: T::AccountId,
-		_name: BoundedVec<u8, T::NameLimit>,
-		_phone_number: BoundedVec<u8, T::PhoneNumberLimit>,
+		_name: T::Username,
+		_phone_number: T::PhoneNumber,
 	) -> DispatchResult {
 		Self::index_transaction(verifier)?;
 		Self::index_transaction(who)

@@ -11,8 +11,8 @@ use sp_std::{default::Default, marker::PhantomData, vec};
 
 pub type AccountIdentityTag = AccountIdentity<
 	<Runtime as frame_system::Config>::AccountId,
-	<Runtime as pallet_identity::Config>::NameLimit,
-	<Runtime as pallet_identity::Config>::PhoneNumberLimit,
+	<Runtime as pallet_identity::Config>::Username,
+	<Runtime as pallet_identity::Config>::PhoneNumber,
 >;
 
 #[derive(Encode, Decode, Default, Clone, Eq, PartialEq, TypeInfo)]

@@ -1,11 +1,7 @@
 use crate::types::{CharTraitId, CommunityId};
-use frame_support::{dispatch::DispatchResult, traits::Get, BoundedVec};
+use frame_support::dispatch::DispatchResult;
 
-pub trait Hooks<AccountId, Balance, NameLimit, PhoneNumberLimit>
-where
-	NameLimit: Get<u32>,
-	PhoneNumberLimit: Get<u32>,
-{
+pub trait Hooks<AccountId, Balance, Username, PhoneNumber> {
 	/// New user registered via `new_user` transactions. Implement to have something happen.
 	/// This hook called after all checks performed and all values wrote to the storage.
 	///
@@ -22,8 +18,8 @@ where
 	fn on_new_user(
 		_verifier: AccountId,
 		_who: AccountId,
-		_name: BoundedVec<u8, NameLimit>,
-		_phone_number: BoundedVec<u8, PhoneNumberLimit>,
+		_name: Username,
+		_phone_number: PhoneNumber,
 	) -> DispatchResult {
 		Ok(())
 	}
@@ -80,21 +76,21 @@ where
 	}
 }
 
-impl<AccountId, Balance, NameLimit, PhoneNumberLimit, H1, H2>
-	Hooks<AccountId, Balance, NameLimit, PhoneNumberLimit> for (H1, H2)
+impl<AccountId, Balance, Username, PhoneNumber, H1, H2>
+	Hooks<AccountId, Balance, Username, PhoneNumber> for (H1, H2)
 where
 	AccountId: Clone,
 	Balance: Clone,
-	NameLimit: Get<u32>,
-	PhoneNumberLimit: Get<u32>,
-	H1: Hooks<AccountId, Balance, NameLimit, PhoneNumberLimit>,
-	H2: Hooks<AccountId, Balance, NameLimit, PhoneNumberLimit>,
+	Username: Clone,
+	PhoneNumber: Clone,
+	H1: Hooks<AccountId, Balance, Username, PhoneNumber>,
+	H2: Hooks<AccountId, Balance, Username, PhoneNumber>,
 {
 	fn on_new_user(
 		verifier: AccountId,
 		who: AccountId,
-		name: BoundedVec<u8, NameLimit>,
-		phone_number: BoundedVec<u8, PhoneNumberLimit>,
+		name: Username,
+		phone_number: PhoneNumber,
 	) -> DispatchResult {
 		H1::on_new_user(verifier.clone(), who.clone(), name.clone(), phone_number.clone())?;
 		H2::on_new_user(verifier, who, name, phone_number)
