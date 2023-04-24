@@ -39,6 +39,8 @@ pub trait IdentityApi<BlockHash, AccountId, NameLimit, PhoneNumberLimit> {
 		at: Option<BlockHash>,
 	) -> RpcResult<Vec<UserInfo<AccountId>>>;
 
+	/// RPC method provides list of users who's name starts with `prefix`
+	/// also can be filtered by `community_id`, `None` mean no filtering
 	#[method(name = "community_get_contacts")]
 	fn get_contacts(
 		&self,
@@ -47,6 +49,7 @@ pub trait IdentityApi<BlockHash, AccountId, NameLimit, PhoneNumberLimit> {
 		at: Option<BlockHash>,
 	) -> RpcResult<Vec<Contact<AccountId>>>;
 
+	/// RPC method provides info about karma rewards period leaderboard
 	#[method(name = "community_get_leader_board")]
 	fn get_leader_board(&self) -> RpcResult<Vec<LeaderboardEntry<AccountId>>>;
 }
