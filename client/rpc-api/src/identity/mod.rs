@@ -2,7 +2,7 @@ pub mod client;
 
 use jsonrpsee::{core::RpcResult, proc_macros::rpc};
 use sp_common::types::CommunityId;
-use sp_rpc::{Contact, UserInfo};
+use sp_rpc::{Contact, LeaderboardEntry, UserInfo};
 
 #[rpc(client, server)]
 pub trait IdentityApi<BlockHash, AccountId, NameLimit, PhoneNumberLimit> {
@@ -46,4 +46,7 @@ pub trait IdentityApi<BlockHash, AccountId, NameLimit, PhoneNumberLimit> {
 		community_id: Option<CommunityId>,
 		at: Option<BlockHash>,
 	) -> RpcResult<Vec<Contact<AccountId>>>;
+
+	#[method(name = "community_get_leader_board")]
+	fn get_leader_board(&self) -> RpcResult<Vec<LeaderboardEntry<AccountId>>>;
 }

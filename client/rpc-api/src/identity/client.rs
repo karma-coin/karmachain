@@ -8,7 +8,7 @@ use runtime_api::identity::IdentityApi;
 use sp_api::ProvideRuntimeApi;
 use sp_blockchain::HeaderBackend;
 use sp_common::types::CommunityId;
-use sp_rpc::{Contact, UserInfo};
+use sp_rpc::{Contact, LeaderboardEntry, UserInfo};
 use sp_runtime::{
 	generic::BlockId,
 	traits::{Block as BlockT, Get},
@@ -145,5 +145,10 @@ where
 				Some(format!("{:?}", e)),
 			))
 		})?)
+	}
+
+	fn get_leader_board(&self) -> RpcResult<Vec<LeaderboardEntry<AccountId>>> {
+		// TODO: impl this with karma rewards logic
+		Ok(vec![])
 	}
 }
