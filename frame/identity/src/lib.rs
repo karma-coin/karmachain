@@ -24,7 +24,10 @@ where
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
-	use frame_support::pallet_prelude::*;
+	use frame_support::{
+		pallet_prelude::*,
+		traits::{Currency, ExistenceRequirement},
+	};
 	use frame_system::pallet_prelude::*;
 	use sp_common::hooks::Hooks;
 	use sp_std::fmt::Debug;
@@ -50,6 +53,8 @@ pub mod pallet {
 		type MaxPhoneVerifiers: Get<u32>;
 		/// Handler for when a new user has just been registered
 		type Hooks: Hooks<Self::AccountId, Self::Balance, Self::Username, Self::PhoneNumber>;
+		/// The currency mechanism.
+		type Currency: Currency<Self::AccountId, Balance = Self::Balance>;
 	}
 
 	#[pallet::pallet]
@@ -157,9 +162,19 @@ pub mod pallet {
 					IdentityStore { name: prev_identity_store.name, phone_number },
 				);
 
-				// TODO: transfer balance
+				// No need to transfer trait score and reward info
+				// because of they are indexed by `PhoneNumber`
 
-				return Err(Error::<T>::PhoneNumberTaken.into())
+				// Transfer balance
+				let amount = T::Currency::free_balance(&prev_account_id);
+				T::Currency::transfer(
+					&prev_account_id,
+					&account_id,
+					amount,
+					ExistenceRequirement::AllowDeath,
+				)?;
+
+				return Ok(())
 			}
 
 			if IdentityOf::<T>::contains_key(&account_id) {

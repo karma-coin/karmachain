@@ -22,6 +22,8 @@ impl pallet_identity::Config for Runtime {
 	type PhoneNumber = PhoneNumber;
 	/// Max number of phone verifiers accounts
 	type MaxPhoneVerifiers = MaxPhoneVerifiers;
+	/// The currency mechanism.
+	type Currency = Balances;
 
 	type Hooks = (Appreciation, (Reward, TransactionIndexer));
 }

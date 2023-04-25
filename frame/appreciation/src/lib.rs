@@ -40,8 +40,6 @@ pub mod pallet {
 		type EmojiLimit: Get<u32>;
 		/// Max length of `Community`'s urls
 		type CommunityUrlLimit: Get<u32>;
-		/// The currency mechanism.
-		type Currency: Currency<Self::AccountId, Balance = Self::Balance>;
 
 		type IdentityProvider: IdentityProvider<Self::AccountId, Self::Username, Self::PhoneNumber>;
 	}

@@ -20,8 +20,6 @@ pub mod pallet {
 		frame_system::Config + pallet_balances::Config + pallet_identity::Config
 	{
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
-		/// The currency mechanism.
-		type Currency: Currency<Self::AccountId, Balance = Self::Balance>;
 
 		type IdentityProvider: IdentityProvider<Self::AccountId, Self::Username, Self::PhoneNumber>;
 	}
