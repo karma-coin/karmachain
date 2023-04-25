@@ -3129,6 +3129,7 @@ dependencies = [
  "pallet-grandpa",
  "pallet-identity",
  "pallet-identity-rpc-runtime-api",
+ "pallet-reward",
  "pallet-session",
  "pallet-staking",
  "pallet-sudo",
@@ -4465,7 +4466,7 @@ dependencies = [
 
 [[package]]
 name = "pallet-appreciation"
-version = "4.0.0-dev"
+version = "0.1.0"
 dependencies = [
  "frame-support",
  "frame-system",
@@ -4598,10 +4599,11 @@ dependencies = [
 
 [[package]]
 name = "pallet-identity"
-version = "4.0.0-dev"
+version = "0.1.0"
 dependencies = [
  "frame-support",
  "frame-system",
+ "impl-trait-for-tuples",
  "parity-scale-codec",
  "scale-info",
  "sp-common",
@@ -4613,7 +4615,7 @@ dependencies = [
 
 [[package]]
 name = "pallet-identity-rpc"
-version = "4.0.0-dev"
+version = "0.1.0"
 dependencies = [
  "jsonrpsee",
  "pallet-identity-rpc-runtime-api",
@@ -4628,7 +4630,7 @@ dependencies = [
 
 [[package]]
 name = "pallet-identity-rpc-runtime-api"
-version = "4.0.0-dev"
+version = "0.1.0"
 dependencies = [
  "parity-scale-codec",
  "scale-info",
@@ -4637,6 +4639,21 @@ dependencies = [
  "sp-rpc 0.1.0",
  "sp-runtime",
  "sp-weights",
+]
+
+[[package]]
+name = "pallet-reward"
+version = "0.1.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "pallet-balances",
+ "pallet-identity",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
 ]
 
 [[package]]

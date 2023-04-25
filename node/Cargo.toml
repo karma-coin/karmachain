@@ -55,7 +55,7 @@ sp-block-builder = { version = "4.0.0-dev", git = "https://github.com/paritytech
 sc-basic-authorship = { version = "0.10.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.37" }
 substrate-frame-rpc-system = { version = "4.0.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.37" }
 pallet-transaction-payment-rpc = { version = "4.0.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.37" }
-pallet-identity-rpc = { version = "4.0.0-dev", path = "../frame/identity/rpc" }
+pallet-identity-rpc = { version = "0.1.0", path = "../frame/identity/rpc" }
 
 # These dependencies are used for runtime benchmarking
 frame-benchmarking = { version = "4.0.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.37" }
@@ -63,7 +63,7 @@ frame-benchmarking-cli = { version = "4.0.0-dev", git = "https://github.com/pari
 
 # Local Dependencies
 karmachain-node-runtime = { version = "4.0.0-dev", path = "../runtime" }
-pallet-appreciation = { version = "4.0.0-dev", path = "../frame/appreciation" }
+pallet-appreciation = { version = "0.1.0", path = "../frame/appreciation" }
 
 sp-common = { version = "0.2.0", path = "../primitives/common" }
 

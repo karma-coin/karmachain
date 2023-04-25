@@ -291,6 +291,7 @@ fn testnet_genesis(
 				(59, "a Dynamo".into(), "🚀".into()),
 				(60, "an Imaginative Motivator".into(), "🌻".into()),
 				(61, "a Campaigner".into(), "📣".into()),
+				(62, "A Karma Rewards Winner".into(), ":trophy:".into()),
 			],
 			communities: vec![
 				(
@@ -311,5 +312,6 @@ fn testnet_genesis(
 			..Default::default()
 		},
 		identity: IdentityConfig { phone_verifiers },
+		reward: Default::default(),
 	}
 }
