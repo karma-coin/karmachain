@@ -32,7 +32,7 @@ cargo run --release -- --dev
 Firstly you need to create chain specification file or use existed one:
 
 ```sh
-cargo run -- build-spec --dev > chainSpec.json
+cargo run -- build-spec --dev > chain-spec/chainSpec.json
 ```
 
 Now you can modify `chainSpec.json` to change blockchain genesis params.
@@ -45,7 +45,7 @@ Then to run local node use next command, because of this is dev environment use
 alice session keys and account as validator:
 
 ```shell
- cargo run -- --chain=chainSpec.json --alice --validator
+ cargo run -- --chain=chain-spec/chainSpec.json --alice --validator
 ```
 
 ### Build
