@@ -27,8 +27,6 @@ impl pallet_appreciation::Config for Runtime {
 	type EmojiLimit = EmojiLimit;
 	/// Max length of `Community`'s urls
 	type CommunityUrlLimit = CommunityUrlLimit;
-	/// The currency mechanism.
-	type Currency = Balances;
 
 	type IdentityProvider = Identity;
 }

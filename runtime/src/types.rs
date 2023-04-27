@@ -63,5 +63,4 @@ pub type Executive = frame_executive::Executive<
 	AllPalletsWithSystem,
 >;
 
-pub type AccountIdentity =
-	sp_common::identity::AccountIdentity<AccountId, NameLimit, PhoneNumberLimit>;
+pub type AccountIdentity = sp_common::identity::AccountIdentity<AccountId, Username, PhoneNumber>;

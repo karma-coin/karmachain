@@ -1,8 +1,11 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use frame_support::{dispatch::DispatchResult, BoundedVec};
+use frame_support::dispatch::DispatchResult;
 pub use pallet::*;
-use sp_common::types::{CharTraitId, CommunityId};
+use sp_common::{
+	traits::IdentityProvider,
+	types::{CharTraitId, CommunityId},
+};
 use sp_runtime::traits::{BlockNumberProvider, Hash};
 
 #[frame_support::pallet]
@@ -35,7 +38,7 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn accounts_tx)]
 	pub type AccountTransactions<T: Config> =
-		StorageMap<_, Blake2_128Concat, T::AccountId, Vec<(T::BlockNumber, u32)>>;
+		StorageMap<_, Blake2_128Concat, T::PhoneNumber, Vec<(T::BlockNumber, u32)>>;
 
 	#[pallet::storage]
 	pub type TransactionsCount<T: Config> = StorageValue<_, u64, ValueQuery>;
@@ -59,6 +62,8 @@ pub mod pallet {
 	pub enum Error<T> {
 		/// Attempted to call `store` outside of block execution.
 		BadContext,
+		/// User date not found
+		NotFound,
 	}
 
 	#[pallet::hooks]
@@ -78,21 +83,25 @@ impl<T: Config> Pallet<T> {
 		let extrinsic_data = <frame_system::Pallet<T>>::extrinsic_data(extrinsic_index);
 		let hash = T::Hashing::hash(&extrinsic_data);
 
+		let who = T::IdentityProvider::identity_by_id(&account_id)
+			.ok_or(Error::<T>::NotFound)?
+			.number;
+
 		TxHashes::<T>::insert(hash, (block_number, extrinsic_index));
-		AccountTransactions::<T>::append(account_id, (block_number, extrinsic_index));
+		AccountTransactions::<T>::append(who, (block_number, extrinsic_index));
 
 		Ok(())
 	}
 }
 
-impl<T: Config> sp_common::hooks::Hooks<T::AccountId, T::Balance, T::NameLimit, T::PhoneNumberLimit>
+impl<T: Config> sp_common::hooks::Hooks<T::AccountId, T::Balance, T::Username, T::PhoneNumber>
 	for Pallet<T>
 {
 	fn on_new_user(
 		verifier: T::AccountId,
 		who: T::AccountId,
-		_name: BoundedVec<u8, T::NameLimit>,
-		_phone_number: BoundedVec<u8, T::PhoneNumberLimit>,
+		_name: T::Username,
+		_phone_number: T::PhoneNumber,
 	) -> DispatchResult {
 		Self::index_transaction(verifier)?;
 		Self::index_transaction(who)
