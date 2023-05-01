@@ -4,6 +4,9 @@
 //! Also provide helpful cli features for running node, syncing node, createing chain specification
 //! file, creating keypairs, etc.
 
+mod benchmarking;
 pub mod chain_spec;
+pub mod cli;
+pub mod command;
 pub mod rpc;
 pub mod service;
