@@ -187,11 +187,11 @@ mod community {
 /// `get_transactions_by_account`, `get_transaction`
 mod transactions {
 	use crate::utils::{get_account_id_from_seed, new_test_ext, TestUtils};
-	use karmachain_node_runtime::{Hash, System, Runtime};
+	use karmachain_node_runtime::{Hash, Runtime, System};
+	use pallet_appreciation::CommunityRole;
 	use runtime_api::transactions::runtime_decl_for_TransactionIndexer::TransactionIndexerV1;
 	use sp_core::sr25519;
 	use sp_runtime::traits::{BlakeTwo256, Hash as HashT};
-	use pallet_appreciation::CommunityRole;
 
 	#[test]
 	fn get_transactions_by_account_no_transactions() {
@@ -246,7 +246,7 @@ mod transactions {
 				// 	+1 for registration
 				//  +1 for transfer
 				assert_eq!(bob_transactions.len(), 2);
-		});
+			});
 	}
 
 	#[test]
@@ -274,29 +274,26 @@ mod transactions {
 				// 	+1 for registration
 				//  +1 for set_admin
 				assert_eq!(bob_transactions.len(), 2);
-		});
+			});
 	}
 
 	#[test]
 	fn get_transaction_transaction_not_exists() {
-		new_test_ext()
-			.execute_with(|| {
-				let hash = Hash::random();
-				let transaction = Runtime::get_transaction(hash);
-				assert!(transaction.is_none());
-			});
+		new_test_ext().execute_with(|| {
+			let hash = Hash::random();
+			let transaction = Runtime::get_transaction(hash);
+			assert!(transaction.is_none());
+		});
 	}
 
 	#[test]
 	fn get_transaction_happy_flow() {
-		new_test_ext()
-			.with_user("Alice", "Bob", "1111")
-			.execute_with(|| {
-				let extrinsic_data = System::extrinsic_data(0);
-				let hash = BlakeTwo256::hash(&extrinsic_data);
+		new_test_ext().with_user("Alice", "Bob", "1111").execute_with(|| {
+			let extrinsic_data = System::extrinsic_data(0);
+			let hash = BlakeTwo256::hash(&extrinsic_data);
 
-				let transaction = Runtime::get_transaction(hash);
-				assert!(transaction.is_some());
-			});
+			let transaction = Runtime::get_transaction(hash);
+			assert!(transaction.is_some());
+		});
 	}
 }

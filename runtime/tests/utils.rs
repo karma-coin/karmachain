@@ -1,11 +1,12 @@
-use frame_support::{assert_ok, BoundedVec};
+use frame_support::{assert_ok, traits::fungible::Mutate, BoundedVec};
 use karmachain_node_runtime::*;
 use pallet_appreciation::{Community, CommunityRole};
-use sp_common::types::{CharTraitId, CommunityId};
+use sp_common::{
+	identity::AccountIdentity,
+	types::{CharTraitId, CommunityId},
+};
 use sp_core::{sr25519, Pair, Public};
 use sp_runtime::traits::{IdentifyAccount, Verify};
-use sp_common::identity::AccountIdentity;
-use frame_support::traits::fungible::Mutate;
 
 /// Generate a crypto pair from seed.
 pub fn get_from_seed<TPublic: Public>(seed: &str) -> <TPublic::Pair as Pair>::Public {
@@ -87,19 +88,10 @@ pub trait TestUtils {
 	) -> &mut Self;
 
 	/// Set account balance
-	fn with_balance(
-		&mut self,
-		who: &str,
-		amount: Balance,
-	) -> &mut Self;
+	fn with_balance(&mut self, who: &str, amount: Balance) -> &mut Self;
 
 	/// Perform `set_admin` tx
-	fn with_set_admin(
-		&mut self,
-		community_id: CommunityId,
-		who: &str,
-		to: &str,
-	) -> &mut Self;
+	fn with_set_admin(&mut self, community_id: CommunityId, who: &str, to: &str) -> &mut Self;
 }
 
 impl TestUtils for sp_io::TestExternalities {
@@ -212,11 +204,7 @@ impl TestUtils for sp_io::TestExternalities {
 		self
 	}
 
-	fn with_balance(
-		&mut self,
-		who: &str,
-		amount: Balance,
-	) -> &mut Self {
+	fn with_balance(&mut self, who: &str, amount: Balance) -> &mut Self {
 		self.execute_with(|| {
 			let who = get_account_id_from_seed::<sr25519::Public>(who);
 
@@ -226,12 +214,7 @@ impl TestUtils for sp_io::TestExternalities {
 		self
 	}
 
-	fn with_set_admin(
-		&mut self,
-		community_id: CommunityId,
-		who: &str,
-		to: &str,
-	) -> &mut Self {
+	fn with_set_admin(&mut self, community_id: CommunityId, who: &str, to: &str) -> &mut Self {
 		self.execute_with(|| {
 			let who = get_account_id_from_seed::<sr25519::Public>(who);
 			let to = get_account_id_from_seed::<sr25519::Public>(to);
