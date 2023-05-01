@@ -1,10 +1,10 @@
 mod utils;
 
-use utils::*;
 use frame_support::{assert_noop, assert_ok, BoundedVec};
 use karmachain_node_runtime::*;
 use runtime_api::identity::runtime_decl_for_IdentityApi::IdentityApiV1;
 use sp_core::sr25519;
+use utils::*;
 
 #[test]
 fn new_user_happy_flow() {
