@@ -1,0 +1,7 @@
+# Lock rust version on `nightly-1.68` because of some test
+# some tests do not work with the newer versions
+[toolchain]
+channel = "nightly-2023-01-16"
+components = [ "rustfmt" ]
+targets = [ "wasm32-unknown-unknown" ]
+profile = "minimal"
