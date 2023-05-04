@@ -84,10 +84,20 @@ impl SignedExtension for CheckAccount {
 					Ok(ValidTransaction::default())
 				} else {
 					pallet_appreciation::Referrals::<Runtime>::insert(who, to, ());
+
 					// User is not registered need to provide tag to wait,
 					// until `new_user` transaction provide this tag
 					let requires = vec![Encode::encode(&(to))];
-					Ok(ValidTransaction { requires, ..Default::default() })
+
+					// These transactions should be stored in the pool for a period of 14 days
+					// `longevity` time sets in blocks
+					let longevity = 14 * DAYS;
+
+					Ok(ValidTransaction {
+						requires,
+						longevity: longevity.into(),
+						..Default::default()
+					})
 				},
 			// In case this is `new_user` transaction
 			RuntimeCall::Identity(pallet_identity::Call::new_user {
@@ -108,6 +118,7 @@ impl SignedExtension for CheckAccount {
 					Encode::encode(&number_tag),
 					Encode::encode(&name_tag),
 				];
+
 				Ok(ValidTransaction { provides, ..Default::default() })
 			},
 			_ => Ok(ValidTransaction::default()),
