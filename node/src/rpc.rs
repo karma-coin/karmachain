@@ -8,13 +8,18 @@
 use std::sync::Arc;
 
 use jsonrpsee::RpcModule;
-use karmachain_node_runtime::{opaque::Block, AccountId, Balance, Index};
+use karmachain_node_runtime::{
+	opaque::{Block, UncheckedExtrinsic},
+	AccountId, Balance, Hash, Index, NameLimit, PhoneNumberLimit, RuntimeEvent, Signature,
+};
+use sc_client_api::BlockBackend;
 use sc_transaction_pool_api::TransactionPool;
 use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder;
 use sp_blockchain::{Error as BlockChainError, HeaderBackend, HeaderMetadata};
 
 pub use sc_rpc_api::DenyUnsafe;
+use sp_runtime::generic::SignedBlock;
 
 /// Full client dependencies.
 pub struct FullDeps<C, P> {
@@ -34,14 +39,29 @@ where
 	C: ProvideRuntimeApi<Block>,
 	C: HeaderBackend<Block> + HeaderMetadata<Block, Error = BlockChainError> + 'static,
 	C: Send + Sync + 'static,
+	C: BlockBackend<Block>,
 	C::Api: substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Index>,
 	C::Api: pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>,
 	C::Api: BlockBuilder<Block>,
-	C::Api: pallet_identity_rpc::IdentityRuntimeApi<Block, AccountId>,
+	C::Api: runtime_api::identity::IdentityApi<Block, AccountId, NameLimit, PhoneNumberLimit>,
+	C::Api: runtime_api::transactions::TransactionInfoProvider<
+		Block,
+		UncheckedExtrinsic,
+		AccountId,
+		Signature,
+	>,
+	C::Api: runtime_api::transactions::TransactionIndexer<Block, AccountId>,
+	C::Api: runtime_api::events::EventProvider<Block, RuntimeEvent>,
+	C::Api: runtime_api::chain::BlockInfoProvider<Block, SignedBlock<Block>, AccountId, Hash>,
 	P: TransactionPool + 'static,
 {
-	use pallet_identity_rpc::{Identity, IdentityApiServer};
 	use pallet_transaction_payment_rpc::{TransactionPayment, TransactionPaymentApiServer};
+	use rpc_api::{
+		chain::{client::BlocksProvider, BlocksProviderApiServer},
+		events::{client::EventsProvider, EventsProviderApiServer},
+		identity::{client::Identity, IdentityApiServer},
+		transactions::{client::TransactionsIndexer, TransactionsIndexerApiServer},
+	};
 	use substrate_frame_rpc_system::{System, SystemApiServer};
 
 	let mut module = RpcModule::new(());
@@ -49,7 +69,10 @@ where
 
 	module.merge(System::new(client.clone(), pool, deny_unsafe).into_rpc())?;
 	module.merge(TransactionPayment::new(client.clone()).into_rpc())?;
-	module.merge(Identity::new(client).into_rpc())?;
+	module.merge(Identity::new(client.clone()).into_rpc())?;
+	module.merge(TransactionsIndexer::new(client.clone()).into_rpc())?;
+	module.merge(EventsProvider::new(client.clone()).into_rpc())?;
+	module.merge(BlocksProvider::new(client.clone()).into_rpc())?;
 
 	Ok(module)
 }

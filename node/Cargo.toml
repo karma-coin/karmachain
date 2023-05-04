@@ -55,7 +55,8 @@ sp-block-builder = { version = "4.0.0-dev", git = "https://github.com/paritytech
 sc-basic-authorship = { version = "0.10.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.37" }
 substrate-frame-rpc-system = { version = "4.0.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.37" }
 pallet-transaction-payment-rpc = { version = "4.0.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.37" }
-pallet-identity-rpc = { version = "0.1.0", path = "../frame/identity/rpc" }
+rpc-api = { version = "0.2.0", path = "../client/rpc-api" }
+runtime-api = { version = "0.2.0", path = "../client/runtime-api" }
 
 # These dependencies are used for runtime benchmarking
 frame-benchmarking = { version = "4.0.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.37" }
@@ -72,6 +73,13 @@ try-runtime-cli = { version = "0.10.0-dev", optional = true, git = "https://gith
 
 [build-dependencies]
 substrate-build-script-utils = { version = "3.0.0", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.37" }
+
+[dev-dependencies]
+tokio = "1.28.0"
+reqwest = { version = "0.11.17", features = ["json"] }
+serde_json = "1.0.96"
+sp-panic-handler = { version = "5.0.0", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.37" }
+sp-rpc = { version = "0.2.0", path = "../primitives/rpc" }
 
 [features]
 default = []

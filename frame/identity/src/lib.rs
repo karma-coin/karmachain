@@ -1,44 +1,60 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use codec::{Decode, Encode, MaxEncodedLen};
-use frame_support::{
-	pallet_prelude::DispatchResult, traits::Get, BoundedVec, CloneNoBound, PartialEqNoBound,
-	RuntimeDebugNoBound,
-};
+use codec::{Codec, Decode, Encode, MaxEncodedLen};
+use frame_support::{pallet_prelude::DispatchResult, traits::Get, BoundedVec};
 use scale_info::TypeInfo;
 use sp_std::{prelude::*, vec};
 
 pub use pallet::*;
-use sp_common::identity::{AccountIdentity, IdentityInfo, IdentityProvider};
+use sp_common::{
+	identity::{AccountIdentity, IdentityInfo},
+	traits::IdentityProvider,
+};
 
-#[derive(
-	CloneNoBound, Encode, Decode, Eq, MaxEncodedLen, PartialEqNoBound, RuntimeDebugNoBound, TypeInfo,
-)]
-#[codec(mel_bound())]
-#[scale_info(skip_type_params(NameLimit, PhoneNumberLimit))]
-pub struct IdentityStore<NameLimit: Get<u32>, PhoneNumberLimit: Get<u32>> {
-	name: BoundedVec<u8, NameLimit>,
-	phone_number: BoundedVec<u8, PhoneNumberLimit>,
+#[derive(Clone, Encode, Decode, Eq, MaxEncodedLen, PartialEq, Debug, TypeInfo)]
+pub struct IdentityStore<Username, PhoneNumber>
+where
+	Username: Codec,
+	PhoneNumber: Codec,
+{
+	pub name: Username,
+	pub phone_number: PhoneNumber,
 }
 
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
-	use frame_support::pallet_prelude::*;
+	use frame_support::{
+		pallet_prelude::*,
+		traits::{Currency, ExistenceRequirement},
+	};
 	use frame_system::pallet_prelude::*;
+	use sp_common::hooks::Hooks;
+	use sp_std::fmt::Debug;
 
 	#[pallet::config]
-	pub trait Config: frame_system::Config {
+	pub trait Config: frame_system::Config + pallet_balances::Config {
 		/// The overarching event type.
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
-		/// Max length of name
-		type NameLimit: Get<u32>;
-		/// Max length of number
+		/// Max length of username
+		type UsernameLimit: Get<u32>;
+		/// Username type
+		type Username: Parameter + Member + MaybeSerializeDeserialize + Debug + Ord + MaxEncodedLen;
+		/// Max length of phone number
 		type PhoneNumberLimit: Get<u32>;
+		/// Phone number type
+		type PhoneNumber: Parameter
+			+ Member
+			+ MaybeSerializeDeserialize
+			+ Debug
+			+ Ord
+			+ MaxEncodedLen;
 		/// Max number of phone verifiers allowed
 		type MaxPhoneVerifiers: Get<u32>;
 		/// Handler for when a new user has just been registered
-		type OnNewUser: OnNewUser<Self::AccountId>;
+		type Hooks: Hooks<Self::AccountId, Self::Balance, Self::Username, Self::PhoneNumber>;
+		/// The currency mechanism.
+		type Currency: Currency<Self::AccountId, Balance = Self::Balance>;
 	}
 
 	#[pallet::pallet]
@@ -79,22 +95,22 @@ pub mod pallet {
 	}
 
 	#[pallet::storage]
-	pub type IdentityOf<T: Config> = StorageMap<
+	pub type IdentityOf<T: Config> = CountedStorageMap<
 		_,
 		Blake2_128Concat,
 		T::AccountId,
-		IdentityStore<T::NameLimit, T::PhoneNumberLimit>,
+		IdentityStore<T::Username, T::PhoneNumber>,
 	>;
 
 	#[pallet::storage]
-	pub type NameFor<T: Config> =
-		StorageMap<_, Blake2_128Concat, BoundedVec<u8, T::NameLimit>, T::AccountId>;
+	pub type NameFor<T: Config> = StorageMap<_, Blake2_128Concat, T::Username, T::AccountId>;
 
 	#[pallet::storage]
 	pub type PhoneNumberFor<T: Config> =
-		StorageMap<_, Blake2_128Concat, BoundedVec<u8, T::PhoneNumberLimit>, T::AccountId>;
+		StorageMap<_, Blake2_128Concat, T::PhoneNumber, T::AccountId>;
 
 	#[pallet::storage]
+	#[pallet::getter(fn verifiers)]
 	pub type PhoneVerifiers<T: Config> =
 		StorageValue<_, BoundedVec<T::AccountId, T::MaxPhoneVerifiers>, ValueQuery>;
 
@@ -122,11 +138,44 @@ pub mod pallet {
 		pub fn new_user(
 			origin: OriginFor<T>,
 			account_id: T::AccountId,
-			name: BoundedVec<u8, T::NameLimit>,
-			phone_number: BoundedVec<u8, T::PhoneNumberLimit>,
+			name: T::Username,
+			phone_number: T::PhoneNumber,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			ensure!(PhoneVerifiers::<T>::get().contains(&who), Error::<T>::NotAllowed);
+
+			if PhoneNumberFor::<T>::contains_key(&phone_number) {
+				// If such phone number exists migrate those account
+				// balance, trait score, etc to this new account
+
+				// Remove old account date
+				// Save unwrap because of check above
+				let prev_account_id = PhoneNumberFor::<T>::take(&phone_number).unwrap();
+				let prev_identity_store = IdentityOf::<T>::take(&prev_account_id).unwrap();
+				NameFor::<T>::remove(&prev_identity_store.name);
+
+				// Save old nickname and new `AccountId`
+				NameFor::<T>::insert(&prev_identity_store.name, account_id.clone());
+				PhoneNumberFor::<T>::insert(&phone_number, account_id.clone());
+				IdentityOf::<T>::insert(
+					&account_id,
+					IdentityStore { name: prev_identity_store.name, phone_number },
+				);
+
+				// No need to transfer trait score and reward info
+				// because of they are indexed by `PhoneNumber`
+
+				// Transfer balance
+				let amount = T::Currency::free_balance(&prev_account_id);
+				T::Currency::transfer(
+					&prev_account_id,
+					&account_id,
+					amount,
+					ExistenceRequirement::AllowDeath,
+				)?;
+
+				return Ok(())
+			}
 
 			if IdentityOf::<T>::contains_key(&account_id) {
 				return Err(Error::<T>::AlreadyRegistered.into())
@@ -136,24 +185,23 @@ pub mod pallet {
 				return Err(Error::<T>::UserNameTaken.into())
 			}
 
-			if PhoneNumberFor::<T>::contains_key(&phone_number) {
-				return Err(Error::<T>::PhoneNumberTaken.into())
-			}
-
 			NameFor::<T>::insert(&name, account_id.clone());
 			PhoneNumberFor::<T>::insert(&phone_number, account_id.clone());
-			IdentityOf::<T>::insert(&account_id, IdentityStore { name, phone_number });
+			IdentityOf::<T>::insert(
+				&account_id,
+				IdentityStore { name: name.clone(), phone_number: phone_number.clone() },
+			);
 
-			T::OnNewUser::on_new_user(&account_id)?;
+			T::Hooks::on_new_user(who, account_id, name, phone_number)?;
 
 			Ok(())
 		}
 	}
 }
 
-impl<T: Config> IdentityProvider<T::AccountId, T::NameLimit, T::PhoneNumberLimit> for Pallet<T> {
+impl<T: Config> IdentityProvider<T::AccountId, T::Username, T::PhoneNumber> for Pallet<T> {
 	fn exist_by_identity(
-		account_identity: &AccountIdentity<T::AccountId, T::NameLimit, T::PhoneNumberLimit>,
+		account_identity: &AccountIdentity<T::AccountId, T::Username, T::PhoneNumber>,
 	) -> bool {
 		match account_identity {
 			AccountIdentity::AccountId(account_id) => IdentityOf::<T>::get(account_id).is_some(),
@@ -163,46 +211,39 @@ impl<T: Config> IdentityProvider<T::AccountId, T::NameLimit, T::PhoneNumberLimit
 	}
 
 	fn identity_by_id(
-		account_id: T::AccountId,
-	) -> Option<IdentityInfo<T::AccountId, T::NameLimit, T::PhoneNumberLimit>> {
-		<IdentityOf<T>>::get(&account_id).map(|v| IdentityInfo {
-			account_id,
+		account_id: &T::AccountId,
+	) -> Option<IdentityInfo<T::AccountId, T::Username, T::PhoneNumber>> {
+		<IdentityOf<T>>::get(account_id).map(|v| IdentityInfo {
+			account_id: account_id.clone(),
 			name: v.name,
 			number: v.phone_number,
 		})
 	}
 
 	fn identity_by_name(
-		name: BoundedVec<u8, T::NameLimit>,
-	) -> Option<IdentityInfo<T::AccountId, T::NameLimit, T::PhoneNumberLimit>> {
-		<NameFor<T>>::get(name).and_then(Self::identity_by_id)
+		name: &T::Username,
+	) -> Option<IdentityInfo<T::AccountId, T::Username, T::PhoneNumber>> {
+		<NameFor<T>>::get(name).as_ref().and_then(Self::identity_by_id)
 	}
 
 	fn identity_by_number(
-		number: BoundedVec<u8, T::PhoneNumberLimit>,
-	) -> Option<IdentityInfo<T::AccountId, T::NameLimit, T::PhoneNumberLimit>> {
-		<PhoneNumberFor<T>>::get(number).and_then(Self::identity_by_id)
+		number: &T::PhoneNumber,
+	) -> Option<IdentityInfo<T::AccountId, T::Username, T::PhoneNumber>> {
+		<PhoneNumberFor<T>>::get(number).as_ref().and_then(Self::identity_by_id)
 	}
 }
 
-pub trait OnNewUser<AccountId> {
-	/// A new account `who` has been registered.
-	fn on_new_user(who: &AccountId) -> DispatchResult;
-}
-
-impl<AccountId> OnNewUser<AccountId> for () {
-	fn on_new_user(_who: &AccountId) -> DispatchResult {
-		Ok(())
-	}
-}
-
-impl<AccountId, T0, T1> OnNewUser<AccountId> for (T0, T1)
+impl<T, UsernameLimit> Pallet<T>
 where
-	T0: OnNewUser<AccountId>,
-	T1: OnNewUser<AccountId>,
+	UsernameLimit: Get<u32> + 'static,
+	T: Config<Username = BoundedVec<u8, UsernameLimit>>,
 {
-	fn on_new_user(who: &AccountId) -> DispatchResult {
-		T0::on_new_user(who)?;
-		T1::on_new_user(who)
+	/// Search for registered user who's username start with given `prefix`
+	pub fn get_contacts(
+		prefix: T::Username,
+	) -> Vec<(T::AccountId, IdentityStore<T::Username, T::PhoneNumber>)> {
+		IdentityOf::<T>::iter()
+			.filter(|(_key, value)| value.name.starts_with(&prefix))
+			.collect()
 	}
 }

@@ -11,19 +11,13 @@ use sp_std::{default::Default, marker::PhantomData, vec};
 
 pub type AccountIdentityTag = AccountIdentity<
 	<Runtime as frame_system::Config>::AccountId,
-	<Runtime as pallet_identity::Config>::NameLimit,
-	<Runtime as pallet_identity::Config>::PhoneNumberLimit,
+	<Runtime as pallet_identity::Config>::Username,
+	<Runtime as pallet_identity::Config>::PhoneNumber,
 >;
 
-#[derive(Encode, Decode, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(Encode, Decode, Default, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(skip_type_params(T))]
 pub struct CheckAccount(PhantomData<Runtime>);
-
-impl CheckAccount {
-	pub fn new() -> Self {
-		Self(Default::default())
-	}
-}
 
 impl sp_std::fmt::Debug for CheckAccount {
 	#[cfg(feature = "std")]
@@ -69,7 +63,7 @@ impl SignedExtension for CheckAccount {
 
 	fn validate(
 		&self,
-		who: &Self::AccountId,
+		_who: &Self::AccountId,
 		call: &Self::Call,
 		_info: &DispatchInfoOf<Self::Call>,
 		_len: usize,
@@ -78,13 +72,12 @@ impl SignedExtension for CheckAccount {
 			// In case this is `appreciation` transaction
 			RuntimeCall::Appreciation(pallet_appreciation::Call::appreciation { to, .. }) =>
 			// Check if the user is registered
+			{
 				if <Runtime as pallet_appreciation::Config>::IdentityProvider::exist_by_identity(to)
 				{
 					// User already is registered, can execute transaction
 					Ok(ValidTransaction::default())
 				} else {
-					pallet_appreciation::Referrals::<Runtime>::insert(who, to, ());
-
 					// User is not registered need to provide tag to wait,
 					// until `new_user` transaction provide this tag
 					let requires = vec![Encode::encode(&(to))];
@@ -98,7 +91,8 @@ impl SignedExtension for CheckAccount {
 						longevity: longevity.into(),
 						..Default::default()
 					})
-				},
+				}
+			},
 			// In case this is `new_user` transaction
 			RuntimeCall::Identity(pallet_identity::Call::new_user {
 				account_id,

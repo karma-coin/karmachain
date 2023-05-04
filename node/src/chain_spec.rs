@@ -1,7 +1,7 @@
 use karmachain_node_runtime::{
 	opaque::SessionKeys, AccountId, AppreciationConfig, BabeConfig, BalancesConfig, GenesisConfig,
-	GrandpaConfig, IdentityConfig, SessionConfig, Signature, StakingConfig, SudoConfig,
-	SystemConfig, KCOINS, WASM_BINARY,
+	GrandpaConfig, IdentityConfig, PhoneNumber, SessionConfig, Signature, StakingConfig,
+	SudoConfig, SystemConfig, KCOINS, WASM_BINARY,
 };
 use pallet_appreciation::*;
 use pallet_staking::{Forcing, StakerStatus};
@@ -14,7 +14,7 @@ use sp_runtime::{
 	Perbill,
 };
 
-use sp_common::String;
+use sp_common::{types::CommunityId, String};
 
 // The URL for the telemetry server.
 // const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
@@ -69,8 +69,8 @@ pub fn development_config() -> Result<ChainSpec, String> {
 				],
 				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
 				vec![
-					(get_account_id_from_seed::<sr25519::Public>("Alice"), 1, CommunityRole::Admin),
-					(get_account_id_from_seed::<sr25519::Public>("Bob"), 1, CommunityRole::Member),
+					(vec![0].try_into().unwrap(), 1, CommunityRole::Admin),
+					(vec![1].try_into().unwrap(), 1, CommunityRole::Member),
 				],
 				true,
 			)
@@ -143,8 +143,8 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 				],
 				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
 				vec![
-					(get_account_id_from_seed::<sr25519::Public>("Alice"), 1, CommunityRole::Admin),
-					(get_account_id_from_seed::<sr25519::Public>("Bob"), 1, CommunityRole::Member),
+					(vec![0].try_into().unwrap(), 1, CommunityRole::Admin),
+					(vec![1].try_into().unwrap(), 1, CommunityRole::Member),
 				],
 				true,
 			)
@@ -179,7 +179,7 @@ fn testnet_genesis(
 	root_key: AccountId,
 	endowed_accounts: Vec<AccountId>,
 	phone_verifiers: Vec<AccountId>,
-	community_membership: Vec<(AccountId, CommunityId, CommunityRole)>,
+	community_membership: Vec<(PhoneNumber, CommunityId, CommunityRole)>,
 	_enable_println: bool,
 ) -> GenesisConfig {
 	const ENDOWMENT: u128 = 1_000_000_000 * KCOINS;

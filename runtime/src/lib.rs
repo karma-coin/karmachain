@@ -60,7 +60,7 @@ pub use pallet_balances::Call as BalancesCall;
 use pallet_staking::UseValidatorsMap;
 pub use pallet_timestamp::Call as TimestampCall;
 use pallet_transaction_payment::{ConstFeeMultiplier, CurrencyAdapter, Multiplier};
-use sp_common::identity::{AccountIdentity, IdentityProvider};
+use sp_common::{identity::AccountIdentity, traits::IdentityProvider};
 pub use sp_runtime::{Perbill, Permill};
 
 pub mod api;
@@ -123,6 +123,7 @@ construct_runtime!(
 		// Include the custom logic from the pallet-template in the runtime.
 		Identity: pallet_identity,
 		Appreciation: pallet_appreciation,
+		TransactionIndexer: pallet_transaction_indexer,
 		Reward: pallet_reward,
 	}
 );

@@ -1,4 +1,16 @@
-use crate::*;
+use crate::{validators_rewards::era_payout, *};
+use codec::{Decode, Encode};
+use frame_system::Phase;
+use sp_common::types::CommunityId;
+use sp_rpc::{
+	Block as RpcBlock, BlockchainStats, CharTrait, CommunityMembership, Contact, GenesisData,
+	PhoneVerifier, SignedTransaction, SignedTransactionWithStatus, TraitScore, TransactionStatus,
+	UserInfo,
+};
+use sp_runtime::{
+	generic::SignedBlock,
+	traits::{Hash as HashT, StaticLookup},
+};
 
 // To learn more about runtime versioning, see:
 // https://docs.substrate.io/main-docs/build/upgrade#runtime-versioning
@@ -206,31 +218,31 @@ impl_runtime_apis! {
 		}
 	}
 
-	impl pallet_identity_rpc_runtime_api::IdentityApi<Block, AccountId> for Runtime {
+	impl runtime_api::identity::IdentityApi<Block, AccountId, NameLimit, PhoneNumberLimit> for Runtime {
 		fn get_user_info_by_account(
 			account_id: AccountId,
-		) -> Option<pallet_identity_rpc_runtime_api::UserInfo<AccountId>> {
-			Identity::identity_by_id(account_id).map(|identity_info| {
+		) -> Option<UserInfo<AccountId>> {
+			Identity::identity_by_id(&account_id).map(|identity_info| {
 				let nonce = System::account_nonce(&identity_info.account_id);
 				let balance = Balances::free_balance(&identity_info.account_id);
 				let trait_scores: Vec<_> = Appreciation::trait_scores_of(&identity_info.account_id)
 					.into_iter()
 					.map(|(community_id, trait_id, karma_score)| {
-						pallet_identity_rpc_runtime_api::TraitScore {
+						TraitScore {
 							trait_id, karma_score, community_id
 						}
 					})
 					.collect();
 				let community_membership: Vec<_> = Appreciation::community_membership_of(&identity_info.account_id)
 					.into_iter()
-					.map(|(community_id, karma_score, is_admin)| pallet_identity_rpc_runtime_api::CommunityMembership {
+					.map(|(community_id, karma_score, is_admin)| CommunityMembership {
 						community_id, karma_score, is_admin
 					})
 					.collect();
 
 				let karma_score = trait_scores.iter().map(|score| score.karma_score).sum::<u32>() + community_membership.len() as u32;
 
-				pallet_identity_rpc_runtime_api::UserInfo {
+				UserInfo {
 					account_id: identity_info.account_id,
 					nonce: nonce.into(),
 					user_name: identity_info.name.into(),
@@ -244,23 +256,22 @@ impl_runtime_apis! {
 		}
 
 		fn get_user_info_by_name(
-			name: Vec<u8>,
-		) -> Option<pallet_identity_rpc_runtime_api::UserInfo<AccountId>> {
-			let name: BoundedVec<u8, NameLimit> = name.try_into().ok()?;
-			Identity::identity_by_name(name).map(|identity_info| {
+			name: BoundedVec<u8, NameLimit>,
+		) -> Option<UserInfo<AccountId>> {
+			Identity::identity_by_name(&name).map(|identity_info| {
 				let nonce = System::account_nonce(&identity_info.account_id);
 				let balance = Balances::free_balance(&identity_info.account_id);
 				let trait_scores: Vec<_> = Appreciation::trait_scores_of(&identity_info.account_id)
 					.into_iter()
 					.map(|(community_id, trait_id, karma_score)| {
-						pallet_identity_rpc_runtime_api::TraitScore {
+						TraitScore {
 							trait_id, karma_score, community_id
 						}
 					})
 					.collect();
 				let community_membership: Vec<_> = Appreciation::community_membership_of(&identity_info.account_id)
 					.into_iter()
-					.map(|(community_id, karma_score, is_admin)| pallet_identity_rpc_runtime_api::CommunityMembership {
+					.map(|(community_id, karma_score, is_admin)| CommunityMembership {
 						community_id, karma_score, is_admin
 					})
 					.collect();
@@ -268,7 +279,7 @@ impl_runtime_apis! {
 				let karma_score = trait_scores.iter().map(|score| score.karma_score).sum::<u32>() + community_membership.len() as u32;
 
 
-				pallet_identity_rpc_runtime_api::UserInfo {
+				UserInfo {
 					account_id: identity_info.account_id,
 					nonce: nonce.into(),
 					user_name: identity_info.name.into(),
@@ -282,30 +293,29 @@ impl_runtime_apis! {
 		}
 
 		fn get_user_info_by_number(
-			number: Vec<u8>,
-		) -> Option<pallet_identity_rpc_runtime_api::UserInfo<AccountId>> {
-			let number: BoundedVec<u8, PhoneNumberLimit> = number.try_into().ok()?;
-			Identity::identity_by_number(number).map(|identity_info| {
+			number: BoundedVec<u8, PhoneNumberLimit>,
+		) -> Option<UserInfo<AccountId>> {
+			Identity::identity_by_number(&number).map(|identity_info| {
 				let nonce = System::account_nonce(&identity_info.account_id);
 				let balance = Balances::free_balance(&identity_info.account_id);
 				let trait_scores: Vec<_> = Appreciation::trait_scores_of(&identity_info.account_id)
 					.into_iter()
 					.map(|(community_id, trait_id, karma_score)| {
-						pallet_identity_rpc_runtime_api::TraitScore {
+						TraitScore {
 							trait_id, karma_score, community_id
 						}
 					})
 					.collect();
 				let community_membership: Vec<_> = Appreciation::community_membership_of(&identity_info.account_id)
 					.into_iter()
-					.map(|(community_id, karma_score, is_admin)| pallet_identity_rpc_runtime_api::CommunityMembership {
+					.map(|(community_id, karma_score, is_admin)| CommunityMembership {
 						community_id, karma_score, is_admin
 					})
 					.collect();
 
 				let karma_score = trait_scores.iter().map(|score| score.karma_score).sum::<u32>() + community_membership.len() as u32;
 
-				pallet_identity_rpc_runtime_api::UserInfo {
+				UserInfo {
 					account_id: identity_info.account_id,
 					nonce: nonce.into(),
 					user_name: identity_info.name.into(),
@@ -316,6 +326,284 @@ impl_runtime_apis! {
 					community_membership,
 				}
 			})
+		}
+
+		fn get_all_users(
+			community_id: CommunityId,
+		) -> Vec<UserInfo<AccountId>> {
+			pallet_appreciation::CommunityMembership::<Runtime>::iter()
+				.filter(|(_, id, _)| *id == community_id)
+				.flat_map(|(phone_number, _, _)| Self::get_user_info_by_number(phone_number))
+				.collect()
+		}
+
+		fn get_contacts(
+			prefix: BoundedVec<u8, NameLimit>,
+			community_id: Option<CommunityId>,
+		) -> Vec<Contact<AccountId>> {
+			Identity::get_contacts(prefix)
+				.into_iter()
+				.filter(|(_account_id, identity_store)| {
+					// If `community_id` provided filter by it
+					community_id
+						.map(|community_id|
+							pallet_appreciation::CommunityMembership::<Runtime>::get(&identity_store.phone_number, community_id)
+								.is_some()
+						)
+						.unwrap_or(true)
+				})
+				.map(|(account_id, identity_store)| {
+					let trait_scores: Vec<_> = Appreciation::trait_scores_of(&account_id)
+						.into_iter()
+						.map(|(community_id, trait_id, karma_score)| {
+							TraitScore {
+								trait_id, karma_score, community_id
+							}
+						})
+						.collect();
+					let community_membership: Vec<_> = Appreciation::community_membership_of(&account_id)
+						.into_iter()
+						.map(|(community_id, karma_score, is_admin)| CommunityMembership {
+							community_id, karma_score, is_admin
+						})
+						.collect();
+
+					Contact {
+						user_name: identity_store.name.into(),
+						account_id,
+						mobile_number: identity_store.phone_number.into(),
+						community_membership,
+						trait_scores,
+					}
+				})
+				.collect()
+		}
+	}
+
+	impl runtime_api::transactions::TransactionInfoProvider<Block, opaque::UncheckedExtrinsic, AccountId, Signature> for Runtime
+	{
+		fn get_transaction_info(opaque_extrinsic: opaque::UncheckedExtrinsic) -> Option<SignedTransactionWithStatus<AccountId, Signature>> {
+			use runtime_api::identity::runtime_decl_for_IdentityApi::IdentityApi;
+
+			// Convert `OpaqueExtrinsic` into bytes and then decode `UncheckedExtrinsic` from that bytes
+			let transaction_body = opaque_extrinsic.encode();
+			let mut bytes = transaction_body.as_slice();
+			let extrinsic = UncheckedExtrinsic::decode(&mut bytes).ok()?;
+
+			let (address, signature) = extrinsic.signature
+				.map(|(address, signature, _extra)| (address, signature))
+				.unzip();
+
+			// Convert `Address` into `AccountId`
+			let signer = address
+				.map(<Runtime as frame_system::Config>::Lookup::lookup)
+				.transpose()
+				.ok()?;
+
+			// Get info about transaction sender and receiver
+			let from = signer.clone().and_then(Self::get_user_info_by_account);
+			let to = extrinsic.function.get_recipient().and_then(|account_identity| {
+				match account_identity {
+					AccountIdentity::AccountId(account_id) => Self::get_user_info_by_account(account_id),
+					AccountIdentity::Name(name) => Self::get_user_info_by_name(name.into()),
+					AccountIdentity::PhoneNumber(phone_number) => Self::get_user_info_by_number(phone_number.into()),
+				}
+			});
+
+			Some(SignedTransactionWithStatus {
+				signed_transaction: SignedTransaction {
+					signer,
+					transaction_body,
+					signature,
+				},
+				status: TransactionStatus::OnChain,
+				from,
+				to,
+			})
+		}
+	}
+
+	impl runtime_api::transactions::TransactionIndexer<Block, AccountId> for Runtime {
+		fn get_transactions_by_account(account_id: AccountId) -> Vec<(BlockNumber, u32)> {
+			Identity::identity_by_id(&account_id)
+				.and_then(|identity| TransactionIndexer::accounts_tx(identity.number))
+				.unwrap_or_default()
+		}
+
+		fn get_transaction(tx_hash: Hash) -> Option<(BlockNumber, u32)> {
+			TransactionIndexer::tx_block_and_index(tx_hash)
+		}
+	}
+
+	impl runtime_api::events::EventProvider<Block, RuntimeEvent> for Runtime {
+		fn get_block_events() -> Vec<RuntimeEvent> {
+			// Just ask pallet System for events
+			System::read_events_no_consensus().map(|v| v.event).collect()
+		}
+
+		fn get_transaction_events(tx_index: u32) -> Vec<RuntimeEvent> {
+			// Just ask pallet System for events and then filter by extrinsic index
+			 // in order to get only that transaction events
+			System::read_events_no_consensus()
+				.filter(|v| matches!(v.phase, Phase::ApplyExtrinsic(index) if index == tx_index))
+				.map(|v| v.event).collect()
+		}
+	}
+
+	impl runtime_api::chain::BlockInfoProvider<Block, SignedBlock<Block>, AccountId, Hash> for Runtime {
+		fn get_block_info(block: SignedBlock<Block>) -> RpcBlock<AccountId, Hash> {
+
+			let time = Timestamp::now();
+			let author = Authorship::author();
+			let height = block.block.header.number;
+			let transaction_hashes = block.block.extrinsics
+				.iter()
+				.map(<Runtime as frame_system::Config>::Hashing::hash_of)
+				.collect();
+			let fees = System::read_events_no_consensus()
+				.filter_map(|v| match v.event {
+					RuntimeEvent::TransactionPayment(pallet_transaction_payment::Event::TransactionFeePaid { actual_fee, .. }) => {
+						Some(actual_fee)
+					},
+					_ => None,
+				})
+				.sum::<u128>();
+			let signature = block.justifications.encode();
+
+			let digest = block.block.header.digest.encode();
+
+			RpcBlock {
+				time,
+				author,
+				height,
+				transaction_hashes,
+				fees,
+				signature,
+				// reward: todo!(),
+				// minted: todo!(),
+				digest,
+			}
+		}
+
+		fn get_blockchain_data() -> BlockchainStats {
+			let tip_height = System::block_number().into();
+			let transaction_count = pallet_transaction_indexer::TransactionsCount::<Runtime>::get();
+			let payment_transaction_count = pallet_transaction_indexer::PaymentTransactionsCount::<Runtime>::get();
+			let appreciations_transactions_count = pallet_transaction_indexer::AppreciationTransactionsCount::<Runtime>::get();
+			let update_user_transactions_count = pallet_transaction_indexer::UpdateUserTransactionsCount::<Runtime>::get();
+			let users_count = pallet_identity::IdentityOf::<Runtime>::count().into();
+			let fees_amount = 0; // TODO:
+			let minted_amount = Reward::total_rewarded();
+			let circulation = Reward::total_rewarded();
+			let fee_subs_count = 0; // TODO:
+			let fee_subs_amount = pallet_reward::TxFeeSubsidiesTotalAllocated::<Runtime>::get();
+			let signup_rewards_count = 0; // TODO:
+			let signup_rewards_amount = pallet_reward::SignupRewardTotalAllocated::<Runtime>::get();
+			let referral_rewards_count = 0; // TODO:
+			let referral_rewards_amount = pallet_reward::ReferralRewardTotalAllocated::<Runtime>::get();
+			let validator_rewards_count = 0;
+			let validator_rewards_amount = (0..Staking::current_era().unwrap_or_default())
+				.map(era_payout)
+				.sum();
+			let causes_rewards_amount = 0;
+
+			BlockchainStats {
+				last_block_time: MILLISECS_PER_BLOCK,
+				tip_height,
+				transaction_count,
+				payment_transaction_count,
+				appreciations_transactions_count,
+				update_user_transactions_count,
+				users_count,
+				fees_amount,
+				minted_amount,
+				circulation,
+				fee_subs_count,
+				fee_subs_amount,
+				signup_rewards_count,
+				signup_rewards_amount,
+				referral_rewards_count,
+				referral_rewards_amount,
+				validator_rewards_count,
+				validator_rewards_amount,
+				causes_rewards_amount,
+			}
+		}
+
+		fn get_genesis_data() -> GenesisData<AccountId> {
+			let net_id = 0; // TODO:
+			let net_name = vec![]; // TODO:
+			let genesis_time = 0; // TODO:
+
+			let signup_reward_phase1_alloc = pallet_reward::SignupRewardPhase1Alloc::<Runtime>::get();
+			let signup_reward_phase2_alloc = pallet_reward::SignupRewardPhase2Alloc::<Runtime>::get();
+
+			let signup_reward_phase1_amount = pallet_reward::SignupRewardPhase1Amount::<Runtime>::get();
+			let signup_reward_phase2_amount = pallet_reward::SignupRewardPhase2Amount::<Runtime>::get();
+			// TODO: Q: what `start` means?
+			let signup_reward_phase3_start = pallet_reward::SignupRewardPhase3Amount::<Runtime>::get();
+
+			let referral_reward_phase1_alloc = pallet_reward::ReferralRewardPhase1Alloc::<Runtime>::get();
+			let referral_reward_phase2_alloc = pallet_reward::ReferralRewardPhase2Alloc::<Runtime>::get();
+
+			let referral_reward_phase1_amount = pallet_reward::ReferralRewardPhase1Amount::<Runtime>::get();
+			let referral_reward_phase2_amount = pallet_reward::ReferralRewardPhase2Amount::<Runtime>::get();
+
+			let tx_fee_subsidy_max_per_user = pallet_reward::TxFeeSubsidyMaxPerUser::<Runtime>::get().into();
+			let tx_fee_subsidies_alloc = pallet_reward::TxFeeSubsidiesAlloc::<Runtime>::get();
+			let tx_fee_subsidy_max_amount = pallet_reward::TxFeeSubsidyMaxAmount::<Runtime>::get();
+
+			let block_reward_amount = 0; // TODO:
+			let block_reward_last_block = 0; // TODO:
+
+			let karma_reward_amount = pallet_reward::KarmaRewardAmount::<Runtime>::get();
+			let karma_reward_alloc = pallet_reward::MaxKarmaRewardAlloc::<Runtime>::get();
+			let karma_reward_top_n_users = pallet_reward::KarmaRewardTopNUsers::<Runtime>::get().into();
+
+			// let treasury_premint_amount = 0; // TODO:
+			// let treasury_account_id = todo!(); // TODO:
+			// let treasury_account_name = vec![]; // TODO:
+
+			let char_traits = Appreciation::char_traits()
+				.into_iter()
+				.map(|v| CharTrait {
+					id: v.id,
+					name: v.name.into(),
+					emoji: v.emoji.into(),
+				})
+				.collect();
+			let verifiers = Identity::verifiers()
+				.into_iter()
+				.map(|v| PhoneVerifier {
+					account_id: v,
+					name: vec![], // TODO:
+				})
+				.collect();
+
+			GenesisData {
+				net_id,
+				net_name,
+				genesis_time,
+				signup_reward_phase1_alloc,
+				signup_reward_phase2_alloc,
+				signup_reward_phase1_amount,
+				signup_reward_phase2_amount,
+				signup_reward_phase3_start,
+				referral_reward_phase1_alloc,
+				referral_reward_phase2_alloc,
+				referral_reward_phase1_amount,
+				referral_reward_phase2_amount,
+				tx_fee_subsidy_max_per_user,
+				tx_fee_subsidies_alloc,
+				tx_fee_subsidy_max_amount,
+				block_reward_amount,
+				block_reward_last_block,
+				karma_reward_amount,
+				karma_reward_alloc,
+				karma_reward_top_n_users,
+				char_traits,
+				verifiers,
+			}
 		}
 	}
 

@@ -6,9 +6,8 @@ use sp_std::vec::Vec;
 
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
+use sp_common::types::{CharTraitId, CommunityId};
 
-pub type CharTraitId = u32;
-pub type CommunityId = u32;
 pub type Score = u32;
 
 pub type GenesisCommunity = (

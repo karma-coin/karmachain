@@ -34,3 +34,29 @@ impl pallet_staking::EraPayout<Balance> for EraPayout<Staking> {
 		(payout, rest)
 	}
 }
+
+// Impls Serialize for event type
+#[cfg(feature = "std")]
+impl serde::Serialize for RuntimeEvent {
+	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+	where
+		S: serde::Serializer,
+	{
+		// Serialize the `RuntimeEvent` type as a string
+		serializer.serialize_str(&format!("{:?}", self))
+	}
+}
+
+impl RuntimeCall {
+	/// Get `AccountIdentity` of recipient of the transaction
+	pub fn get_recipient(&self) -> Option<types::AccountIdentity> {
+		match self {
+			RuntimeCall::Appreciation(pallet_appreciation::Call::appreciation { to, .. }) =>
+				Some(to.clone()),
+			RuntimeCall::Identity(pallet_identity::Call::new_user { account_id, .. }) =>
+				Some(AccountIdentity::AccountId(account_id.clone())),
+			// TODO: cover more cases
+			_ => None,
+		}
+	}
+}
