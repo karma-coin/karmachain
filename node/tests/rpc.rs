@@ -1,7 +1,9 @@
 mod utils;
 
-use crate::{chain::get_block_info, utils::create_runner};
-use crate::chain::{get_blockchain_data, get_genesis_data};
+use crate::{
+	chain::{get_block_info, get_blockchain_data, get_genesis_data},
+	utils::create_runner,
+};
 
 /// Test API that provide info about current chain state
 /// or specified block
@@ -84,12 +86,9 @@ mod chain {
 
 		let response: GenesisData<AccountId> =
 			serde_json::from_value(response.get("result").unwrap().clone()).unwrap();
-		let alice = AccountId::from_string("5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY").unwrap();
-		assert!(response
-			.verifiers
-			.iter()
-			.find(|value| value.account_id == alice)
-			.is_some());
+		let alice =
+			AccountId::from_string("5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY").unwrap();
+		assert!(response.verifiers.iter().find(|value| value.account_id == alice).is_some());
 
 		Ok(())
 	}
