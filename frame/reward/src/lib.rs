@@ -258,7 +258,7 @@ impl<T: Config> KarmaHooks<T::AccountId, T::Balance, T::Username, T::PhoneNumber
 
 		let reward = if total_allocated < SignupRewardPhase1Alloc::<T>::get() {
 			SignupRewardPhase1Amount::<T>::get()
-		} else if total_allocated < SignupRewardPhase2Amount::<T>::get() {
+		} else if total_allocated < (SignupRewardPhase2Alloc::<T>::get() + SignupRewardPhase1Alloc::<T>::get()) {
 			SignupRewardPhase2Amount::<T>::get()
 		} else {
 			SignupRewardPhase3Amount::<T>::get()
