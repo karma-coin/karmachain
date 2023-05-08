@@ -87,6 +87,12 @@ fn new_user_happy_flow() {
 		// TODO: check transactions on chain
 		// TODO: check chain stats
 		// TODO: check block events
+		// Check that signup char trait score increasing emits event
+		System::assert_has_event(pallet_appreciation::Event::<Runtime>::CharTraitScoreIncreased {
+			who: user_info.account_id,
+			community_id: 0,
+			char_trait_id: 1,
+		}.into());
 	});
 }
 
