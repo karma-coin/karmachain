@@ -156,7 +156,10 @@ pub mod pallet {
 		StorageMap<_, Blake2_128Concat, T::PhoneNumber, AccountRewardsData, ValueQuery>;
 
 	#[pallet::event]
-	pub enum Event<T: Config> {}
+	#[pallet::generate_deposit(pub(super) fn deposit_event)]
+	pub enum Event<T: Config> {
+		RewardIssued { who: T::AccountId, amount: T::Balance, reward_type: RewardType },
+	}
 
 	#[pallet::error]
 	pub enum Error<T> {
@@ -196,6 +199,12 @@ impl<T: Config> Pallet<T> {
 		SignupRewardTotalAllocated::<T>::mutate(|value| *value += amount);
 		T::Currency::deposit_creating(who, amount);
 
+		Self::deposit_event(Event::<T>::RewardIssued {
+			who: who.clone(),
+			amount: amount.clone(),
+			reward_type: RewardType::Signup,
+		});
+
 		Ok(())
 	}
 
@@ -215,6 +224,12 @@ impl<T: Config> Pallet<T> {
 		ReferralRewardTotalAllocated::<T>::mutate(|value| *value += amount);
 		T::Currency::deposit_creating(who, amount);
 
+		Self::deposit_event(Event::<T>::RewardIssued {
+			who: who.clone(),
+			amount: amount.clone(),
+			reward_type: RewardType::Referral,
+		});
+
 		Ok(())
 	}
 
@@ -233,6 +248,12 @@ impl<T: Config> Pallet<T> {
 		// Increase total allocated amount of the reward and deposit the reward to user
 		KarmaRewardTotalAllocated::<T>::mutate(|value| *value += amount);
 		T::Currency::deposit_creating(who, amount);
+
+		Self::deposit_event(Event::<T>::RewardIssued {
+			who: who.clone(),
+			amount: amount.clone(),
+			reward_type: RewardType::Karma,
+		});
 
 		Ok(())
 	}
