@@ -3,6 +3,8 @@ use scale_info::prelude::vec::Vec;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 
+pub type ByPassToken = String;
+
 #[derive(Encode, Decode)]
 #[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
 pub struct UserInfo<AccountId> {
@@ -183,4 +185,31 @@ pub struct LeaderboardEntry<AccountId> {
 	pub account_id: AccountId,
 	pub score: u32,
 	char_traits_ids: u32,
+}
+
+#[derive(Encode, Decode)]
+#[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
+pub enum VerificationResult {
+	Unspecified = 0,
+	/// There's already a user with the requested user name
+	UserNameTaken = 1,
+	/// User is verified using provided token
+	Verified = 2,
+	/// User is not verifier using provided token
+	Unverified = 3,
+	/// Request is missing required data
+	MissingData = 4,
+	/// Bad client signature
+	InvalidSignature = 5,
+	/// Different account associated with phone number
+	AccountMismatch = 6,
+}
+
+#[derive(Encode, Decode)]
+#[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
+pub struct VerificationEvidence<PublicKey, AccountId, Username, PhoneNumber> {
+	pub verifier_account_id: PublicKey,
+	pub account_id: AccountId,
+	pub username: Username,
+	pub phone_number: PhoneNumber,
 }
