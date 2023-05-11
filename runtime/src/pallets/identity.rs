@@ -22,8 +22,12 @@ impl pallet_identity::Config for Runtime {
 	type PhoneNumber = PhoneNumber;
 	/// Max number of phone verifiers accounts
 	type MaxPhoneVerifiers = MaxPhoneVerifiers;
+	///
+	type Hooks = (Appreciation, (Reward, TransactionIndexer));
 	/// The currency mechanism.
 	type Currency = Balances;
-
-	type Hooks = (Appreciation, (Reward, TransactionIndexer));
+	/// Signature that used by `PhoneVerifier`
+	type Signature = sp_core::sr25519::Signature;
+	/// This is required by the `Signature` type.
+	type PublicKey = sp_core::sr25519::Public;
 }
