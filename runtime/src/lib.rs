@@ -29,7 +29,7 @@ use sp_runtime::{
 		Verify,
 	},
 	transaction_validity::{TransactionPriority, TransactionSource, TransactionValidity},
-	ApplyExtrinsicResult, BoundedVec, MultiSignature,
+	ApplyExtrinsicResult, MultiSignature,
 };
 use sp_staking::SessionIndex;
 use sp_std::{marker::PhantomData, prelude::*};

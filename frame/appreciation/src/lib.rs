@@ -17,6 +17,7 @@ pub mod pallet {
 	use super::*;
 	use frame_system::pallet_prelude::*;
 	use sp_common::{
+		bounded_string::BoundedString,
 		types::{CharTraitId, CommunityId},
 		*,
 	};
@@ -241,7 +242,7 @@ pub mod pallet {
 	pub enum Event<T: Config> {
 		NewCommunityAdmin {
 			community_id: CommunityId,
-			community_name: BoundedVec<u8, T::CommunityNameLimit>,
+			community_name: BoundedString<T::CommunityNameLimit>,
 			account_id: T::AccountId,
 			username: T::Username,
 			phone_number: T::PhoneNumber,

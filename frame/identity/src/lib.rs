@@ -11,6 +11,7 @@ use sp_std::{prelude::*, vec};
 use crate::types::UserVerificationData;
 pub use pallet::*;
 use sp_common::{
+	bounded_string::BoundedString,
 	identity::{AccountIdentity, IdentityInfo},
 	traits::IdentityProvider,
 };
@@ -295,14 +296,14 @@ impl<T: Config> Pallet<T> {
 impl<T, UsernameLimit> Pallet<T>
 where
 	UsernameLimit: Get<u32> + 'static,
-	T: Config<Username = BoundedVec<u8, UsernameLimit>>,
+	T: Config<Username = BoundedString<UsernameLimit>>,
 {
 	/// Search for registered user who's username start with given `prefix`
 	pub fn get_contacts(
 		prefix: T::Username,
 	) -> Vec<(T::AccountId, IdentityStore<T::Username, T::PhoneNumber>)> {
 		IdentityOf::<T>::iter()
-			.filter(|(_key, value)| value.name.starts_with(&prefix))
+			.filter(|(_key, value)| value.name.0.starts_with(&prefix.0))
 			.collect()
 	}
 }

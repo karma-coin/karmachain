@@ -6,7 +6,10 @@ use sp_std::vec::Vec;
 
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
-use sp_common::types::{CharTraitId, CommunityId};
+use sp_common::{
+	bounded_string::BoundedString,
+	types::{CharTraitId, CommunityId},
+};
 
 pub type Score = u32;
 
@@ -30,8 +33,8 @@ pub type GenesisCommunity = (
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct CharTrait<CharNameLimit: Get<u32>, EmojiLimit: Get<u32>> {
 	pub id: CharTraitId,
-	pub name: BoundedVec<u8, CharNameLimit>,
-	pub emoji: BoundedVec<u8, EmojiLimit>,
+	pub name: BoundedString<CharNameLimit>,
+	pub emoji: BoundedString<EmojiLimit>,
 }
 
 #[derive(Encode, Decode, MaxEncodedLen, TypeInfo, RuntimeDebugNoBound, Default)]
@@ -61,14 +64,14 @@ pub struct Community<
 	MaxCharTrait: Get<u32>,
 > {
 	pub id: CommunityId,
-	pub name: BoundedVec<u8, NameLimit>,
-	pub desc: BoundedVec<u8, DescLimit>,
-	pub emoji: BoundedVec<u8, EmojiLimit>,
-	pub website_url: BoundedVec<u8, UrlLimit>,
-	pub twitter_url: BoundedVec<u8, UrlLimit>,
-	pub insta_url: BoundedVec<u8, UrlLimit>,
-	pub face_url: BoundedVec<u8, UrlLimit>,
-	pub discord_url: BoundedVec<u8, UrlLimit>,
+	pub name: BoundedString<NameLimit>,
+	pub desc: BoundedString<DescLimit>,
+	pub emoji: BoundedString<EmojiLimit>,
+	pub website_url: BoundedString<UrlLimit>,
+	pub twitter_url: BoundedString<UrlLimit>,
+	pub insta_url: BoundedString<UrlLimit>,
+	pub face_url: BoundedString<UrlLimit>,
+	pub discord_url: BoundedString<UrlLimit>,
 	pub char_traits: BoundedVec<CharTraitId, MaxCharTrait>,
 	/// Closed community - only community manager can invite new members
 	/// and only members can appreciate each other in the community

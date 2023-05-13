@@ -7,7 +7,7 @@ use jsonrpsee::{
 use runtime_api::identity::IdentityApi;
 use sp_api::ProvideRuntimeApi;
 use sp_blockchain::HeaderBackend;
-use sp_common::types::CommunityId;
+use sp_common::{bounded_string::BoundedString, types::CommunityId};
 use sp_rpc::{Contact, LeaderboardEntry, UserInfo};
 use sp_runtime::{
 	generic::BlockId,
@@ -56,7 +56,7 @@ where
 
 	fn get_user_info_by_name(
 		&self,
-		name: Vec<u8>,
+		name: BoundedString<NameLimit>,
 		at: Option<<Block as BlockT>::Hash>,
 	) -> RpcResult<Option<UserInfo<AccountId>>> {
 		let api = self.client.runtime_api();
@@ -81,7 +81,7 @@ where
 
 	fn get_user_info_by_number(
 		&self,
-		number: Vec<u8>,
+		number: BoundedString<PhoneNumberLimit>,
 		at: Option<<Block as BlockT>::Hash>,
 	) -> RpcResult<Option<UserInfo<AccountId>>> {
 		let api = self.client.runtime_api();
@@ -123,20 +123,12 @@ where
 
 	fn get_contacts(
 		&self,
-		prefix: Vec<u8>,
+		prefix: BoundedString<NameLimit>,
 		community_id: Option<CommunityId>,
 		at: Option<<Block as BlockT>::Hash>,
 	) -> RpcResult<Vec<Contact<AccountId>>> {
 		let api = self.client.runtime_api();
 		let at = BlockId::hash(at.unwrap_or_else(|| self.client.info().best_hash));
-
-		let prefix = prefix.try_into().map_err(|e| {
-			CallError::Custom(ErrorObject::owned(
-				0,
-				"Name length out of bounds.",
-				Some(format!("{:?}", e)),
-			))
-		})?;
 
 		Ok(api.get_contacts(&at, prefix, community_id).map_err(|e| {
 			CallError::Custom(ErrorObject::owned(

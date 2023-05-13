@@ -1,4 +1,5 @@
 use crate::*;
+use sp_common::bounded_string::BoundedString;
 
 parameter_types! {
 	pub const NameLimit: u32 = 40;
@@ -6,8 +7,8 @@ parameter_types! {
 	pub const MaxPhoneVerifiers: u32 = 5;
 }
 
-pub type Username = BoundedVec<u8, NameLimit>;
-pub type PhoneNumber = BoundedVec<u8, PhoneNumberLimit>;
+pub type Username = BoundedString<NameLimit>;
+pub type PhoneNumber = BoundedString<PhoneNumberLimit>;
 
 impl pallet_identity::Config for Runtime {
 	/// The overarching event type.
