@@ -22,7 +22,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"identity_getUserInfoByName\",\n    \"params\": {\n        \"name\": [\n            0\n        ]\n    }\n}"
+							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"identity_getUserInfoByName\",\n    \"params\": {\n        \"name\": \"Alice\"\n    }\n}"
 						},
 						"url": {
 							"raw": "http://localhost:9933/?",
@@ -57,7 +57,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"identity_getUserInfoByAccount\",\n    \"params\": {\n        \"account_id\": \"5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty\"\n    }\n}"
+							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"identity_getUserInfoByAccount\",\n    \"params\": {\n        \"account_id\": \"5Cfi7gqVNda2vKTFRN48jP95b6zXDoh2md2xLCamnggyLnma\"\n    }\n}"
 						},
 						"url": {
 							"raw": "http://localhost:9933/?",
@@ -92,7 +92,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"identity_getUserInfoByNumber\",\n    \"params\": {\n        \"number\": [\n            1\n        ]\n    }\n}"
+							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"identity_getUserInfoByNumber\",\n    \"params\": {\n        \"number\": \"+Alice\"\n    }\n}"
 						},
 						"url": {
 							"raw": "http://localhost:9933/?",
@@ -162,7 +162,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"community_get_contacts\",\n    \"params\": {\n        \"prefix\": [0],\n        \"community_id\": null\n    }\n}"
+							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"community_get_contacts\",\n    \"params\": {\n        \"prefix\": \"Al\",\n        \"community_id\": null\n    }\n}"
 						},
 						"url": {
 							"raw": "http://localhost:9933/?",
@@ -541,6 +541,39 @@
 				"body": {
 					"mode": "raw",
 					"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"rpc_methods\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:9933/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9933",
+					"path": [
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Verify",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"verify\",\n    \"params\": {\n        \"account_id\": \"5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY\",\n        \"username\": \"Alice\",\n        \"phone_number\": \"+Alice\"\n    }\n}",
 					"options": {
 						"raw": {
 							"language": "json"
