@@ -1,5 +1,5 @@
 use crate::*;
-use sp_common::bounded_string::BoundedString;
+use sp_common::BoundedString;
 
 parameter_types! {
 	pub const NameLimit: u32 = 40;

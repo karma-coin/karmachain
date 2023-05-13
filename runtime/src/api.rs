@@ -1,7 +1,7 @@
 use crate::{validators_rewards::era_payout, *};
 use codec::{Decode, Encode};
 use frame_system::Phase;
-use sp_common::{bounded_string::BoundedString, types::CommunityId};
+use sp_common::{types::CommunityId, BoundedString};
 use sp_rpc::{
 	Block as RpcBlock, BlockchainStats, CharTrait, CommunityMembership, Contact, GenesisData,
 	PhoneVerifier, SignedTransaction, SignedTransactionWithStatus, TraitScore, TransactionStatus,

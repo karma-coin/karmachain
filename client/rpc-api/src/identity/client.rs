@@ -7,7 +7,7 @@ use jsonrpsee::{
 use runtime_api::identity::IdentityApi;
 use sp_api::ProvideRuntimeApi;
 use sp_blockchain::HeaderBackend;
-use sp_common::{bounded_string::BoundedString, types::CommunityId};
+use sp_common::{types::CommunityId, BoundedString};
 use sp_rpc::{Contact, LeaderboardEntry, UserInfo};
 use sp_runtime::{
 	generic::BlockId,

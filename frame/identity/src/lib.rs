@@ -11,9 +11,9 @@ use sp_std::{prelude::*, vec};
 use crate::types::UserVerificationData;
 pub use pallet::*;
 use sp_common::{
-	bounded_string::BoundedString,
 	identity::{AccountIdentity, IdentityInfo},
 	traits::IdentityProvider,
+	BoundedString,
 };
 
 #[derive(Clone, Encode, Decode, Eq, MaxEncodedLen, PartialEq, Debug, TypeInfo)]

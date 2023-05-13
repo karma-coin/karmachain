@@ -1,6 +1,6 @@
 use codec::Codec;
 use scale_info::prelude::vec::Vec;
-use sp_common::{bounded_string::BoundedString, types::CommunityId};
+use sp_common::{types::CommunityId, BoundedString};
 use sp_rpc::{Contact, UserInfo};
 use sp_runtime::traits::Get;
 

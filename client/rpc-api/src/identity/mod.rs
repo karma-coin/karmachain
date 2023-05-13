@@ -1,7 +1,7 @@
 pub mod client;
 
 use jsonrpsee::{core::RpcResult, proc_macros::rpc};
-use sp_common::{bounded_string::BoundedString, types::CommunityId};
+use sp_common::{types::CommunityId, BoundedString};
 use sp_core::Get;
 use sp_rpc::{Contact, LeaderboardEntry, UserInfo};
 

@@ -1,14 +1,14 @@
 use codec::{Decode, Encode, MaxEncodedLen};
 use frame_support::{traits::Get, BoundedVec, CloneNoBound, RuntimeDebugNoBound};
 use scale_info::TypeInfo;
-use sp_common::*;
 use sp_std::vec::Vec;
+use scale_info::prelude::string::String;
 
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_common::{
-	bounded_string::BoundedString,
 	types::{CharTraitId, CommunityId},
+	BoundedString,
 };
 
 pub type Score = u32;

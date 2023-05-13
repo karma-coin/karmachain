@@ -17,9 +17,8 @@ pub mod pallet {
 	use super::*;
 	use frame_system::pallet_prelude::*;
 	use sp_common::{
-		bounded_string::BoundedString,
 		types::{CharTraitId, CommunityId},
-		*,
+		BoundedString,
 	};
 
 	#[pallet::config]

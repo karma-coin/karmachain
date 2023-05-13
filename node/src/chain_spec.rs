@@ -13,8 +13,9 @@ use sp_runtime::{
 	traits::{IdentifyAccount, Verify},
 	Perbill,
 };
+use scale_info::prelude::string::String;
 
-use sp_common::{types::CommunityId, String};
+use sp_common::{types::CommunityId};
 
 // The URL for the telemetry server.
 // const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
