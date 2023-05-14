@@ -6,6 +6,7 @@ use karmachain_node_runtime::{
 use pallet_appreciation::*;
 use pallet_staking::{Forcing, StakerStatus};
 use sc_service::ChainType;
+use scale_info::prelude::string::String;
 use sp_consensus_babe::AuthorityId as BabeId;
 use sp_core::{sr25519, Pair, Public};
 use sp_finality_grandpa::AuthorityId as GrandpaId;
@@ -13,9 +14,8 @@ use sp_runtime::{
 	traits::{IdentifyAccount, Verify},
 	Perbill,
 };
-use scale_info::prelude::string::String;
 
-use sp_common::{types::CommunityId};
+use sp_common::types::CommunityId;
 
 // The URL for the telemetry server.
 // const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";

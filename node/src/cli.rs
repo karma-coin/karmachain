@@ -1,12 +1,33 @@
 use sc_cli::RunCmd;
+use sp_rpc::ByPassToken;
 
 #[derive(Debug, clap::Parser)]
 pub struct Cli {
 	#[command(subcommand)]
 	pub subcommand: Option<Subcommand>,
-
+	/// Default node arguments
 	#[clap(flatten)]
 	pub run: RunCmd,
+	/// Default node arguments
+	#[clap(flatten)]
+	pub verifier_config: VerifierConfig,
+}
+
+#[derive(Debug, clap::Parser)]
+pub struct VerifierConfig {
+	/// Enable verifier mode.
+	///
+	/// The node will be provide verifier API
+	#[arg(long)]
+	pub verifier: bool,
+	/// Bypass token
+	///
+	/// Token for verifier API to pass verification
+	#[arg(long)]
+	pub bypass_token: Option<ByPassToken>,
+	/// Auth verifier endpoint url
+	#[arg(long)]
+	pub auth_dst: Option<String>,
 }
 
 #[derive(Debug, clap::Subcommand)]

@@ -187,7 +187,7 @@ pub struct LeaderboardEntry<AccountId> {
 	char_traits_ids: u32,
 }
 
-#[derive(Encode, Decode)]
+#[derive(Copy, Clone, Encode, Decode)]
 #[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
 pub enum VerificationResult {
 	Unspecified = 0,

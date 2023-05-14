@@ -10,16 +10,21 @@ use std::sync::Arc;
 use jsonrpsee::RpcModule;
 use karmachain_node_runtime::{
 	opaque::{Block, UncheckedExtrinsic},
-	AccountId, Balance, Hash, Index, NameLimit, PhoneNumberLimit, RuntimeEvent, Signature,
+	AccountId, Balance, Hash, Index, NameLimit, PhoneNumber, PhoneNumberLimit, RuntimeEvent,
+	Signature, Username,
 };
-use sc_client_api::BlockBackend;
+use sc_client_api::{BlockBackend, StorageProvider};
 use sc_transaction_pool_api::TransactionPool;
 use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder;
 use sp_blockchain::{Error as BlockChainError, HeaderBackend, HeaderMetadata};
+use sp_keystore::SyncCryptoStore;
 
 pub use sc_rpc_api::DenyUnsafe;
+use sp_rpc::ByPassToken;
 use sp_runtime::generic::SignedBlock;
+
+use crate::service::FullBackend;
 
 /// Full client dependencies.
 pub struct FullDeps<C, P> {
@@ -29,17 +34,23 @@ pub struct FullDeps<C, P> {
 	pub pool: Arc<P>,
 	/// Whether to deny unsafe calls
 	pub deny_unsafe: DenyUnsafe,
+	/// The keystore instance to use
+	pub keystore: Arc<dyn SyncCryptoStore>,
 }
 
 /// Instantiate all full RPC extensions.
 pub fn create_full<C, P>(
 	deps: FullDeps<C, P>,
+	verifier: bool,
+	bypass_token: Option<ByPassToken>,
+	auth_dst: Option<String>,
 ) -> Result<RpcModule<()>, Box<dyn std::error::Error + Send + Sync>>
 where
 	C: ProvideRuntimeApi<Block>,
 	C: HeaderBackend<Block> + HeaderMetadata<Block, Error = BlockChainError> + 'static,
 	C: Send + Sync + 'static,
 	C: BlockBackend<Block>,
+	C: StorageProvider<Block, FullBackend>,
 	C::Api: substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Index>,
 	C::Api: pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>,
 	C::Api: BlockBuilder<Block>,
@@ -61,11 +72,12 @@ where
 		events::{client::EventsProvider, EventsProviderApiServer},
 		identity::{client::Identity, IdentityApiServer},
 		transactions::{client::TransactionsIndexer, TransactionsIndexerApiServer},
+		verifier::{client::Verifier, VerifierApiServer},
 	};
 	use substrate_frame_rpc_system::{System, SystemApiServer};
 
 	let mut module = RpcModule::new(());
-	let FullDeps { client, pool, deny_unsafe } = deps;
+	let FullDeps { client, pool, deny_unsafe, keystore } = deps;
 
 	module.merge(System::new(client.clone(), pool, deny_unsafe).into_rpc())?;
 	module.merge(TransactionPayment::new(client.clone()).into_rpc())?;
@@ -73,6 +85,16 @@ where
 	module.merge(TransactionsIndexer::new(client.clone()).into_rpc())?;
 	module.merge(EventsProvider::new(client.clone()).into_rpc())?;
 	module.merge(BlocksProvider::new(client.clone()).into_rpc())?;
+
+	if verifier {
+		// TODO: better way to handle error
+		let bypass_token = bypass_token.expect("Missing bypass token");
+		let auth_dst = auth_dst.expect("Missing auth endpoint url");
+
+		module.merge(VerifierApiServer::<AccountId, Username, PhoneNumber>::into_rpc(
+			Verifier::new(client.clone(), keystore, bypass_token, auth_dst),
+		))?;
+	}
 
 	Ok(module)
 }
