@@ -27,6 +27,14 @@ Use Rust's native `cargo` command to build and launch the template node:
 cargo run --release -- --dev
 ```
 
+#### Run verifier node 
+
+Use Rust's native `cargo` command to build and launch the template node:
+
+```sh
+cargo run --release -- --dev --verifier --bypass-token="dummy" --auth-dst="https://localhost:8080"
+```
+
 #### Run local node 
 
 Firstly you need to create chain specification file or use existed one:
