@@ -1,7 +1,7 @@
 use crate::{validators_rewards::era_payout, *};
 use codec::{Decode, Encode};
 use frame_system::Phase;
-use sp_common::types::CommunityId;
+use sp_common::{types::CommunityId, BoundedString};
 use sp_rpc::{
 	Block as RpcBlock, BlockchainStats, CharTrait, CommunityMembership, Contact, GenesisData,
 	PhoneVerifier, SignedTransaction, SignedTransactionWithStatus, TraitScore, TransactionStatus,
@@ -245,8 +245,8 @@ impl_runtime_apis! {
 				UserInfo {
 					account_id: identity_info.account_id,
 					nonce: nonce.into(),
-					user_name: identity_info.name.into(),
-					mobile_number: identity_info.number.into(),
+					user_name: identity_info.name.try_into().unwrap_or_default(),
+					mobile_number: identity_info.number.try_into().unwrap_or_default(),
 					balance: balance as u64,
 					trait_scores,
 					karma_score,
@@ -256,7 +256,7 @@ impl_runtime_apis! {
 		}
 
 		fn get_user_info_by_name(
-			name: BoundedVec<u8, NameLimit>,
+			name: BoundedString<NameLimit>,
 		) -> Option<UserInfo<AccountId>> {
 			Identity::identity_by_name(&name).map(|identity_info| {
 				let nonce = System::account_nonce(&identity_info.account_id);
@@ -282,8 +282,8 @@ impl_runtime_apis! {
 				UserInfo {
 					account_id: identity_info.account_id,
 					nonce: nonce.into(),
-					user_name: identity_info.name.into(),
-					mobile_number: identity_info.number.into(),
+					user_name: identity_info.name.try_into().unwrap_or_default(),
+					mobile_number: identity_info.number.try_into().unwrap_or_default(),
 					balance: balance as u64,
 					trait_scores,
 					karma_score,
@@ -293,7 +293,7 @@ impl_runtime_apis! {
 		}
 
 		fn get_user_info_by_number(
-			number: BoundedVec<u8, PhoneNumberLimit>,
+			number: BoundedString<PhoneNumberLimit>,
 		) -> Option<UserInfo<AccountId>> {
 			Identity::identity_by_number(&number).map(|identity_info| {
 				let nonce = System::account_nonce(&identity_info.account_id);
@@ -318,8 +318,8 @@ impl_runtime_apis! {
 				UserInfo {
 					account_id: identity_info.account_id,
 					nonce: nonce.into(),
-					user_name: identity_info.name.into(),
-					mobile_number: identity_info.number.into(),
+					user_name: identity_info.name.try_into().unwrap_or_default(),
+					mobile_number: identity_info.number.try_into().unwrap_or_default(),
 					balance: balance as u64,
 					trait_scores,
 					karma_score,
@@ -338,7 +338,7 @@ impl_runtime_apis! {
 		}
 
 		fn get_contacts(
-			prefix: BoundedVec<u8, NameLimit>,
+			prefix: BoundedString<NameLimit>,
 			community_id: Option<CommunityId>,
 		) -> Vec<Contact<AccountId>> {
 			Identity::get_contacts(prefix)
@@ -369,9 +369,9 @@ impl_runtime_apis! {
 						.collect();
 
 					Contact {
-						user_name: identity_store.name.into(),
+						user_name: identity_store.name.try_into().unwrap_or_default(),
 						account_id,
-						mobile_number: identity_store.phone_number.into(),
+						mobile_number: identity_store.phone_number.try_into().unwrap_or_default(),
 						community_membership,
 						trait_scores,
 					}
@@ -568,15 +568,15 @@ impl_runtime_apis! {
 				.into_iter()
 				.map(|v| CharTrait {
 					id: v.id,
-					name: v.name.into(),
-					emoji: v.emoji.into(),
+					name: v.name.try_into().unwrap_or_default(),
+					emoji: v.emoji.try_into().unwrap_or_default(),
 				})
 				.collect();
 			let verifiers = Identity::verifiers()
 				.into_iter()
 				.map(|v| PhoneVerifier {
 					account_id: v,
-					name: vec![], // TODO:
+					name: Default::default(), // TODO:
 				})
 				.collect();
 

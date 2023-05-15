@@ -1,8 +1,8 @@
 use codec::Codec;
 use scale_info::prelude::vec::Vec;
-use sp_common::types::CommunityId;
+use sp_common::{types::CommunityId, BoundedString};
 use sp_rpc::{Contact, UserInfo};
-use sp_runtime::{traits::Get, BoundedVec};
+use sp_runtime::traits::Get;
 
 sp_api::decl_runtime_apis! {
 	pub trait IdentityApi<AccountId, NameLimit, PhoneNumberLimit>
@@ -18,12 +18,12 @@ sp_api::decl_runtime_apis! {
 
 		/// Provide additional information about user by `Name`
 		fn get_user_info_by_name(
-			name: BoundedVec<u8, NameLimit>,
+			name: BoundedString<NameLimit>,
 		) -> Option<UserInfo<AccountId>>;
 
 		/// Provide additional information about user by `PhoneNumber`
 		fn get_user_info_by_number(
-			number: BoundedVec<u8, PhoneNumberLimit>,
+			number: BoundedString<PhoneNumberLimit>,
 		) -> Option<UserInfo<AccountId>>;
 
 		/// Provide list of community members with information about each member
@@ -33,7 +33,7 @@ sp_api::decl_runtime_apis! {
 
 		/// Get list of user by username prefix and community
 		fn get_contacts(
-			prefix: BoundedVec<u8, NameLimit>,
+			prefix: BoundedString<NameLimit>,
 			community_id: Option<CommunityId>,
 		) -> Vec<Contact<AccountId>>;
 	}

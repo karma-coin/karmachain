@@ -1,4 +1,4 @@
-use crate::SignedTransactionWithStatus;
+use crate::{SignedTransactionWithStatus, VerificationResult};
 use codec::{Decode, Encode};
 use scale_info::prelude::vec::Vec;
 #[cfg(feature = "std")]
@@ -29,4 +29,15 @@ pub struct GetTransactionResponse<AccountId, Signature, TransactionEvent> {
 #[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
 pub struct GetBlockchainEventsResponse<TransactionEvent> {
 	pub tx_events: Vec<TransactionEvent>,
+}
+
+#[derive(Encode, Decode)]
+#[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
+pub struct VerificationResponse<AccountId, Username, PhoneNumber> {
+	pub verifier_account_id: Option<AccountId>,
+	pub verification_result: VerificationResult,
+	pub account_id: Option<AccountId>,
+	pub phone_number: Option<PhoneNumber>,
+	pub username: Option<Username>,
+	pub signature: Option<sp_core::sr25519::Signature>,
 }

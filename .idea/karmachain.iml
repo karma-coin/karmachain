@@ -5,12 +5,11 @@
       <sourceFolder url="file://$MODULE_DIR$/client/rpc-api/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/client/runtime-api/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/frame/appreciation/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/frame/identity/rpc/runtime-api/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/frame/identity/rpc/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/frame/identity/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/frame/reward/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/frame/transaction-indexer/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/node/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/node/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/primitives/common/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/primitives/rpc/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/runtime/src" isTestSource="false" />

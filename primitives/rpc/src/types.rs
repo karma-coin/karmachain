@@ -1,15 +1,17 @@
 use codec::{Decode, Encode};
-use scale_info::prelude::vec::Vec;
+use scale_info::prelude::{string::String, vec::Vec};
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
+
+pub type ByPassToken = String;
 
 #[derive(Encode, Decode)]
 #[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
 pub struct UserInfo<AccountId> {
 	pub account_id: AccountId,
 	pub nonce: u64,
-	pub user_name: Vec<u8>,
-	pub mobile_number: Vec<u8>,
+	pub user_name: String,
+	pub mobile_number: String,
 	pub balance: u64,
 	pub trait_scores: Vec<TraitScore>,
 	// pre_keys
@@ -155,23 +157,23 @@ pub struct GenesisData<AccountId> {
 #[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
 pub struct CharTrait {
 	pub id: u32,
-	pub name: Vec<u8>,
-	pub emoji: Vec<u8>,
+	pub name: String,
+	pub emoji: String,
 }
 
 #[derive(Encode, Decode)]
 #[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
 pub struct PhoneVerifier<AccountId> {
 	pub account_id: AccountId,
-	pub name: Vec<u8>,
+	pub name: String,
 }
 
 #[derive(Encode, Decode)]
 #[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
 pub struct Contact<AccountId> {
-	pub user_name: Vec<u8>,
+	pub user_name: String,
 	pub account_id: AccountId,
-	pub mobile_number: Vec<u8>,
+	pub mobile_number: String,
 	pub community_membership: Vec<CommunityMembership>,
 	pub trait_scores: Vec<TraitScore>,
 }
@@ -179,8 +181,46 @@ pub struct Contact<AccountId> {
 #[derive(Encode, Decode)]
 #[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
 pub struct LeaderboardEntry<AccountId> {
-	pub user_name: Vec<u8>,
+	pub user_name: String,
 	pub account_id: AccountId,
 	pub score: u32,
 	char_traits_ids: u32,
+}
+
+#[derive(Copy, Clone, Encode, Decode)]
+#[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
+pub enum VerificationResult {
+	Unspecified = 0,
+	/// There's already a user with the requested user name
+	UserNameTaken = 1,
+	/// User is verified using provided token
+	Verified = 2,
+	/// User is not verifier using provided token
+	Unverified = 3,
+	/// Request is missing required data
+	MissingData = 4,
+	/// Bad client signature
+	InvalidSignature = 5,
+	/// Different account associated with phone number
+	AccountMismatch = 6,
+}
+
+impl From<i32> for VerificationResult {
+	fn from(value: i32) -> Self {
+		match value {
+			0 => VerificationResult::Verified,
+			1 => VerificationResult::Unverified,
+			2 => VerificationResult::AccountMismatch,
+			_ => VerificationResult::Unspecified,
+		}
+	}
+}
+
+#[derive(Encode, Decode)]
+#[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
+pub struct VerificationEvidence<PublicKey, AccountId, Username, PhoneNumber> {
+	pub verifier_account_id: PublicKey,
+	pub account_id: AccountId,
+	pub username: Username,
+	pub phone_number: PhoneNumber,
 }

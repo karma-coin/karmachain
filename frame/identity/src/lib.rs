@@ -1,14 +1,19 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
+mod types;
+
 use codec::{Codec, Decode, Encode, MaxEncodedLen};
 use frame_support::{pallet_prelude::DispatchResult, traits::Get, BoundedVec};
 use scale_info::TypeInfo;
+use sp_runtime::traits::{IdentifyAccount, Verify};
 use sp_std::{prelude::*, vec};
 
+use crate::types::UserVerificationData;
 pub use pallet::*;
 use sp_common::{
 	identity::{AccountIdentity, IdentityInfo},
 	traits::IdentityProvider,
+	BoundedString,
 };
 
 #[derive(Clone, Encode, Decode, Eq, MaxEncodedLen, PartialEq, Debug, TypeInfo)]
@@ -55,6 +60,19 @@ pub mod pallet {
 		type Hooks: Hooks<Self::AccountId, Self::Balance, Self::Username, Self::PhoneNumber>;
 		/// The currency mechanism.
 		type Currency: Currency<Self::AccountId, Balance = Self::Balance>;
+
+		/// A Signature can be verified with a specific `PublicKey`.
+		/// The additional traits are boilerplate.
+		type Signature: Verify<Signer = Self::PublicKey> + Encode + Decode + Parameter;
+
+		/// A PublicKey can be converted into an `AccountId`. This is required by the
+		/// `Signature` type.
+		/// The additional traits are boilerplate.
+		type PublicKey: IdentifyAccount<AccountId = Self::PublicKey>
+			+ Encode
+			+ Decode
+			+ Parameter
+			+ Into<Self::AccountId>;
 	}
 
 	#[pallet::pallet]
@@ -124,8 +142,12 @@ pub mod pallet {
 		PhoneNumberTaken,
 		/// Account isn't found.
 		NotFound,
-		///
-		NotAllowed,
+		/// `AccountId` is not a `PhoneVerifier`
+		NotVerifier,
+		/// Signature `AccountId` do not match `AccountId` from params
+		AccountIdMismatch,
+		/// Signature do not match to passed parameters
+		InvalidSignature,
 	}
 
 	#[pallet::event]
@@ -137,12 +159,30 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().reads_writes(3,1).ref_time())]
 		pub fn new_user(
 			origin: OriginFor<T>,
+			verifier_account_id: T::PublicKey,
+			verifier_signature: T::Signature,
 			account_id: T::AccountId,
 			name: T::Username,
 			phone_number: T::PhoneNumber,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-			ensure!(PhoneVerifiers::<T>::get().contains(&who), Error::<T>::NotAllowed);
+			ensure!(who == account_id, Error::<T>::AccountIdMismatch);
+
+			// Check verification
+			ensure!(
+				PhoneVerifiers::<T>::get().contains(&verifier_account_id.clone().into()),
+				Error::<T>::NotVerifier
+			);
+			ensure!(
+				Self::verify(
+					verifier_account_id,
+					verifier_signature,
+					account_id.clone(),
+					name.clone(),
+					phone_number.clone()
+				),
+				Error::<T>::InvalidSignature
+			);
 
 			if PhoneNumberFor::<T>::contains_key(&phone_number) {
 				// If such phone number exists migrate those account
@@ -233,17 +273,37 @@ impl<T: Config> IdentityProvider<T::AccountId, T::Username, T::PhoneNumber> for 
 	}
 }
 
+impl<T: Config> Pallet<T> {
+	pub fn verify(
+		verifier_account_id: T::PublicKey,
+		verifier_signature: T::Signature,
+		account_id: T::AccountId,
+		username: T::Username,
+		phone_number: T::PhoneNumber,
+	) -> bool {
+		let data = UserVerificationData {
+			verifier_account_id: verifier_account_id.clone(),
+			account_id,
+			username,
+			phone_number,
+		}
+		.encode();
+
+		verifier_signature.verify(&*data, &verifier_account_id)
+	}
+}
+
 impl<T, UsernameLimit> Pallet<T>
 where
 	UsernameLimit: Get<u32> + 'static,
-	T: Config<Username = BoundedVec<u8, UsernameLimit>>,
+	T: Config<Username = BoundedString<UsernameLimit>>,
 {
 	/// Search for registered user who's username start with given `prefix`
 	pub fn get_contacts(
 		prefix: T::Username,
 	) -> Vec<(T::AccountId, IdentityStore<T::Username, T::PhoneNumber>)> {
 		IdentityOf::<T>::iter()
-			.filter(|(_key, value)| value.name.starts_with(&prefix))
+			.filter(|(_key, value)| value.name.0.starts_with(&prefix.0))
 			.collect()
 	}
 }

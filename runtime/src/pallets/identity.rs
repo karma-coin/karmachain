@@ -1,4 +1,5 @@
 use crate::*;
+use sp_common::BoundedString;
 
 parameter_types! {
 	pub const NameLimit: u32 = 40;
@@ -6,8 +7,8 @@ parameter_types! {
 	pub const MaxPhoneVerifiers: u32 = 5;
 }
 
-pub type Username = BoundedVec<u8, NameLimit>;
-pub type PhoneNumber = BoundedVec<u8, PhoneNumberLimit>;
+pub type Username = BoundedString<NameLimit>;
+pub type PhoneNumber = BoundedString<PhoneNumberLimit>;
 
 impl pallet_identity::Config for Runtime {
 	/// The overarching event type.
@@ -22,8 +23,12 @@ impl pallet_identity::Config for Runtime {
 	type PhoneNumber = PhoneNumber;
 	/// Max number of phone verifiers accounts
 	type MaxPhoneVerifiers = MaxPhoneVerifiers;
+	///
+	type Hooks = (Appreciation, (Reward, TransactionIndexer));
 	/// The currency mechanism.
 	type Currency = Balances;
-
-	type Hooks = (Appreciation, (Reward, TransactionIndexer));
+	/// Signature that used by `PhoneVerifier`
+	type Signature = sp_core::sr25519::Signature;
+	/// This is required by the `Signature` type.
+	type PublicKey = sp_core::sr25519::Public;
 }
