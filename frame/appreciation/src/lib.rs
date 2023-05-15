@@ -239,6 +239,39 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
+		/// Happens when `appreciation` tx happen
+		Appreciation {
+			/// Sender of appreciation
+			payer: T::AccountId,
+			/// Receiver of appreciation
+			payee: T::AccountId,
+			/// Amount of tokens sent with appreciation
+			amount: T::Balance,
+			/// Community in which appreciation happened
+			community_id: CommunityId,
+			/// Character trait
+			char_trait_id: CharTraitId,
+		},
+		/// May happens multiply times when `appreciation` tx happen and ones per `new_user` tx.
+		/// Happens even if transaction execution fails
+		CharTraitScoreIncreased {
+			/// Receiver of appreciation
+			who: T::AccountId,
+			/// Community in which appreciation happened
+			community_id: CommunityId,
+			/// Character trait
+			char_trait_id: CharTraitId,
+		},
+		/// May happen if `Admin` of closed community or any `Member` of opened community
+		/// appreciate someone with `appreciation` tx, whose not a part of this community
+		NewCommunityMember {
+			community_id: CommunityId,
+			/// Community member whose appreciation leads to expansion of the community
+			payer: T::AccountId,
+			/// The account who was add to community
+			payee: T::AccountId,
+		},
+		/// Happens when `set_admin` tx happen
 		NewCommunityAdmin {
 			community_id: CommunityId,
 			community_name: BoundedString<T::CommunityNameLimit>,
@@ -288,12 +321,34 @@ pub mod pallet {
 			let community_id = community_id.unwrap_or(NoCommunityId::<T>::get()?);
 			let char_trait_id = char_trait_id.unwrap_or(NoCharTraitId::<T>::get()?);
 
-			Self::process_appreciation(&payer, &payee, community_id, char_trait_id, referral)?;
+			let new_member =
+				Self::process_appreciation(&payer, &payee, community_id, char_trait_id, referral)?;
 
 			T::Currency::transfer(&payer, &payee, amount, ExistenceRequirement::KeepAlive)?;
 
-			T::Hooks::on_appreciation(payer, payee, amount, community_id, char_trait_id)?;
-			// TODO: events
+			T::Hooks::on_appreciation(
+				payer.clone(),
+				payee.clone(),
+				amount,
+				community_id,
+				char_trait_id,
+			)?;
+
+			if new_member {
+				Self::deposit_event(Event::<T>::NewCommunityMember {
+					community_id,
+					payer: payer.clone(),
+					payee: payee.clone(),
+				});
+			}
+
+			Self::deposit_event(Event::<T>::Appreciation {
+				payer,
+				payee,
+				amount,
+				community_id,
+				char_trait_id,
+			});
 
 			Ok(())
 		}
@@ -357,6 +412,7 @@ impl<T: pallet::Config> Pallet<T> {
 	}
 
 	pub fn increment_trait_score(
+		account_id: &T::AccountId,
 		phone_number: &T::PhoneNumber,
 		community_id: CommunityId,
 		char_trait_id: CharTraitId,
@@ -364,21 +420,35 @@ impl<T: pallet::Config> Pallet<T> {
 		TraitScores::<T>::mutate((phone_number, community_id, char_trait_id), |value| {
 			*value = Some(value.unwrap_or_default() + 1)
 		});
+
+		Self::deposit_event(Event::<T>::CharTraitScoreIncreased {
+			who: account_id.clone(),
+			community_id,
+			char_trait_id,
+		})
 	}
 
+	/// # Returns
+	///
+	/// `true` - if appreciation lead to adding `payee` to community as a new member,
+	/// 	otherwise `false`
 	pub fn process_appreciation(
-		payer: &T::AccountId,
-		payee: &T::AccountId,
+		payer_account_id: &T::AccountId,
+		payee_account_id: &T::AccountId,
 		community_id: CommunityId,
 		char_trait_id: CharTraitId,
 		referral: bool,
-	) -> DispatchResult {
+	) -> Result<bool, DispatchError> {
 		if NoCharTraitId::<T>::get()? == char_trait_id {
-			return Ok(())
+			return Ok(false)
 		}
 
-		let payer = T::IdentityProvider::identity_by_id(payer).ok_or(Error::<T>::NotFound)?.number;
-		let payee = T::IdentityProvider::identity_by_id(payee).ok_or(Error::<T>::NotFound)?.number;
+		let payer = T::IdentityProvider::identity_by_id(payer_account_id)
+			.ok_or(Error::<T>::NotFound)?
+			.number;
+		let payee = T::IdentityProvider::identity_by_id(payee_account_id)
+			.ok_or(Error::<T>::NotFound)?
+			.number;
 
 		// TODO: whether to check `char_trait_id` for existence?
 
@@ -386,6 +456,7 @@ impl<T: pallet::Config> Pallet<T> {
 		if referral {
 			// Give payer karma points for helping to grow the network
 			Self::increment_trait_score(
+				&payer_account_id,
 				&payer,
 				NoCommunityId::<T>::get()?,
 				AmbassadorCharTraitId::<T>::get()?,
@@ -394,9 +465,14 @@ impl<T: pallet::Config> Pallet<T> {
 
 		// Standard appreciation w/o a community context
 		if NoCommunityId::<T>::get()? == community_id {
-			Self::increment_trait_score(&payer, community_id, SpenderCharTraitId::<T>::get()?);
-			Self::increment_trait_score(&payee, community_id, char_trait_id);
-			return Ok(())
+			Self::increment_trait_score(
+				&payer_account_id,
+				&payer,
+				community_id,
+				SpenderCharTraitId::<T>::get()?,
+			);
+			Self::increment_trait_score(&payee_account_id, &payee, community_id, char_trait_id);
+			return Ok(false)
 		}
 
 		let community = Communities::<T>::get()
@@ -413,37 +489,57 @@ impl<T: pallet::Config> Pallet<T> {
 		let payee_membership =
 			CommunityMembership::<T>::get(&payee, community_id).unwrap_or_default();
 
-		match (payer_membership, payee_membership) {
+		let new_member = match (payer_membership, payee_membership) {
 			(CommunityRole::None, _) => return Err(Error::<T>::NotMember.into()),
 			(_, CommunityRole::Admin) | (_, CommunityRole::Member) => {
-				Self::increment_trait_score(&payer, community_id, SpenderCharTraitId::<T>::get()?);
-				Self::increment_trait_score(&payee, community_id, char_trait_id);
+				Self::increment_trait_score(
+					&payer_account_id,
+					&payer,
+					community_id,
+					SpenderCharTraitId::<T>::get()?,
+				);
+				Self::increment_trait_score(&payee_account_id, &payee, community_id, char_trait_id);
+				false
 			},
 			(CommunityRole::Admin, CommunityRole::None) => {
-				Self::increment_trait_score(&payer, community_id, SpenderCharTraitId::<T>::get()?);
 				Self::increment_trait_score(
+					&payer_account_id,
+					&payer,
+					community_id,
+					SpenderCharTraitId::<T>::get()?,
+				);
+				Self::increment_trait_score(
+					&payer_account_id,
 					&payer,
 					community_id,
 					AmbassadorCharTraitId::<T>::get()?,
 				);
-				Self::increment_trait_score(&payee, community_id, char_trait_id);
+				Self::increment_trait_score(&payee_account_id, &payee, community_id, char_trait_id);
 				CommunityMembership::<T>::insert(&payee, community_id, CommunityRole::Member);
+				true
 			},
 			(CommunityRole::Member, CommunityRole::None) if !is_community_closed => {
-				Self::increment_trait_score(&payer, community_id, SpenderCharTraitId::<T>::get()?);
 				Self::increment_trait_score(
+					&payer_account_id,
+					&payer,
+					community_id,
+					SpenderCharTraitId::<T>::get()?,
+				);
+				Self::increment_trait_score(
+					&payer_account_id,
 					&payer,
 					community_id,
 					AmbassadorCharTraitId::<T>::get()?,
 				);
-				Self::increment_trait_score(&payee, community_id, char_trait_id);
+				Self::increment_trait_score(&payee_account_id, &payee, community_id, char_trait_id);
 				CommunityMembership::<T>::insert(&payee, community_id, CommunityRole::Member);
+				true
 			},
 			(CommunityRole::Member, CommunityRole::None) =>
 				return Err(Error::<T>::CommunityClosed.into()),
-		}
+		};
 
-		Ok(())
+		Ok(new_member)
 	}
 
 	pub fn trait_scores_of(
@@ -488,16 +584,18 @@ impl<T: pallet::Config> Pallet<T> {
 impl<T: Config> Hooks<T::AccountId, T::Balance, T::Username, T::PhoneNumber> for Pallet<T> {
 	fn on_new_user(
 		_verifier: T::AccountId,
-		who: T::AccountId,
+		who_account_id: T::AccountId,
 		_name: T::Username,
 		_phone_number: T::PhoneNumber,
 	) -> DispatchResult {
 		let no_community_id = NoCommunityId::<T>::get()?;
 		let signup_char_trait_id = SignupCharTraitId::<T>::get()?;
 
-		let who = T::IdentityProvider::identity_by_id(&who).ok_or(Error::<T>::NotFound)?.number;
+		let who = T::IdentityProvider::identity_by_id(&who_account_id)
+			.ok_or(Error::<T>::NotFound)?
+			.number;
 
-		Self::increment_trait_score(&who, no_community_id, signup_char_trait_id);
+		Self::increment_trait_score(&who_account_id, &who, no_community_id, signup_char_trait_id);
 
 		Ok(())
 	}

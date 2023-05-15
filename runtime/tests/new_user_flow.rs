@@ -25,7 +25,7 @@ fn new_user_happy_flow() {
 			.expect("Invalid phone number length");
 
 		assert_ok!(Identity::new_user(
-			RuntimeOrigin::signed(alice),
+			RuntimeOrigin::signed(alice.clone()),
 			account_id.clone(),
 			name.clone(),
 			number.clone(),
@@ -86,7 +86,24 @@ fn new_user_happy_flow() {
 
 		// TODO: check transactions on chain
 		// TODO: check chain stats
-		// TODO: check block events
+		// Check that signup char trait score increasing emits event
+		System::assert_has_event(
+			pallet_appreciation::Event::<Runtime>::CharTraitScoreIncreased {
+				who: user_info.account_id.clone(),
+				community_id: 0,
+				char_trait_id: 1,
+			}
+			.into(),
+		);
+		System::assert_has_event(
+			pallet_identity::Event::<Runtime>::NewUser {
+				phone_verifier: alice,
+				account_id: user_info.account_id,
+				name,
+				phone_number: number,
+			}
+			.into(),
+		)
 	});
 }
 
@@ -160,15 +177,15 @@ fn new_user_migrate_account_flow() {
 		));
 
 		assert_ok!(Identity::new_user(
-			RuntimeOrigin::signed(alice),
+			RuntimeOrigin::signed(alice.clone()),
 			charlie_account_id.clone(),
 			name.clone(),
 			number.clone(),
 		));
 
-		assert!(Runtime::get_user_info_by_account(bob_account_id).is_none());
-		let user_info =
-			Runtime::get_user_info_by_account(charlie_account_id).expect("Missing user info");
+		assert!(Runtime::get_user_info_by_account(bob_account_id.clone()).is_none());
+		let user_info = Runtime::get_user_info_by_account(charlie_account_id.clone())
+			.expect("Missing user info");
 		assert_eq!(user_info.user_name, name.clone().into_inner());
 		assert_eq!(user_info.mobile_number, number.clone().into_inner());
 		assert_eq!(user_info.nonce, 0);
@@ -184,5 +201,14 @@ fn new_user_migrate_account_flow() {
 				.map(|v| v.karma_score),
 			Some(1)
 		);
+
+		System::assert_has_event(
+			pallet_identity::Event::<Runtime>::UpdateAccountId {
+				phone_verifier: alice,
+				old_account_id: bob_account_id,
+				new_account_id: charlie_account_id,
+			}
+			.into(),
+		)
 	});
 }

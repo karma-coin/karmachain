@@ -151,7 +151,22 @@ pub mod pallet {
 	}
 
 	#[pallet::event]
-	pub enum Event<T: Config> {}
+	#[pallet::generate_deposit(pub(super) fn deposit_event)]
+	pub enum Event<T: Config> {
+		/// New user registered
+		NewUser {
+			phone_verifier: T::AccountId,
+			account_id: T::AccountId,
+			name: T::Username,
+			phone_number: T::PhoneNumber,
+		},
+		/// User updated `AccountId`
+		UpdateAccountId {
+			phone_verifier: T::AccountId,
+			old_account_id: T::AccountId,
+			new_account_id: T::AccountId,
+		},
+	}
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
@@ -190,29 +205,35 @@ pub mod pallet {
 
 				// Remove old account date
 				// Save unwrap because of check above
-				let prev_account_id = PhoneNumberFor::<T>::take(&phone_number).unwrap();
-				let prev_identity_store = IdentityOf::<T>::take(&prev_account_id).unwrap();
-				NameFor::<T>::remove(&prev_identity_store.name);
+				let old_account_id = PhoneNumberFor::<T>::take(&phone_number).unwrap();
+				let old_identity_store = IdentityOf::<T>::take(&old_account_id).unwrap();
+				NameFor::<T>::remove(&old_identity_store.name);
 
 				// Save old nickname and new `AccountId`
-				NameFor::<T>::insert(&prev_identity_store.name, account_id.clone());
+				NameFor::<T>::insert(&old_identity_store.name, account_id.clone());
 				PhoneNumberFor::<T>::insert(&phone_number, account_id.clone());
 				IdentityOf::<T>::insert(
 					&account_id,
-					IdentityStore { name: prev_identity_store.name, phone_number },
+					IdentityStore { name: old_identity_store.name, phone_number },
 				);
 
 				// No need to transfer trait score and reward info
 				// because of they are indexed by `PhoneNumber`
 
 				// Transfer balance
-				let amount = T::Currency::free_balance(&prev_account_id);
+				let amount = T::Currency::free_balance(&old_account_id);
 				T::Currency::transfer(
-					&prev_account_id,
+					&old_account_id,
 					&account_id,
 					amount,
 					ExistenceRequirement::AllowDeath,
 				)?;
+
+				Self::deposit_event(Event::<T>::UpdateAccountId {
+					phone_verifier: who,
+					old_account_id,
+					new_account_id: account_id,
+				});
 
 				return Ok(())
 			}
@@ -232,7 +253,19 @@ pub mod pallet {
 				IdentityStore { name: name.clone(), phone_number: phone_number.clone() },
 			);
 
-			T::Hooks::on_new_user(who, account_id, name, phone_number)?;
+			T::Hooks::on_new_user(
+				who.clone(),
+				account_id.clone(),
+				name.clone(),
+				phone_number.clone(),
+			)?;
+
+			Self::deposit_event(Event::<T>::NewUser {
+				phone_verifier: who,
+				account_id,
+				name,
+				phone_number,
+			});
 
 			Ok(())
 		}

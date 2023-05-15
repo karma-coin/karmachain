@@ -12,3 +12,11 @@ pub struct AccountRewardsData {
 	/// Number of transaction that was subsidized for this user
 	pub transaction_subsidized: u8,
 }
+
+#[derive(Debug, Clone, Eq, PartialEq, Decode, Encode, MaxEncodedLen, TypeInfo)]
+pub enum RewardType {
+	Signup = 0,
+	Referral,
+	Karma,
+	Subsidy,
+}
