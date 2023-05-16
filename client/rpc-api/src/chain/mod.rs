@@ -8,11 +8,11 @@ use sp_runtime::traits::Block as BlockT;
 #[rpc(client, server)]
 pub trait BlocksProviderApi<Block: BlockT, AccountId> {
 	/// RPC method provides block information by block number
-	#[method(name = "chain_get_block_info", blocking)]
+	#[method(name = "chain_getBlockInfo", blocking)]
 	fn get_block_info(&self, block_height: u32) -> RpcResult<RpcBlock<AccountId, Block::Hash>>;
 
 	/// RPC method provides blocks information by the range of blocks number
-	#[method(name = "chain_get_blocks", blocking)]
+	#[method(name = "chain_getBlocks", blocking)]
 	fn get_blocks(
 		&self,
 		from_block_height: u32,
@@ -24,10 +24,10 @@ pub trait BlocksProviderApi<Block: BlockT, AccountId> {
 	}
 
 	/// RPC method provides information about current blockchain state
-	#[method(name = "chain_get_blockchain_data")]
+	#[method(name = "chain_getBlockchainData")]
 	fn get_blockchain_data(&self) -> RpcResult<BlockchainStats>;
 
 	/// RPC method provides information about blockchain genesis config
-	#[method(name = "chain_get_genesis_data")]
+	#[method(name = "chain_getGenesisData")] 
 	fn get_genesis_data(&self) -> RpcResult<GenesisData<AccountId>>;
 }

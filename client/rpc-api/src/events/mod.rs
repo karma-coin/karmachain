@@ -7,7 +7,7 @@ use sp_runtime::traits::Block as BlockT;
 #[rpc(client, server)]
 pub trait EventsProviderApi<Block: BlockT, Event> {
 	/// RPC method provides events for specific blocks
-	#[method(name = "events_get_blockchain_events", blocking)]
+	#[method(name = "events_getBlockchainEvents", blocking)]
 	fn get_blockchain_events(
 		&self,
 		from_block_height: u32,
