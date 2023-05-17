@@ -6,7 +6,7 @@ use sp_rpc::{ByPassToken, VerificationResponse};
 
 #[rpc(client, server)]
 pub trait VerifierApi<AccountId, Username, PhoneNumber> {
-	#[method(name = "verify")]
+	#[method(name = "verifier_verify")]
 	async fn verify(
 		&self,
 		account_id: AccountId,
