@@ -170,8 +170,14 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
+		// `Pays::No` allow to call this tx without paying any fee, this is a temporary solution and
+		// should be removed after fee subsudies mechanism will be implemented
 		#[pallet::call_index(0)]
-		#[pallet::weight(10_000 + T::DbWeight::get().reads_writes(3,1).ref_time())]
+		#[pallet::weight((
+			10_000 + T::DbWeight::get().reads_writes(3,1).ref_time(),
+			DispatchClass::Normal,
+			Pays::No,
+		))]
 		pub fn new_user(
 			origin: OriginFor<T>,
 			verifier_account_id: T::PublicKey,
