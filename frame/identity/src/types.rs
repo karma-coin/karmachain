@@ -8,3 +8,14 @@ pub struct UserVerificationData<PublicKey, AccountId, Username, PhoneNumber> {
 	pub username: Username,
 	pub phone_number: PhoneNumber,
 }
+
+pub enum VerificationResult {
+	/// Parameters are valid
+	Valid,
+	/// Parameters are valid but lead to account data migration
+	Migration,
+	/// This `AccountId` belong to another user
+	AccountIdExists,
+	/// This `Username` belong to another user
+	UsernameExists,
+}

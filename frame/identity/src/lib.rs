@@ -3,14 +3,19 @@
 mod types;
 
 use codec::{Codec, Decode, Encode, MaxEncodedLen};
-use frame_support::{pallet_prelude::DispatchResult, traits::Get, BoundedVec};
+use frame_support::{
+	pallet_prelude::DispatchResult,
+	traits::{Currency, ExistenceRequirement, Get},
+	BoundedVec,
+};
 use scale_info::TypeInfo;
 use sp_runtime::traits::{IdentifyAccount, Verify};
 use sp_std::{prelude::*, vec};
 
-use crate::types::UserVerificationData;
+use crate::types::{UserVerificationData, VerificationResult};
 pub use pallet::*;
 use sp_common::{
+	hooks::Hooks,
 	identity::{AccountIdentity, IdentityInfo},
 	traits::IdentityProvider,
 	BoundedString,
@@ -29,10 +34,7 @@ where
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
-	use frame_support::{
-		pallet_prelude::*,
-		traits::{Currency, ExistenceRequirement},
-	};
+	use frame_support::{pallet_prelude::*, traits::Currency};
 	use frame_system::pallet_prelude::*;
 	use sp_common::hooks::Hooks;
 	use sp_std::fmt::Debug;
@@ -121,7 +123,7 @@ pub mod pallet {
 	>;
 
 	#[pallet::storage]
-	pub type NameFor<T: Config> = StorageMap<_, Blake2_128Concat, T::Username, T::AccountId>;
+	pub type UsernameFor<T: Config> = StorageMap<_, Blake2_128Concat, T::Username, T::AccountId>;
 
 	#[pallet::storage]
 	pub type PhoneNumberFor<T: Config> =
@@ -157,7 +159,7 @@ pub mod pallet {
 		NewUser {
 			phone_verifier: T::AccountId,
 			account_id: T::AccountId,
-			name: T::Username,
+			username: T::Username,
 			phone_number: T::PhoneNumber,
 		},
 		/// User updated `AccountId`
@@ -183,97 +185,37 @@ pub mod pallet {
 			verifier_public_key: T::PublicKey,
 			verifier_signature: T::Signature,
 			account_id: T::AccountId,
-			name: T::Username,
+			username: T::Username,
 			phone_number: T::PhoneNumber,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			ensure!(who == account_id, Error::<T>::AccountIdMismatch);
 
+			let verifier_account_id = verifier_public_key.clone().into();
 			// Check verification
 			ensure!(
-				PhoneVerifiers::<T>::get().contains(&verifier_public_key.clone().into()),
+				PhoneVerifiers::<T>::get().contains(&verifier_account_id),
 				Error::<T>::NotVerifier
 			);
 			ensure!(
-				Self::verify(
+				Self::verify_signature(
 					verifier_public_key,
 					verifier_signature,
 					account_id.clone(),
-					name.clone(),
+					username.clone(),
 					phone_number.clone()
 				),
 				Error::<T>::InvalidSignature
 			);
 
-			if PhoneNumberFor::<T>::contains_key(&phone_number) {
-				// If such phone number exists migrate those account
-				// balance, trait score, etc to this new account
-
-				// Remove old account date
-				// Save unwrap because of check above
-				let old_account_id = PhoneNumberFor::<T>::take(&phone_number).unwrap();
-				let old_identity_store = IdentityOf::<T>::take(&old_account_id).unwrap();
-				NameFor::<T>::remove(&old_identity_store.name);
-
-				// Save old nickname and new `AccountId`
-				NameFor::<T>::insert(&old_identity_store.name, account_id.clone());
-				PhoneNumberFor::<T>::insert(&phone_number, account_id.clone());
-				IdentityOf::<T>::insert(
-					&account_id,
-					IdentityStore { name: old_identity_store.name, phone_number },
-				);
-
-				// No need to transfer trait score and reward info
-				// because of they are indexed by `PhoneNumber`
-
-				// Transfer balance
-				let amount = T::Currency::free_balance(&old_account_id);
-				T::Currency::transfer(
-					&old_account_id,
-					&account_id,
-					amount,
-					ExistenceRequirement::AllowDeath,
-				)?;
-
-				Self::deposit_event(Event::<T>::UpdateAccountId {
-					phone_verifier: who,
-					old_account_id,
-					new_account_id: account_id,
-				});
-
-				return Ok(())
+			match Self::verify(&account_id, &username, &phone_number) {
+				VerificationResult::Valid =>
+					Self::register_user(verifier_account_id, account_id, username, phone_number),
+				VerificationResult::Migration =>
+					Self::migrate_user(verifier_account_id, account_id, phone_number),
+				VerificationResult::AccountIdExists => Err(Error::<T>::AlreadyRegistered.into()),
+				VerificationResult::UsernameExists => Err(Error::<T>::UserNameTaken.into()),
 			}
-
-			if IdentityOf::<T>::contains_key(&account_id) {
-				return Err(Error::<T>::AlreadyRegistered.into())
-			}
-
-			if NameFor::<T>::contains_key(&name) {
-				return Err(Error::<T>::UserNameTaken.into())
-			}
-
-			NameFor::<T>::insert(&name, account_id.clone());
-			PhoneNumberFor::<T>::insert(&phone_number, account_id.clone());
-			IdentityOf::<T>::insert(
-				&account_id,
-				IdentityStore { name: name.clone(), phone_number: phone_number.clone() },
-			);
-
-			T::Hooks::on_new_user(
-				who.clone(),
-				account_id.clone(),
-				name.clone(),
-				phone_number.clone(),
-			)?;
-
-			Self::deposit_event(Event::<T>::NewUser {
-				phone_verifier: who,
-				account_id,
-				name,
-				phone_number,
-			});
-
-			Ok(())
 		}
 	}
 }
@@ -285,7 +227,7 @@ impl<T: Config> IdentityProvider<T::AccountId, T::Username, T::PhoneNumber> for 
 		match account_identity {
 			AccountIdentity::AccountId(account_id) => IdentityOf::<T>::get(account_id).is_some(),
 			AccountIdentity::PhoneNumber(number) => PhoneNumberFor::<T>::get(number).is_some(),
-			AccountIdentity::Name(name) => NameFor::<T>::get(name).is_some(),
+			AccountIdentity::Name(name) => UsernameFor::<T>::get(name).is_some(),
 		}
 	}
 
@@ -302,7 +244,7 @@ impl<T: Config> IdentityProvider<T::AccountId, T::Username, T::PhoneNumber> for 
 	fn identity_by_name(
 		name: &T::Username,
 	) -> Option<IdentityInfo<T::AccountId, T::Username, T::PhoneNumber>> {
-		<NameFor<T>>::get(name).as_ref().and_then(Self::identity_by_id)
+		<UsernameFor<T>>::get(name).as_ref().and_then(Self::identity_by_id)
 	}
 
 	fn identity_by_number(
@@ -313,7 +255,37 @@ impl<T: Config> IdentityProvider<T::AccountId, T::Username, T::PhoneNumber> for 
 }
 
 impl<T: Config> Pallet<T> {
+	/// Perform validation for input parameters of `new_user` tx
 	pub fn verify(
+		account_id: &T::AccountId,
+		username: &T::Username,
+		phone_number: &T::PhoneNumber,
+	) -> VerificationResult {
+		// If such phone number exists migrate those account
+		// balance, trait score, etc to this new account
+		if PhoneNumberFor::<T>::contains_key(&phone_number) {
+			return VerificationResult::Migration
+		}
+
+		// Such `AccountId` registered by other account
+		if IdentityOf::<T>::contains_key(&account_id) {
+			return VerificationResult::AccountIdExists
+		}
+
+		// Such `Username` registered by other account
+		if UsernameFor::<T>::contains_key(&username) {
+			return VerificationResult::UsernameExists
+		}
+
+		VerificationResult::Valid
+	}
+
+	/// Checks that signature match passed data
+	///
+	/// # Returns
+	/// `true` - if signature match passed data
+	/// `false` - otherwise
+	pub fn verify_signature(
 		verifier_public_key: T::PublicKey,
 		verifier_signature: T::Signature,
 		account_id: T::AccountId,
@@ -329,6 +301,81 @@ impl<T: Config> Pallet<T> {
 		.encode();
 
 		verifier_signature.verify(&*data, &verifier_public_key)
+	}
+
+	/// Add information about new user into storage, call `on_new_user` hook and deposit event
+	pub(crate) fn register_user(
+		phone_verifier: T::AccountId,
+		account_id: T::AccountId,
+		username: T::Username,
+		phone_number: T::PhoneNumber,
+	) -> DispatchResult {
+		UsernameFor::<T>::insert(&username, account_id.clone());
+		PhoneNumberFor::<T>::insert(&phone_number, account_id.clone());
+		IdentityOf::<T>::insert(
+			&account_id,
+			IdentityStore { name: username.clone(), phone_number: phone_number.clone() },
+		);
+
+		T::Hooks::on_new_user(
+			phone_verifier.clone(),
+			account_id.clone(),
+			username.clone(),
+			phone_number.clone(),
+		)?;
+
+		Self::deposit_event(Event::<T>::NewUser {
+			phone_verifier,
+			account_id,
+			username,
+			phone_number,
+		});
+
+		Ok(())
+	}
+
+	/// Migrate user data to new `AccountId` and deposit event
+	pub(crate) fn migrate_user(
+		phone_verifier: T::AccountId,
+		new_account_id: T::AccountId,
+		phone_number: T::PhoneNumber,
+	) -> DispatchResult {
+		// If such phone number exists migrate those account
+		// balance, trait score, etc to this new account
+
+		// Remove old account date
+		// Save unwrap because of check above
+		let old_account_id = PhoneNumberFor::<T>::take(&phone_number).unwrap();
+		let old_identity_store = IdentityOf::<T>::take(&old_account_id).unwrap();
+		UsernameFor::<T>::remove(&old_identity_store.name);
+
+		// Save old nickname and new `AccountId`
+		UsernameFor::<T>::insert(&old_identity_store.name, new_account_id.clone());
+		PhoneNumberFor::<T>::insert(&phone_number, new_account_id.clone());
+		IdentityOf::<T>::insert(
+			&new_account_id,
+			IdentityStore { name: old_identity_store.name, phone_number },
+		);
+
+		// No need to transfer trait score and reward info
+		// because of they are indexed by `PhoneNumber`
+
+		// Transfer balance
+		let amount = T::Currency::free_balance(&old_account_id);
+		T::Currency::transfer(
+			&old_account_id,
+			&new_account_id,
+			amount,
+			ExistenceRequirement::AllowDeath,
+		)?;
+
+		Self::deposit_event(Event::<T>::UpdateAccountId {
+			phone_verifier,
+			old_account_id,
+			new_account_id,
+		});
+
+		Ok(())
 	}
 }
 
