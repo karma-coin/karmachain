@@ -25,7 +25,7 @@ mod chain {
 			.json(&json!({
 				"id": 1,
 				"jsonrpc": "2.0",
-				"method": "get_block_info",
+				"method": "chain_getBlockInfo",
 				"params": {
 					"block_height": 1
 				}
@@ -52,7 +52,7 @@ mod chain {
 			.json(&json!({
 				"id": 1,
 				"jsonrpc": "2.0",
-				"method": "get_blockchain_data",
+				"method": "chain_getBlockchainData",
 			}))
 			.send()
 			.await
@@ -75,7 +75,7 @@ mod chain {
 			.json(&json!({
 				"id": 1,
 				"jsonrpc": "2.0",
-				"method": "get_genesis_data",
+				"method": "chain_getGenesisData",
 			}))
 			.send()
 			.await
