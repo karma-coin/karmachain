@@ -142,7 +142,7 @@ pub mod pallet {
 		PhoneNumberTaken,
 		/// Account isn't found.
 		NotFound,
-		/// `AccountId` is not a `PhoneVerifier`
+		/// Passed `PublicKey` do not belong to any `PhoneVerifier`
 		NotVerifier,
 		/// Signature `AccountId` do not match `AccountId` from params
 		AccountIdMismatch,
@@ -180,7 +180,7 @@ pub mod pallet {
 		))]
 		pub fn new_user(
 			origin: OriginFor<T>,
-			verifier_account_id: T::PublicKey,
+			verifier_public_key: T::PublicKey,
 			verifier_signature: T::Signature,
 			account_id: T::AccountId,
 			name: T::Username,
@@ -191,12 +191,12 @@ pub mod pallet {
 
 			// Check verification
 			ensure!(
-				PhoneVerifiers::<T>::get().contains(&verifier_account_id.clone().into()),
+				PhoneVerifiers::<T>::get().contains(&verifier_public_key.clone().into()),
 				Error::<T>::NotVerifier
 			);
 			ensure!(
 				Self::verify(
-					verifier_account_id,
+					verifier_public_key,
 					verifier_signature,
 					account_id.clone(),
 					name.clone(),
@@ -314,21 +314,21 @@ impl<T: Config> IdentityProvider<T::AccountId, T::Username, T::PhoneNumber> for 
 
 impl<T: Config> Pallet<T> {
 	pub fn verify(
-		verifier_account_id: T::PublicKey,
+		verifier_public_key: T::PublicKey,
 		verifier_signature: T::Signature,
 		account_id: T::AccountId,
 		username: T::Username,
 		phone_number: T::PhoneNumber,
 	) -> bool {
 		let data = UserVerificationData {
-			verifier_account_id: verifier_account_id.clone(),
+			verifier_public_key: verifier_public_key.clone(),
 			account_id,
 			username,
 			phone_number,
 		}
 		.encode();
 
-		verifier_signature.verify(&*data, &verifier_account_id)
+		verifier_signature.verify(&*data, &verifier_public_key)
 	}
 }
 
