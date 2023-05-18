@@ -127,7 +127,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"community_get_all_users\",\n    \"params\": {\n        \"community_id\": 0\n    }\n}"
+							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"community_getAllUsers\",\n    \"params\": {\n        \"community_id\": 0\n    }\n}"
 						},
 						"url": {
 							"raw": "http://localhost:9933/?",
@@ -162,7 +162,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"community_get_contacts\",\n    \"params\": {\n        \"prefix\": \"Al\",\n        \"community_id\": null\n    }\n}"
+							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"community_getContacts\",\n    \"params\": {\n        \"prefix\": \"Al\",\n        \"community_id\": null\n    }\n}"
 						},
 						"url": {
 							"raw": "http://localhost:9933/?",
@@ -197,7 +197,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"community_get_leader_board\",\n    \"params\": {}\n}"
+							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"community_getLeaderBoard\",\n    \"params\": {}\n}"
 						},
 						"url": {
 							"raw": "http://localhost:9933/?",
@@ -269,7 +269,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"get_tx_with_events\",\n    \"params\": {\n        \"block_number\": 1,\n        \"tx_index\": 1\n    }\n}",
+							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"get_txWithEvents\",\n    \"params\": {\n        \"block_number\": 1,\n        \"tx_index\": 1\n    }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -335,7 +335,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"get_transaction_from_hashes\",\n    \"params\": {\n        \"tx_hashes\": [\n            \"0x33d191b41d83a930da61a0a8894e97caee2862ed25911e8fd41bc50e4602c53b\",\n            \"0x33d191b41d83a930da61a0a8894e97caee2862ed25911e8fd41bc50e4602c53b\"\n        ]\n    }\n}",
+							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"get_transactionFromHashes\",\n    \"params\": {\n        \"tx_hashes\": [\n            \"0x33d191b41d83a930da61a0a8894e97caee2862ed25911e8fd41bc50e4602c53b\",\n            \"0x33d191b41d83a930da61a0a8894e97caee2862ed25911e8fd41bc50e4602c53b\"\n        ]\n    }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -439,7 +439,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"get_block_info\",\n    \"params\": {\n        \"block_height\": 5\n    }\n}",
+							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"get_blockInfo\",\n    \"params\": {\n        \"block_height\": 5\n    }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -472,7 +472,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"get_blockchain_data\"\n}",
+							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"get_blockchainData\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -505,7 +505,78 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"get_genesis_data\"\n}",
+							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"get_genesisData\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:9933/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9933",
+							"path": [
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Verifier",
+			"item": [
+				{
+					"name": "Verify",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"verifier_verify\",\n    \"params\": {\n        \"account_id\": \"5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY\",\n        \"username\": \"Alice\",\n        \"phone_number\": \"+Alice\",\n        \"bypass_token\": \"dummy\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:9933/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9933",
+							"path": [
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Insert key",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"author_insertKey\",\n    \"params\": {\n        \"key_type\": \"Veri\",\n        \"suri\": \"//Alice\",\n        \"public\": \"30783547727776614546357A58623236467A397263517044575335374374455248704E6568584350634E6F48474B75745159\"\n    }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -562,39 +633,6 @@
 			"response": []
 		},
 		{
-			"name": "Verify",
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"verify\",\n    \"params\": {\n        \"account_id\": \"5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY\",\n        \"username\": \"Alice\",\n        \"phone_number\": \"+Alice\"\n    }\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "http://localhost:9933/",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "9933",
-					"path": [
-						""
-					]
-				}
-			},
-			"response": []
-		},
-		{
 			"name": "Get blockchain events",
 			"request": {
 				"method": "POST",
@@ -606,7 +644,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"get_blockchain_events\",\n    \"params\": {\n        \"from_block_height\": 0, \n        \"to_block_height\": 2\n    }\n}",
+					"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"get_blockchainEvents\",\n    \"params\": {\n        \"from_block_height\": 0, \n        \"to_block_height\": 2\n    }\n}",
 					"options": {
 						"raw": {
 							"language": "json"

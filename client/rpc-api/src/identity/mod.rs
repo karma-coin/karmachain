@@ -33,7 +33,7 @@ pub trait IdentityApi<BlockHash, AccountId, NameLimit: Get<u32>, PhoneNumberLimi
 
 	/// RPC method provides list of community members with information
 	/// about each member account
-	#[method(name = "community_get_all_users")]
+	#[method(name = "community_getAllUsers")]
 	fn get_all_users(
 		&self,
 		community_id: CommunityId,
@@ -42,7 +42,7 @@ pub trait IdentityApi<BlockHash, AccountId, NameLimit: Get<u32>, PhoneNumberLimi
 
 	/// RPC method provides list of users who's name starts with `prefix`
 	/// also can be filtered by `community_id`, `None` mean no filtering
-	#[method(name = "community_get_contacts")]
+	#[method(name = "community_getContacts")]
 	fn get_contacts(
 		&self,
 		prefix: BoundedString<NameLimit>,
@@ -51,6 +51,6 @@ pub trait IdentityApi<BlockHash, AccountId, NameLimit: Get<u32>, PhoneNumberLimi
 	) -> RpcResult<Vec<Contact<AccountId>>>;
 
 	/// RPC method provides info about karma rewards period leaderboard
-	#[method(name = "community_get_leader_board")]
+	#[method(name = "community_getLeaderBoard")]
 	fn get_leader_board(&self) -> RpcResult<Vec<LeaderboardEntry<AccountId>>>;
 }
