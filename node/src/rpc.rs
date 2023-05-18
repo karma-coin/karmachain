@@ -53,6 +53,8 @@ where
 	C::Api: substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Index>,
 	C::Api: pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>,
 	C::Api: BlockBuilder<Block>,
+	C::Api: runtime_api::chain::BlockInfoProvider<Block, SignedBlock<Block>, AccountId, Hash>,
+	C::Api: runtime_api::events::EventProvider<Block, RuntimeEvent>,
 	C::Api: runtime_api::identity::IdentityApi<Block, AccountId, Username, PhoneNumber>,
 	C::Api: runtime_api::transactions::TransactionInfoProvider<
 		Block,
@@ -61,8 +63,7 @@ where
 		Signature,
 	>,
 	C::Api: runtime_api::transactions::TransactionIndexer<Block, AccountId>,
-	C::Api: runtime_api::events::EventProvider<Block, RuntimeEvent>,
-	C::Api: runtime_api::chain::BlockInfoProvider<Block, SignedBlock<Block>, AccountId, Hash>,
+	C::Api: runtime_api::verifier::VerifierApi<Block, AccountId, Username, PhoneNumber>,
 	P: TransactionPool + 'static,
 {
 	use pallet_transaction_payment_rpc::{TransactionPayment, TransactionPaymentApiServer};

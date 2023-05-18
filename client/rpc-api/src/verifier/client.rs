@@ -8,21 +8,23 @@ use jsonrpsee::{
 	core::{async_trait, RpcResult},
 	types::error::CallError,
 };
+use runtime_api::verifier::VerifierApi;
 use sp_api::ProvideRuntimeApi;
+use sp_blockchain::HeaderBackend;
 use sp_core::{
 	crypto::{AccountId32, CryptoTypePublicPair},
 	ByteArray,
 };
 use sp_keystore::SyncCryptoStore;
 use sp_rpc::{ByPassToken, VerificationEvidence, VerificationResponse, VerificationResult};
-use sp_runtime::{traits::Block as BlockT, KeyTypeId};
+use sp_runtime::{generic::BlockId, traits::Block as BlockT, KeyTypeId};
 use std::sync::Arc;
 
 const KEY_TYPE: KeyTypeId = KeyTypeId(*b"Veri");
 
 pub struct Verifier<C, P> {
 	/// Shared reference to the client.
-	_client: Arc<C>,
+	client: Arc<C>,
 	crypto_store: Arc<dyn SyncCryptoStore>,
 	bypass_token: ByPassToken,
 	auth_dst: String,
@@ -36,7 +38,7 @@ impl<C, P> Verifier<C, P> {
 		bypass_token: ByPassToken,
 		auth_dst: String,
 	) -> Self {
-		Self { _client: client, crypto_store, bypass_token, auth_dst, _marker: Default::default() }
+		Self { client, crypto_store, bypass_token, auth_dst, _marker: Default::default() }
 	}
 }
 
@@ -50,7 +52,8 @@ where
 	Username: Codec + Clone + Send + Sync + 'static,
 	PhoneNumber: Codec + Clone + Send + Sync + 'static + TryInto<String>,
 	<PhoneNumber as TryInto<String>>::Error: std::fmt::Display,
-	C: ProvideRuntimeApi<Block> + Send + Sync + 'static,
+	C: ProvideRuntimeApi<Block> + HeaderBackend<Block> + Send + Sync + 'static,
+	C::Api: VerifierApi<Block, AccountId, Username, PhoneNumber>,
 {
 	async fn verify(
 		&self,
@@ -60,6 +63,25 @@ where
 		bypass_token: Option<ByPassToken>,
 	) -> RpcResult<VerificationResponse<AccountId, Username, PhoneNumber>> {
 		// TODO: perform checks for parameters
+		let api = self.client.runtime_api();
+		let at = BlockId::hash(self.client.info().best_hash);
+
+		// Verify input parameters for `new_user` tx
+		match api
+			.verify(&at, &account_id, &username, &phone_number)
+			.map_err(|e| map_err(Error::RuntimeError, e))?
+		{
+			VerificationResult::Verified => {},
+			verification_result =>
+				return Ok(VerificationResponse {
+					verifier_account_id: None,
+					verification_result,
+					account_id: None,
+					phone_number: None,
+					username: None,
+					signature: None,
+				}),
+		}
 
 		let verification_result = match bypass_token {
 			// Bypass token passed and matched, skip verification

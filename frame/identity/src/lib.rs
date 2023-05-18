@@ -1,6 +1,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-mod types;
+pub mod types;
 
 use codec::{Codec, Decode, Encode, MaxEncodedLen};
 use frame_support::{
