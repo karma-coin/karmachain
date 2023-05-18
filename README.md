@@ -35,6 +35,23 @@ Use Rust's native `cargo` command to build and launch the template node:
 cargo run --release -- --dev --verifier --bypass-token="dummy" --auth-dst="https://localhost:8080"
 ```
 
+Inserting verifier keys:
+
+```sh
+curl --location 'http://localhost:9933/' \
+--header 'Content-Type: application/json' \
+--data '{
+    "id": 1,
+    "jsonrpc": "2.0",
+    "method": "author_insertKey",
+    "params": {
+        "key_type": "Veri",
+        "suri": "//Alice",
+        "public": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d"
+    }
+}'
+```
+
 #### Run local node 
 
 Firstly you need to create chain specification file or use existed one:
