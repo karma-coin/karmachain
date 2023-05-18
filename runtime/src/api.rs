@@ -218,7 +218,7 @@ impl_runtime_apis! {
 		}
 	}
 
-	impl runtime_api::identity::IdentityApi<Block, AccountId, NameLimit, PhoneNumberLimit> for Runtime {
+	impl runtime_api::identity::IdentityApi<Block, AccountId, Username, PhoneNumber> for Runtime {
 		fn get_user_info_by_account(
 			account_id: AccountId,
 		) -> Option<UserInfo<AccountId>> {

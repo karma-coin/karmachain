@@ -1,12 +1,11 @@
 pub mod client;
 
 use jsonrpsee::{core::RpcResult, proc_macros::rpc};
-use sp_common::{types::CommunityId, BoundedString};
-use sp_core::Get;
+use sp_common::types::CommunityId;
 use sp_rpc::{Contact, LeaderboardEntry, UserInfo};
 
 #[rpc(client, server)]
-pub trait IdentityApi<BlockHash, AccountId, NameLimit: Get<u32>, PhoneNumberLimit: Get<u32>> {
+pub trait IdentityApi<BlockHash, AccountId, Username, PhoneNumber> {
 	/// RPC method provides information about user account by `AccountId`
 	#[method(name = "identity_getUserInfoByAccount")]
 	fn get_user_info_by_account(
@@ -19,7 +18,7 @@ pub trait IdentityApi<BlockHash, AccountId, NameLimit: Get<u32>, PhoneNumberLimi
 	#[method(name = "identity_getUserInfoByName")]
 	fn get_user_info_by_name(
 		&self,
-		name: BoundedString<NameLimit>,
+		name: Username,
 		at: Option<BlockHash>,
 	) -> RpcResult<Option<UserInfo<AccountId>>>;
 
@@ -27,7 +26,7 @@ pub trait IdentityApi<BlockHash, AccountId, NameLimit: Get<u32>, PhoneNumberLimi
 	#[method(name = "identity_getUserInfoByNumber")]
 	fn get_user_info_by_number(
 		&self,
-		number: BoundedString<PhoneNumberLimit>,
+		number: PhoneNumber,
 		at: Option<BlockHash>,
 	) -> RpcResult<Option<UserInfo<AccountId>>>;
 
@@ -45,7 +44,7 @@ pub trait IdentityApi<BlockHash, AccountId, NameLimit: Get<u32>, PhoneNumberLimi
 	#[method(name = "community_getContacts")]
 	fn get_contacts(
 		&self,
-		prefix: BoundedString<NameLimit>,
+		prefix: Username,
 		community_id: Option<CommunityId>,
 		at: Option<BlockHash>,
 	) -> RpcResult<Vec<Contact<AccountId>>>;

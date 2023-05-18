@@ -10,8 +10,7 @@ use std::sync::Arc;
 use jsonrpsee::RpcModule;
 use karmachain_node_runtime::{
 	opaque::{Block, UncheckedExtrinsic},
-	AccountId, Balance, Hash, Index, NameLimit, PhoneNumber, PhoneNumberLimit, RuntimeEvent,
-	Signature, Username,
+	AccountId, Balance, Hash, Index, PhoneNumber, RuntimeEvent, Signature, Username,
 };
 use sc_client_api::{BlockBackend, StorageProvider};
 use sc_transaction_pool_api::TransactionPool;
@@ -54,7 +53,7 @@ where
 	C::Api: substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Index>,
 	C::Api: pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>,
 	C::Api: BlockBuilder<Block>,
-	C::Api: runtime_api::identity::IdentityApi<Block, AccountId, NameLimit, PhoneNumberLimit>,
+	C::Api: runtime_api::identity::IdentityApi<Block, AccountId, Username, PhoneNumber>,
 	C::Api: runtime_api::transactions::TransactionInfoProvider<
 		Block,
 		UncheckedExtrinsic,
