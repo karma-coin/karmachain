@@ -1,9 +1,9 @@
 {
-  "name": "Development",
-  "id": "dev",
-  "chainType": "Development",
+  "name": "Karmachain TN1",
+  "id": "testnet_1",
+  "chainType": "Live",
   "bootNodes": [
-    "/ip4/127.0.0.1/tcp/30333/p2p/12D3KooWMm7Y673huHiJZkYxFWocGCxjTa7AJsQnznwtRfEmraCv"
+
   ],
   "telemetryEndpoints": null,
   "protocolId": null,
@@ -30,19 +30,15 @@
       "balances": {
         "balances": [
           [
-            "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+            "5FCPrbdZRiwjWdDJhtSLGYVqnuqVvqHW7TXGncgT16VZV4Ls",
             1000000000000000
           ],
           [
-            "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+            "5F4Pv8CPnSoEwdgyxijkGtaXTbYErMfBZwLDb9tKRJTjFXEz",
             1000000000000000
           ],
           [
-            "5GNJqTPyNqANBkUVMN1LPPrxXnFouWXoe2wNSmmEoLctxiZY",
-            1000000000000000
-          ],
-          [
-            "5HpG9w8EBLe5XCrbczpwq5TSXvedjrBGCwqxK1iQ7qUsSWFc",
+            "5GKxNqbAwyT5tvWR9tVuHkDXjZXBqrLbdmJBuWxZUSrRGiow",
             1000000000000000
           ]
         ]
@@ -51,21 +47,21 @@
         "multiplier": "1000000000000000000"
       },
       "sudo": {
-        "key": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"
+        "key": "5FCPrbdZRiwjWdDJhtSLGYVqnuqVvqHW7TXGncgT16VZV4Ls"
       },
       "staking": {
-        "validatorCount": 1,
+        "validatorCount": 40,
         "minimumValidatorCount": 1,
         "invulnerables": [
-          "5GNJqTPyNqANBkUVMN1LPPrxXnFouWXoe2wNSmmEoLctxiZY"
+          "5FCPrbdZRiwjWdDJhtSLGYVqnuqVvqHW7TXGncgT16VZV4Ls"
         ],
         "forceEra": "NotForcing",
         "slashRewardFraction": 100000000,
         "canceledPayout": 0,
         "stakers": [
           [
-            "5GNJqTPyNqANBkUVMN1LPPrxXnFouWXoe2wNSmmEoLctxiZY",
-            "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+            "5FCPrbdZRiwjWdDJhtSLGYVqnuqVvqHW7TXGncgT16VZV4Ls",
+            "5FCPrbdZRiwjWdDJhtSLGYVqnuqVvqHW7TXGncgT16VZV4Ls",
             2500000000000,
             "Validator"
           ]
@@ -78,11 +74,11 @@
       "session": {
         "keys": [
           [
-            "5GNJqTPyNqANBkUVMN1LPPrxXnFouWXoe2wNSmmEoLctxiZY",
-            "5GNJqTPyNqANBkUVMN1LPPrxXnFouWXoe2wNSmmEoLctxiZY",
+            "5FCPrbdZRiwjWdDJhtSLGYVqnuqVvqHW7TXGncgT16VZV4Ls",
+            "5FCPrbdZRiwjWdDJhtSLGYVqnuqVvqHW7TXGncgT16VZV4Ls",
             {
-              "babe": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
-              "grandpa": "5FA9nQDVg267DEd8m1ZypXLBnvN7SFxYwV7ndqSYGiN9TTpu"
+              "babe": "5FCPrbdZRiwjWdDJhtSLGYVqnuqVvqHW7TXGncgT16VZV4Ls",
+              "grandpa": "5CZEvesjSpSHeeeHqQd8HzzG99i4CPg22HfQ27Y4J62k74eh"
             }
           ]
         ]
@@ -92,7 +88,7 @@
       },
       "identity": {
         "phoneVerifiers": [
-          "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"
+          "5FENtYhgvnUURrWHWo2gf2uea9GT5hZqRg11daM45mjmXWPk"
         ]
       },
       "appreciation": {
@@ -412,47 +408,8 @@
         "signupCharTraitId": 1,
         "spenderCharTraitId": 2,
         "ambassadorCharTraitId": 41,
-        "communities": [
-          [
-            1,
-            "Grateful Giraffes",
-            "A global community of of leaders that come together for powerful wellness experiences",
-            "🦒",
-            "https://www.gratefulgiraffes.com",
-            "https://twitter.com/TheGratefulDAO",
-            "https://www.instagram.com/gratefulgiraffes",
-            "",
-            "https://discord.gg/7FMTXavy8N",
-            [
-              10,
-              4,
-              3,
-              11,
-              15,
-              18,
-              39,
-              42,
-              60
-            ],
-            true
-          ]
-        ],
-        "communityMembership": [
-          [
-            [
-              0
-            ],
-            1,
-            "Admin"
-          ],
-          [
-            [
-              1
-            ],
-            1,
-            "Member"
-          ]
-        ],
+        "communities": [],
+        "communityMembership": [],
         "noCommunityId": 0
       },
       "reward": {
