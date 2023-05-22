@@ -413,11 +413,11 @@
         "noCommunityId": 0
       },
       "reward": {
-        "signupRewardPhase1Alloc": 100000000000000,
-        "signupRewardPhase2Alloc": 200000000000000,
-        "signupRewardPhase1Amount": 10000000,
-        "signupRewardPhase2Amount": 1000000,
-        "signupRewardPhase3Amount": 1000,
+        "signupRewardPhase1Alloc": 100000000000000000000,
+        "signupRewardPhase2Alloc": 200000000000000000000,
+        "signupRewardPhase1Amount": 10000000000000,
+        "signupRewardPhase2Amount": 1000000000000,
+        "signupRewardPhase3Amount": 100000000,
         "referralRewardPhase1Alloc": 100000000000000,
         "referralRewardPhase2Alloc": 200000000000000,
         "referralRewardPhase1Amount": 10000000,
