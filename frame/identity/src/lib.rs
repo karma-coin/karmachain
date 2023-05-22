@@ -172,6 +172,7 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
+		// TODO: disable verifier evidence check for TN1, should be rollbacked after TN1
 		// `Pays::No` allow to call this tx without paying any fee, this is a temporary solution and
 		// should be removed after fee subsudies mechanism will be implemented
 		#[pallet::call_index(0)]
@@ -182,8 +183,8 @@ pub mod pallet {
 		))]
 		pub fn new_user(
 			origin: OriginFor<T>,
-			verifier_public_key: T::PublicKey,
-			verifier_signature: T::Signature,
+			// verifier_public_key: T::PublicKey,
+			// verifier_signature: T::Signature,
 			account_id: T::AccountId,
 			username: T::Username,
 			phone_number: T::PhoneNumber,
@@ -191,22 +192,25 @@ pub mod pallet {
 			let who = ensure_signed(origin)?;
 			ensure!(who == account_id, Error::<T>::AccountIdMismatch);
 
-			let verifier_account_id = verifier_public_key.clone().into();
+			// let verifier_account_id = verifier_public_key.clone().into();
 			// Check verification
-			ensure!(
-				PhoneVerifiers::<T>::get().contains(&verifier_account_id),
-				Error::<T>::NotVerifier
-			);
-			ensure!(
-				Self::verify_signature(
-					verifier_public_key,
-					verifier_signature,
-					account_id.clone(),
-					username.clone(),
-					phone_number.clone()
-				),
-				Error::<T>::InvalidSignature
-			);
+			// ensure!(
+			// 	PhoneVerifiers::<T>::get().contains(&verifier_account_id),
+			// 	Error::<T>::NotVerifier
+			// );
+			// ensure!(
+			// 	Self::verify_signature(
+			// 		verifier_public_key,
+			// 		verifier_signature,
+			// 		account_id.clone(),
+			// 		username.clone(),
+			// 		phone_number.clone()
+			// 	),
+			// 	Error::<T>::InvalidSignature
+			// );
+
+			let verifier_account_id =
+				PhoneVerifiers::<T>::get().pop().ok_or(Error::<T>::NotVerifier)?;
 
 			match Self::verify(&account_id, &username, &phone_number) {
 				VerificationResult::Valid =>
