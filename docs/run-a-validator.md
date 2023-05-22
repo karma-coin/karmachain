@@ -7,6 +7,12 @@ Running karmachain node in validator mode requires:
 * [Docker](https://docs.docker.com/engine/install/)
 * [Git](https://github.com/git-guides/install-git)
 
+---
+
+Also, you need and some prepared accounts [polkadot.js extension](https://chrome.google.com/webstore/detail/polkadot%7Bjs%7D-extension/mopnmbcafieddcagagdcbnhejhlodfdd) 
+to start validating. [How to create account.](https://www.youtube.com/watch?v=sy7lvAqyzkY)
+
+
 ## Requesting tokens for bond
 
 [//]: # (TODO) 
