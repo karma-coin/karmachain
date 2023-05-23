@@ -37,8 +37,8 @@ Click `Submit Transaction` to send the transaction. You should see an `Extrinsic
 - `using the selected account` - account which send appreciation (your account)
 - `to` - AccountId, username or phone number of the appreciation's receiver
 - `amount` - amount of tip in `KCents`to send with appreciation
-- `communityId` - leave empty
-- `charTraitId` - appreciation char trait id. For example, 6 for `Awesome`, 7 for `Smart`.
+- `communityId` - not supported yet. So do not include this option.
+- `charTraitId` - appreciation char trait id. For example, 6 for `Awesome`, 7 for `Smart`. Click on the switch to include this option.
 
 Click `Submit Transaction`. You should see an ExtrinsicSuccess message in few seconds.
 
