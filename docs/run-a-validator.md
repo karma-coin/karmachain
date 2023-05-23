@@ -55,7 +55,7 @@ docker run \
 		--rpc-methods Unsafe \
 		--validator \
 		--name <your-node-name> \
-		--bootnodes /ip4/172.17.0.2/tcp/30333/p2p/12D3KooWMmcVanMqvswZM4HMzMvK3X4vuUr4NpogusA6oqGjcYP4
+		--bootnodes /dns/testnet.karmaco.in/tcp/30333/p2p/12D3KooWFgrbXqQE1kp3ytTGTsgsVVFBp5P3TGYyGa2KaVs9nQta
 ```
 
 ## Bond tokens
