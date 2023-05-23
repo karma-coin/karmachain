@@ -5,7 +5,7 @@ This document details the transactions supported by Karmachain 2.0 Testnest1 (TN
 
 You can use any substrate-compatibe wallet but the easiest way to get started is using the polkadot.js chrome extension.
 
-1. Install the [polkadot.js chrome extension](https://chrome.google.com/webstore/detail/polkadot%7Bjs%7D-extension/mopnmbcafieddcagagdcbnhejhlodfdd).
+1. Install the [polkadot.js chrome extension](https://chrome.google.com/webstore/detail/polkadot%7Bjs%7D-extension/mopnmbcafieddcagagdcbnhejhlodfdd)
 2. Connect to a Karmachain testnet via [polkadot.js](https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Ftestnet.karmaco.in%2Ftestnet%2Fws#/explorer)
 3. Follow the instructions in this guide. [Create an Account using Polkadot JS Extension](https://www.youtube.com/watch?v=sy7lvAqyzkY)
 
@@ -71,3 +71,8 @@ After registration, you can see your account balance in `Accounts` tab.
 You should see basic information about account.
 
 ![accoutnInfo](./images/basic-transactions/account-info.png)
+
+----
+
+
+
