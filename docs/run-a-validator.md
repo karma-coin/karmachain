@@ -1,23 +1,25 @@
-# Run a Validator
+# Running a Validator
 
-This guide describe how you can run validator node and connect
-to karmachain TN1.
+This guide describes how you to run validator node on karmachain 2.0 Testnet 1 (TN1).
 
-Running karmachain node in validator mode requires:
+## Setup
+
+Running a karmachain node in validator mode requires:
 * [Docker](https://docs.docker.com/engine/install/)
 * [Git](https://github.com/git-guides/install-git)
 
----
+- In addition, to start validating, you need and some prepared accounts that you can create using [polkadot.js extension](https://chrome.google.com/webstore/detail/polkadot%7Bjs%7D-extension/mopnmbcafieddcagagdcbnhejhlodfdd).
+- Reffer to this guide [Create an Account using Polkadot JS Extension](https://www.youtube.com/watch?v=sy7lvAqyzkY)
 
-Also, you need and some prepared accounts [polkadot.js extension](https://chrome.google.com/webstore/detail/polkadot%7Bjs%7D-extension/mopnmbcafieddcagagdcbnhejhlodfdd) 
-to start validating. [How to create account.](https://www.youtube.com/watch?v=sy7lvAqyzkY)
+----
 
-
-## Requesting tokens for bond
+## Requesting tokens for your bond
 
 [//]: # (TODO) 
 
 ## Downloading karmachain source files
+
+TODO: Link to TN1 github release on github as validator should clone the release's code.
 
 Downloading karmachain from GitHub.
 
@@ -26,17 +28,15 @@ git clone https://github.com/karma-coin/karmachain
 cd karmachain
 ```
 
-## Prepare to run
+## Preparing a node
 
-Building docker image
+- Build a docker image of your node
 
 ```bash
 docker build . --tag karmachain-node
 ```
 
-## Running node
-
-Now you can run your node
+## Running a node
 
 ```bash
 docker run \
@@ -72,16 +72,14 @@ First, go to the Staking section. Click on "Account Actions", and then the "+ St
 
 ![bond](./images/run-a-validator/bond.png)
 
-* Stash account - Select your Stash account. In this example, we will bond 1 DOT, where the minimum bonding amount is 1. Make sure that your Stash account contains at least this much. You can, of course, stake more than this.
-* Controller account - Select the Controller account created earlier. This account will also need a small amount of DOT in order to start and stop validating.
-* Value bonded - How much DOT from the Stash account you want to bond/stake. Note that you do not need to bond all of the DOT in that account. Also note that you can always bond more DOT later. However, withdrawing any bonded amount requires the duration of the unbonding period. On Kusama, the unbonding period is 7 days. On Polkadot, the planned unbonding period is 28 days.
-* Payment destination - The account where the rewards from validating are sent. More info here. Starting with runtime version v23 natively included in client version 0.9.3, payouts can go to any custom address. If you'd like to redirect payments to an account that is neither the controller nor the stash account, set one up. Note that it is extremely unsafe to set an exchange address as the recipient of the staking rewards.
+- Stash account - Select your Stash account. In this example, we will bond 1 DOT, where the minimum bonding amount is 1. Make sure that your Stash account contains at least this much. You can, of course, stake more than this.
+- Controller account - Select the Controller account created earlier. This account will also need a small amount of DOT in order to start and stop validating.
+- Value bonded - How much DOT from the Stash account you want to bond/stake. Note that you do not need to bond all of the DOT in that account. Also note that you can always bond more DOT later. However, withdrawing any bonded amount requires the duration of the unbonding period. On Kusama, the unbonding period is 7 days. On Polkadot, the planned unbonding period is 28 days.
+- Payment destination - The account where the rewards from validating are sent. More info here. Starting with runtime version v23 natively included in client version 0.9.3, payouts can go to any custom address. If you'd like to redirect payments to an account that is neither the controller nor the stash account, set one up. Note that it is extremely unsafe to set an exchange address as the recipient of the staking rewards.
 
-Once everything is filled in properly, click Bond and sign the transaction with your Stash account.
+Once everything is filled in properly, click `Bond` and sign the transaction with your Stash account. You should see an ExtrinsicSuccess message in few seconds.
 
-After a few seconds, you should see an ExtrinsicSuccess message.
-
-Your bonded account will available under Stashes. You should now see a new card with all your accounts (note: you may need to refresh the screen). The bonded amount on the right corresponds to the funds bonded by the Stash account.
+Your bonded account will available under `Stashes`. You should now see a new card with all your accounts (note: you may need to refresh the screen). The bonded amount on the right corresponds to the funds bonded by the Stash account.
 
 ![bond](./images/run-a-validator/stash.png)
 
@@ -95,7 +93,7 @@ echo '{"id":1,"jsonrpc":"2.0","method":"author_rotateKeys","params":[]}' | webso
 
 The output will have a hex-encoded "result" field. Save this result for a later step.
 
-## Submitting `setKeys` Transaction
+## Submitting a `setKeys` Transaction
 
 You need to tell the chain your Session keys by signing and submitting an extrinsic. This is what associates your validator with your Controller account.
 
@@ -103,7 +101,7 @@ Go to `Staking > Account Actions`, and click "Set Session Key" on the bonding ac
 
 ![setKeys](./images/run-a-validator/set-session-key.png)
 
-## Validate
+## Validating
 
 The "reward commission percentage" is the commission percentage that you can declare against your validator's rewards. This is the rate that your validator will be commissioned with.
 
