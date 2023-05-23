@@ -1,9 +1,12 @@
+use codec::Encode;
 use frame_support::{assert_ok, traits::fungible::Mutate, BoundedVec};
 use karmachain_node_runtime::*;
 use pallet_appreciation::{Community, CommunityRole};
+use pallet_identity::types::UserVerificationData;
 use sp_common::{
 	identity::AccountIdentity,
 	types::{CharTraitId, CommunityId},
+	BoundedString,
 };
 use sp_core::{sr25519, Pair, Public};
 use sp_runtime::traits::{IdentifyAccount, Verify};
@@ -45,18 +48,6 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 		pallet_appreciation::SignupCharTraitId::<Runtime>::put(1);
 		// Set default id for NoCommunity
 		pallet_appreciation::NoCommunityId::<Runtime>::put(0);
-
-		// Because of Alice is PhoneVerifier we must register her identity
-		assert_ok!(Identity::new_user(
-			RuntimeOrigin::signed(alice.clone()),
-			alice.clone(),
-			"alice_phone_verifier"
-				.as_bytes()
-				.to_vec()
-				.try_into()
-				.expect("Invalid name length"),
-			"1".as_bytes().to_vec().try_into().expect("Invalid phone number length"),
-		));
 	});
 
 	ext
@@ -64,7 +55,7 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 
 pub trait TestUtils {
 	/// Call `new_user` tx. `AccountId` will be generated from `name`.
-	fn with_user(&mut self, phone_verifier: &str, username: &str, phone_number: &str) -> &mut Self;
+	fn with_user(&mut self, username: &str, phone_number: &str) -> &mut Self;
 
 	/// Create community entity in storage
 	fn with_community(&mut self, community_id: CommunityId, name: &str, closed: bool) -> &mut Self;
@@ -95,22 +86,23 @@ pub trait TestUtils {
 }
 
 impl TestUtils for sp_io::TestExternalities {
-	fn with_user(&mut self, phone_verifier: &str, username: &str, phone_number: &str) -> &mut Self {
+	fn with_user(&mut self, username: &str, phone_number: &str) -> &mut Self {
 		self.execute_with(|| {
-			// Alice is PhoneVerifier
-			let alice = get_account_id_from_seed::<sr25519::Public>(phone_verifier);
-
 			let account_id = get_account_id_from_seed::<sr25519::Public>(&username);
-			let username: BoundedVec<_, _> =
-				username.as_bytes().to_vec().try_into().expect("Invalid name length");
-			let phone_number: BoundedVec<_, _> = phone_number
-				.as_bytes()
-				.to_vec()
-				.try_into()
-				.expect("Invalid phone number length");
+			let username = BoundedString::try_from(username).expect("Invalid name length");
+			let phone_number =
+				BoundedString::try_from(phone_number).expect("Invalid phone number length");
+
+			let (public_key, signature) = get_verification_evidence(
+				account_id.clone(),
+				username.clone(),
+				phone_number.clone(),
+			);
 
 			assert_ok!(Identity::new_user(
-				RuntimeOrigin::signed(alice.clone()),
+				RuntimeOrigin::signed(account_id.clone()),
+				public_key,
+				signature,
 				account_id,
 				username,
 				phone_number,
@@ -164,11 +156,8 @@ impl TestUtils for sp_io::TestExternalities {
 		self.execute_with(|| {
 			// TODO: check community exists
 
-			let phone_number: BoundedVec<_, PhoneNumberLimit> = phone_number
-				.as_bytes()
-				.to_vec()
-				.try_into()
-				.expect("Invalid phone number length");
+			let phone_number: BoundedString<PhoneNumberLimit> =
+				phone_number.try_into().expect("Invalid phone number length");
 
 			pallet_appreciation::CommunityMembership::<Runtime>::insert(
 				phone_number,
@@ -228,4 +217,22 @@ impl TestUtils for sp_io::TestExternalities {
 
 		self
 	}
+}
+
+pub fn get_verification_evidence(
+	account_id: AccountId,
+	username: Username,
+	phone_number: PhoneNumber,
+) -> (sp_core::sr25519::Public, sp_core::sr25519::Signature) {
+	let pair = sp_core::sr25519::Pair::from_string("//Alice", None).unwrap();
+	let data = UserVerificationData::<sp_core::sr25519::Public, _, _, _> {
+		verifier_public_key: pair.public().into(),
+		account_id,
+		username,
+		phone_number,
+	}
+	.encode();
+	let signature = pair.sign(&*data);
+
+	(pair.public(), signature)
 }

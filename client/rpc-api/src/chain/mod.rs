@@ -28,6 +28,6 @@ pub trait BlocksProviderApi<Block: BlockT, AccountId> {
 	fn get_blockchain_data(&self) -> RpcResult<BlockchainStats>;
 
 	/// RPC method provides information about blockchain genesis config
-	#[method(name = "chain_getGenesisData")] 
+	#[method(name = "chain_getGenesisData")]
 	fn get_genesis_data(&self) -> RpcResult<GenesisData<AccountId>>;
 }

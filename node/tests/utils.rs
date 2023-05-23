@@ -1,5 +1,8 @@
 use futures::FutureExt;
-use karmachain_node::{cli::Cli, service};
+use karmachain_node::{
+	cli::{Cli, VerifierConfig},
+	service,
+};
 use sc_cli::{CliConfiguration, SubstrateCli};
 use std::future::Future;
 use tokio::{runtime::Handle, select};
@@ -15,8 +18,9 @@ where
 	cli.run.shared_params.dev = true;
 	let command = &cli.run;
 	let config = command.create_configuration(&cli, Handle::current()).unwrap();
+	let verifier_config = VerifierConfig { verifier: false, bypass_token: None, auth_dst: None };
 
-	let mut task_manager = service::new_full(config).unwrap();
+	let mut task_manager = service::new_full(config, verifier_config).unwrap();
 
 	let t1 = task_manager.future().fuse();
 	let t2 = test;

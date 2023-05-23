@@ -7,12 +7,9 @@ use jsonrpsee::{
 use runtime_api::identity::IdentityApi;
 use sp_api::ProvideRuntimeApi;
 use sp_blockchain::HeaderBackend;
-use sp_common::{types::CommunityId, BoundedString};
+use sp_common::types::CommunityId;
 use sp_rpc::{Contact, LeaderboardEntry, UserInfo};
-use sp_runtime::{
-	generic::BlockId,
-	traits::{Block as BlockT, Get},
-};
+use sp_runtime::{generic::BlockId, traits::Block as BlockT};
 use std::sync::Arc;
 
 pub struct Identity<C, P> {
@@ -27,15 +24,15 @@ impl<C, P> Identity<C, P> {
 	}
 }
 
-impl<C, Block, AccountId, NameLimit, PhoneNumberLimit>
-	IdentityApiServer<Block::Hash, AccountId, NameLimit, PhoneNumberLimit> for Identity<C, Block>
+impl<C, Block, AccountId, Username, PhoneNumber>
+	IdentityApiServer<Block::Hash, AccountId, Username, PhoneNumber> for Identity<C, Block>
 where
 	Block: BlockT,
 	AccountId: Codec,
-	NameLimit: Get<u32>,
-	PhoneNumberLimit: Get<u32>,
+	Username: Codec,
+	PhoneNumber: Codec,
 	C: ProvideRuntimeApi<Block> + HeaderBackend<Block> + Send + Sync + 'static,
-	C::Api: IdentityApi<Block, AccountId, NameLimit, PhoneNumberLimit>,
+	C::Api: IdentityApi<Block, AccountId, Username, PhoneNumber>,
 {
 	fn get_user_info_by_account(
 		&self,
@@ -56,7 +53,7 @@ where
 
 	fn get_user_info_by_name(
 		&self,
-		name: BoundedString<NameLimit>,
+		name: Username,
 		at: Option<<Block as BlockT>::Hash>,
 	) -> RpcResult<Option<UserInfo<AccountId>>> {
 		let api = self.client.runtime_api();
@@ -81,7 +78,7 @@ where
 
 	fn get_user_info_by_number(
 		&self,
-		number: BoundedString<PhoneNumberLimit>,
+		number: PhoneNumber,
 		at: Option<<Block as BlockT>::Hash>,
 	) -> RpcResult<Option<UserInfo<AccountId>>> {
 		let api = self.client.runtime_api();
@@ -123,7 +120,7 @@ where
 
 	fn get_contacts(
 		&self,
-		prefix: BoundedString<NameLimit>,
+		prefix: Username,
 		community_id: Option<CommunityId>,
 		at: Option<<Block as BlockT>::Hash>,
 	) -> RpcResult<Vec<Contact<AccountId>>> {

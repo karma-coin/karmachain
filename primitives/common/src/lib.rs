@@ -7,7 +7,8 @@ pub mod types;
 
 use codec::{Decode, Encode, EncodeLike, MaxEncodedLen};
 use frame_support::{
-	traits::Get, BoundedVec, CloneNoBound, DebugNoBound, EqNoBound, PartialEqNoBound,
+	traits::Get, BoundedVec, CloneNoBound, DebugNoBound, DefaultNoBound, EqNoBound,
+	PartialEqNoBound,
 };
 use scale_info::{
 	prelude::{
@@ -19,7 +20,9 @@ use scale_info::{
 #[cfg(feature = "std")]
 use serde::{de, ser, Deserialize, Deserializer, Serialize, Serializer};
 
-#[derive(DebugNoBound, CloneNoBound, EqNoBound, PartialEqNoBound, MaxEncodedLen, Encode)]
+#[derive(
+	DebugNoBound, CloneNoBound, EqNoBound, PartialEqNoBound, MaxEncodedLen, Encode, DefaultNoBound,
+)]
 pub struct BoundedString<MaxLength: Get<u32>>(pub BoundedVec<u8, MaxLength>);
 
 impl<MaxLength: Get<u32>> TryFrom<Vec<u8>> for BoundedString<MaxLength> {
@@ -124,6 +127,30 @@ impl<MaxLength: Get<u32>> EncodeLike<BoundedVec<u8, MaxLength>> for BoundedStrin
 impl<MaxLength: Get<u32>> PartialOrd<BoundedString<MaxLength>> for BoundedString<MaxLength> {
 	fn partial_cmp(&self, other: &BoundedString<MaxLength>) -> Option<sp_std::cmp::Ordering> {
 		self.0.partial_cmp(&other.0)
+	}
+}
+
+impl<MaxLength: Get<u32>> PartialEq<String> for BoundedString<MaxLength> {
+	fn eq(&self, other: &String) -> bool {
+		String::try_from(self.clone()).map(|v| v.eq(other)).unwrap_or_default()
+	}
+}
+
+impl<MaxLength: Get<u32>> PartialOrd<String> for BoundedString<MaxLength> {
+	fn partial_cmp(&self, other: &String) -> Option<sp_std::cmp::Ordering> {
+		String::try_from(self.clone()).ok().map(|v| v.partial_cmp(other)).flatten()
+	}
+}
+
+impl<MaxLength: Get<u32>> PartialEq<BoundedString<MaxLength>> for String {
+	fn eq(&self, other: &BoundedString<MaxLength>) -> bool {
+		String::try_from(other.clone()).map(|v| v.eq(self)).unwrap_or_default()
+	}
+}
+
+impl<MaxLength: Get<u32>> PartialOrd<BoundedString<MaxLength>> for String {
+	fn partial_cmp(&self, other: &BoundedString<MaxLength>) -> Option<sp_std::cmp::Ordering> {
+		String::try_from(other.clone()).ok().map(|v| v.partial_cmp(self)).flatten()
 	}
 }
 

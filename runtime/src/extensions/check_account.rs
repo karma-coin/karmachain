@@ -97,14 +97,14 @@ impl SignedExtension for CheckAccount {
 			RuntimeCall::Identity(pallet_identity::Call::new_user {
 				account_id,
 				phone_number,
-				name,
+				username,
 				..
 			}) => {
 				let account_id_tag: AccountIdentityTag =
 					AccountIdentity::AccountId(account_id.clone());
 				let number_tag: AccountIdentityTag =
 					AccountIdentity::PhoneNumber(phone_number.clone());
-				let name_tag: AccountIdentityTag = AccountIdentity::Name(name.clone());
+				let name_tag: AccountIdentityTag = AccountIdentity::Name(username.clone());
 
 				// This transaction provides tag, that may unlock some `appreciation` transactions
 				let provides = vec![

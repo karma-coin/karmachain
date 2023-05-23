@@ -13,6 +13,8 @@ pub enum Error {
 	AuthServiceOffline,
 	/// Passed number cannot be cast to string
 	InvalidString,
+	/// The call to runtime failed
+	RuntimeError,
 }
 
 impl From<Error> for i32 {
@@ -23,6 +25,7 @@ impl From<Error> for i32 {
 			Error::BypassTokenMismatch => 3,
 			Error::AuthServiceOffline => 4,
 			Error::InvalidString => 5,
+			Error::RuntimeError => 6,
 		}
 	}
 }
@@ -35,6 +38,7 @@ impl ToString for Error {
 			Error::BypassTokenMismatch => "Invalid bypass token passed",
 			Error::AuthServiceOffline => "Failed to connect to auth service",
 			Error::InvalidString => "Passed number cannot be cast to string",
+			Error::RuntimeError => "The call to runtime failed",
 		}
 		.to_owned()
 	}

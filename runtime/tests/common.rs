@@ -20,7 +20,7 @@ mod existential_deposit {
 	#[test]
 	fn transfer_tokens_below_existential_deposit_should_fail() {
 		new_test_ext()
-			.with_user("Alice", "Bob", "1111")
+			.with_user("Bob", "1111")
 			.with_balance("Bob", EXISTENTIAL_DEPOSIT)
 			.execute_with(|| {
 				let who = get_account_id_from_seed::<sr25519::Public>("Bob");
@@ -60,7 +60,7 @@ mod signup_rewards {
 			pallet_reward::GenesisConfig::<Runtime>::default().build()
 		});
 
-		test_executor.with_user("Alice", "Bob", "1111").execute_with(|| {
+		test_executor.with_user("Bob", "1111").execute_with(|| {
 			let account_id = get_account_id_from_seed::<sr25519::Public>("Bob");
 			let info = Runtime::get_user_info_by_account(account_id).expect("Fail to get info");
 
@@ -90,7 +90,7 @@ mod signup_rewards {
 		// The first 10 users get 10 KCs on signup
 		for number in 0..10_u64 {
 			let id = format!("user_{}", number);
-			test_executor.with_user("Alice", &id, &id).execute_with(|| {
+			test_executor.with_user(&id, &id).execute_with(|| {
 				let account_id = get_account_id_from_seed::<sr25519::Public>(&id);
 				let info = Runtime::get_user_info_by_account(account_id).expect("Fail to get info");
 
@@ -102,7 +102,7 @@ mod signup_rewards {
 		// The next 200 user get 1 KC on signup
 		(10..210_u64).for_each(|number| {
 			let id = format!("user_{}", number);
-			test_executor.with_user("Alice", &id, &id).execute_with(|| {
+			test_executor.with_user(&id, &id).execute_with(|| {
 				let account_id = get_account_id_from_seed::<sr25519::Public>(&id);
 				let info = Runtime::get_user_info_by_account(account_id).expect("Fail to get info");
 
@@ -114,7 +114,7 @@ mod signup_rewards {
 		// The users get 1_000 KCents on signup
 		(210..250_u64).for_each(|number| {
 			let id = format!("user_{}", number);
-			test_executor.with_user("Alice", &id, &id).execute_with(|| {
+			test_executor.with_user(&id, &id).execute_with(|| {
 				let account_id = get_account_id_from_seed::<sr25519::Public>(&id);
 				let info = Runtime::get_user_info_by_account(account_id).expect("Fail to get info");
 
