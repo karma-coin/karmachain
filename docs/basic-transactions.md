@@ -32,7 +32,7 @@ Click `Submit Transaction` to send the transaction. You should see an `Extrinsic
 
 ![appreciation](./images/basic-transactions/appreciation.png)
 
-- `using the selected accountz - account which send appreciation (your account)
+- `using the selected account` - account which send appreciation (your account)
 - `to` - AccountId, username or phone number of the appreciation's receiver
 - `amount` - amount of tip in `KCents`to send with appreciation
 - `communityId` - leave empty
@@ -44,20 +44,28 @@ Click `Submit Transaction`. You should see an ExtrinsicSuccess message in few se
 
 ## Available char traits
 
-Go to `Developer` > `Chain state`. Here choose `appreciation` and `charTrait` and click on "+".
-You should see list of available character trait below
+- Go to `Developer` > `Chain state`. 
+- Choose `appreciation` and `charTrait` and click on "+".
+
+You should see list of available character traits.
 
 ![characterTraits](./images/basic-transactions/char-traits.png)
 
+----
+
 ## Account balance
 
-After registration, you can see you account balance in `Accounts` tab.
+After registration, you can see your account balance in `Accounts` tab.
 
 ![accountBalance](./images/basic-transactions/account-balance.png)
 
+----
+
 ## Account information
 
-Go to `Developer` > `Chain state`. Here choose `identity` and `identityOf` and click on "+".
+- Go to `Developer` > `Chain state`.  
+- Choose `identity` and `identityOf` and click on "+".
+
 You should see basic information about account.
 
 ![accoutnInfo](./images/basic-transactions/account-info.png)
