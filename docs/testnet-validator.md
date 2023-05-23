@@ -1,4 +1,4 @@
-# Running a Validator
+# Running a Testnet Validator Node
 
 This guide describes how you to run validator node on karmachain 2.0 Testnet 1 (TN1).
 
@@ -28,15 +28,15 @@ git clone https://github.com/karma-coin/karmachain
 cd karmachain
 ```
 
-## Preparing a node
+## Preparing your node
 
-- Build a docker image of your node
+Build a docker image of your node.
 
 ```bash
 docker build . --tag karmachain-node
 ```
 
-## Running a node
+## Running your node
 
 ```bash
 docker run \
@@ -64,12 +64,11 @@ It is highly recommended that you make your controller and stash accounts be two
 
 Make sure not to bond all your KCoin balance since you will be unable to pay transaction fees from your bonded balance.
 
-It is now time to set up our validator. We will do the following:
+Follow these steps to set up your validator.
 
-Bond the KCoin of the Stash account. These KCoin will be put at stake for the security of the network and can be slashed.
-Select the Controller. This is the account that will decide when to start or stop validating.
-First, go to the Staking section. Click on "Account Actions", and then the "+ Stash" button.
-
+- Bond the KCoin of the Stash account. These KCoin will be put at stake for the security of the network and can be slashed.
+- Select the Controller. This is the account that will decide when to start or stop validating.
+First, go to the Staking section. Click on `Account Actions`, and then the `+ Stash` button.`
 ![bond](./images/run-a-validator/bond.png)
 
 - `Stash account` - Select your Stash account. In this example, we will bond 1 DOT, where the minimum bonding amount is 1. Make sure that your Stash account contains at least this much. You can, of course, stake more than this.
@@ -93,7 +92,7 @@ Run this command on the same machine (while the node is running with the default
 echo '{"id":1,"jsonrpc":"2.0","method":"author_rotateKeys","params":[]}' | websocat -n1 -B 99999999 ws://127.0.0.1:9944
 ```
 
-The output will have a hex-encoded "result" field. Save this result for a later step.
+The output will have a hex-encoded `result` field. Save this result for a later step.
 
 ## Submitting a `setKeys` Transaction
 
@@ -109,11 +108,11 @@ The `reward commission percentage` is the commission percentage that you can dec
 
 Payment preferences - You can specify the percentage of the rewards that will get paid to you. The remaining will be split among your nominators.
 
-You can also determine if you would like to receive nominations with the "allows new nominations" option.
+You can also determine if you would like to receive nominations with the `allows new nominations` option.
 
 ![validate](./images/run-a-validator/validate.png)
 
-Click "Validate".
+Click `Validate`.
 
 Navigate to the `Staking` tab, you will see a list of active validators currently running on the network. At the top of the page, it shows the number of validator slots that are available as well as the number of nodes that have signaled their intention to be a validator. You can go to the `Waiting` tab to double check to see whether your node is listed there.
 
