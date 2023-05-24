@@ -8,7 +8,7 @@ Running a karmachain node in validator mode requires:
 * [Docker](https://docs.docker.com/engine/install/)
 * [Git](https://github.com/git-guides/install-git)
 
-- In addition, to start validating, you need and some prepared accounts that you can create using [polkadot.js extension](https://chrome.google.com/webstore/detail/polkadot%7Bjs%7D-extension/mopnmbcafieddcagagdcbnhejhlodfdd).
+- To start validating, you need to create accounts. You can use any Substrate compatible wallet but we recommend you'll use the [polkadot.js extension](https://chrome.google.com/webstore/detail/polkadot%7Bjs%7D-extension/mopnmbcafieddcagagdcbnhejhlodfdd).
 - Reffer to this guide [Create an Account using Polkadot JS Extension](https://www.youtube.com/watch?v=sy7lvAqyzkY)
 
 ----
