@@ -145,5 +145,9 @@ Navigate to the `Staking` tab, you will see a list of active validators currentl
 
 The validator set is refreshed every era. In the next era, if there is a slot available and your node is selected to join the validator set, your node will become an active validator. Until then, it will remain in the waiting queue. If your validator is not selected to become part of the validator set, it will remain in the waiting queue until it is. There is no need to re-start if you are not selected for the validator set in a particular era.
 
+## Summary
+We hope this guide got your validator up and running smooothly. 
+Please feel free to contact Team Karma Coin if you came acrosss any issue.
+
 
 
