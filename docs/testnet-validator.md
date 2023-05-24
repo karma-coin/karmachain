@@ -97,7 +97,7 @@ Follow these steps to set up your validator.
 ![bond](./images/run-a-validator/bond.png)
 
 - `Stash account` - Select your Stash account. Make sure that your `Stash account` contains at least this much. You can, of course, stake more than this.
-- `Controller account` - Select the Controller account created earlier. This account will also need a small amount of DOT in order to start and stop validating.
+- `Controller account` - Select the Controller account created earlier. This account will also need a small amount of KCENTS in order to start and stop validating.
 - `Value bonded` - How much KCENTS from the Stash account you want to bond/stake. Note that you do not need to bond all of the KCENTS in that account. Also note that you can always bond more KCENTS later. However, withdrawing any bonded amount requires the duration of the unbonding period.
 - `Payment destination` - The account where the rewards from validating are sent. Payouts can go to any account. If you'd like to redirect payments to an account that is neither the controller nor the stash account, set one up. Note that it is extremely unsafe to set an exchange address as the recipient of your staking rewards.
 - Next, click `Bond` and sign the transaction with your `Stash account`. You should see an ExtrinsicSuccess message in about a minute.
