@@ -10,9 +10,9 @@ This technical guide walks you thorugh the steps of running a validator node on 
 - x86-64 compatible
 - Intel Ice Lake, or newer (Xeon or Core series); AMD Zen3, or newer (EPYC or Ryzen)
 - 4 physical cores @ 3.4GHz
-- Simultaneous multithreading disabled (Hyper-Threading on Intel, SMT on AMD);
-- Prefer single-threaded performance over higher cores count. 
-- An NVMe SSD of 500 GB (As it should be reasonably sized to deal with blockchain growth). 
+- Simultaneous multithreading disabled (Hyper-Threading on Intel, SMT on AMD)
+- Prefer single-threaded performance over higher cores count
+- An NVMe SSD of 500 GB (As it should be reasonably sized to deal with blockchain growth)
 
 ### Memory
 16 GB DDR4 ECC
@@ -34,11 +34,10 @@ Running a validator node requires Docker and Git.
 Read the latest [testnet reelase notes](https://github.com/karma-coin/karmachain/releases/)
 
 ## Download Karmachain source code
-- Get the latest Testnet release source code from GitHub.
+- Get the latest Testnet release source code from GitHub
 - The latest release is always [available on this page](https://github.com/karma-coin/karmachain/releases/).
-- The current latest release is `v0.1.0`, so we'll use it in the code below.
-
-- Clone the repo and checkout the release tag.
+- The current latest release is `v0.1.0`, so we'll use it in the code below
+- Clone the repo and checkout the release tag
 
 ```bash
 git clone https://github.com/karma-coin/karmachain
@@ -75,16 +74,16 @@ docker run \
 ```
 
 ### Create Stash and Controller Accounts
-- To start validating, you need to create two accounts - a `Stash account` and a `Controller account`. 
-- The `Stash account` is where you keep most of your coins. It is the custodian of your staking funds. 
-- The `Controller account` is used to start and stop validation.
-- You can use any Substrate-compatible wallet to create these accounts. We recommend using the [polkadot.js extension](https://chrome.google.com/webstore/detail/polkadot%7Bjs%7D-extension/mopnmbcafieddcagagdcbnhejhlodfdd). Reffer to this guide [Create an Account using Polkadot JS Extension](https://www.youtube.com/watch?v=sy7lvAqyzkY) for more information on using the extension.
+- To start validating, you need to create two accounts - a `Stash account` and a `Controller account`
+- The `Stash account` is where you keep most of your coins. It is the custodian of your staking funds
+- The `Controller account` is used to start and stop validation
+- You can use any Substrate-compatible wallet to create these accounts. We recommend using the [polkadot.js extension](https://chrome.google.com/webstore/detail/polkadot%7Bjs%7D-extension/mopnmbcafieddcagagdcbnhejhlodfdd). Reffer to this guide [Create an Account using Polkadot JS Extension](https://www.youtube.com/watch?v=sy7lvAqyzkY) for more information on using the extension
 
 ## Request Coins for your bond
-- Join the Karma Coin [Testnet Telegram Channel](https://t.me/karmacoinapp/293).
-- The basic accounting unit of Karmachain is `Karma Cents` (KCENTs). One million Karma Cents are 1 Karma Coin.
-- Share the public address of you `Stash account` and request testnet KCENTs for your bond.
-- Keep most of your funds in the `Stash account since it is meant to be the custodian of your staking funds and move some coins to your `Controller account`.
+- Join the Karma Coin [Testnet Telegram Channel](https://t.me/karmacoinapp/293)
+- The basic accounting unit of Karmachain is `Karma Cents` (KCENTs). One million Karma Cents are 1 Karma Coin
+- Share the public address of you `Stash account` and request testnet KCENTs for your bond
+- Keep most of your funds in the `Stash account since it is meant to be the custodian of your staking funds and move some coins to your `Controller account`
 
 ## Bond Karma Coins
 Follow these steps to set up your validator.
