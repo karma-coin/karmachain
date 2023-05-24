@@ -83,6 +83,7 @@ docker run \
 ## Request Coins for your bond
 - Join the Karma Coin [Testnet Telegram Channel](https://t.me/karmacoinapp/293).
 - The basic accounting unit of Karmachain is `Karma Cents` (KCENTs). One million Karma Cents are 1 Karma Coin.
+- The minimum testnet bonding amount is 2500,000,000,000 KCENTS (2.5M Karma Coins).
 - Share the public address of you `Stash account` and request testnet KCENTs for your bond.
 - Keep most of your funds in the `Stash account` since it is meant to be the custodian of your staking funds and move some coins to your `Controller account` so you can pay transaction fees for transactions from this account.
 
