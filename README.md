@@ -19,6 +19,14 @@ lorri `lorri shell`.
 
 First, complete the [basic Rust setup instructions](./docs/rust-setup.md).
 
+### Install the Protobuf Compiler
+
+Debian / Ubunutu:
+
+```sh
+sudo apt install protobuf-compiler
+```
+
 ### Run
 
 Use Rust's native `cargo` command to build and launch the template node:
