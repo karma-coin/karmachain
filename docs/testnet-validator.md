@@ -1,6 +1,6 @@
 # Running a Testnet Validator Node
 
-This guide describes how you to run validator node on karmachain 2.0 Testnet 1 (TN1).
+This guide walks through how to run a validator node on karmachain 2.0 Testnet 1 (TN1).
 
 ## Setup
 
@@ -8,27 +8,22 @@ Running a karmachain node in validator mode requires:
 * [Docker](https://docs.docker.com/engine/install/)
 * [Git](https://github.com/git-guides/install-git)
 
-- To start validating, you need to create accounts. You can use any Substrate compatible wallet but we recommend you'll use the [polkadot.js extension](https://chrome.google.com/webstore/detail/polkadot%7Bjs%7D-extension/mopnmbcafieddcagagdcbnhejhlodfdd).
-- Reffer to this guide [Create an Account using Polkadot JS Extension](https://www.youtube.com/watch?v=sy7lvAqyzkY)
+- To start validating, you need to create two accounts. You can use any Substrate compatible wallet but we recommend you'll use the [polkadot.js extension](https://chrome.google.com/webstore/detail/polkadot%7Bjs%7D-extension/mopnmbcafieddcagagdcbnhejhlodfdd). Reffer to this guide [Create an Account using Polkadot JS Extension](https://www.youtube.com/watch?v=sy7lvAqyzkY) for more information.
 
-----
+## Read the Release Notes
+Read the latest [testnet reelase notes and docs](https://github.com/karma-coin/karmachain/releases/)
 
-## Requesting tokens for your bond
+## Download Karmachain source code
 
-[//]: # (TODO) 
-
-## Downloading karmachain source files
-
-TODO: Link to TN1 github release on github as validator should clone the release's code.
-
-Downloading karmachain from GitHub.
+Get the latest Testnet release source code from GitHub.
 
 ```bash
 git clone https://github.com/karma-coin/karmachain
 cd karmachain
+git checkout tags/v0.1.0 -b v0.1.0
 ```
 
-## Preparing your node
+## Prepare your node
 
 Build a docker image of your node.
 
@@ -36,7 +31,7 @@ Build a docker image of your node.
 docker build . --tag karmachain-node
 ```
 
-## Running your node
+## Run your node
 
 ```bash
 docker run \
@@ -58,16 +53,24 @@ docker run \
 		--bootnodes /dns/testnet.karmaco.in/tcp/30333/p2p/12D3KooWFgrbXqQE1kp3ytTGTsgsVVFBp5P3TGYyGa2KaVs9nQta
 ```
 
-## Bond tokens
+## Create Controller and Stash accounts
 
 It is highly recommended that you make your controller and stash accounts be two separate accounts. For this, you will create two accounts and make sure each of them have at least enough funds to pay the fees for making transactions. Keep most of your funds in the stash account since it is meant to be the custodian of your staking funds.
+
+
+## Request Karma Couns for your bond
+Join the Karma Coin [Testnet Telegram Channel](https://t.me/karmacoinapp/293).
+Share your stash account public address and request testnet Karma Coins for your bond.
+
+## Bond Karma Coins
 
 Make sure not to bond all your KCoin balance since you will be unable to pay transaction fees from your bonded balance.
 
 Follow these steps to set up your validator.
 
-- Bond the KCoin of the Stash account. These KCoin will be put at stake for the security of the network and can be slashed.
-- Select the Controller. This is the account that will decide when to start or stop validating.
+- Bond the Karma Coins of your stash account. These coins will will be used as stake for the security of the network and can be slashed.
+- Select the controller account. This account is used to decide when to start or stop validating.
+
 First, go to the Staking section. Click on `Account Actions`, and then the `+ Stash` button.`
 ![bond](./images/run-a-validator/bond.png)
 
