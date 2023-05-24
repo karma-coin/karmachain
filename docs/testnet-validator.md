@@ -3,12 +3,12 @@ This technical guide walks you thorugh the steps of running a validator node on 
 
 ## System Requirements
 - The specs posted below are not a hard requirement to run a validator, but are considered best practice. 
-- Running a validator is a responsible task. Using professional hardware is a must in any way.
+- Running a validator is a responsible task. Using professional hardware is a must.
 - The most common way for a beginner to run a validator is on a cloud server running Linux. You may choose whatever VPS provider that your prefer. As OS it is best to use a recent Debian-based Linux (Debian or Ubuntu).
 
 ### CPU
 - x86-64 compatible
-- Intel Ice Lake, or newer (Xeon or Core series); AMD Zen3, or newer (EPYC or Ryzen)
+- Intel Ice Lake, or newer (Xeon or Core series). AMD Zen3, or newer (EPYC or Ryzen)
 - 4 physical cores @ 3.4GHz
 - Simultaneous multithreading disabled (Hyper-Threading on Intel, SMT on AMD)
 - Prefer single-threaded performance over higher cores count
@@ -21,7 +21,7 @@ This technical guide walks you thorugh the steps of running a validator node on 
 Linux Kernel 5.16 or newer
 
 ### Network
-- The minimum symmetric networking speed is set to 500 Mbit/s (= 62.5 MB/s)
+- Minimum symmetric networking speed of 500 Mbit/s (62.5 MB/s)
 - Make sure your system is configured to run NTP to sync its local time
 
 ---
@@ -35,10 +35,10 @@ Running a validator node requires Docker and Git.
 Read the latest [testnet reelase notes](https://github.com/karma-coin/karmachain/releases/)
 
 ## Download Karmachain source code
-- Get the latest Testnet release source code from GitHub
+- Get the latest Testnet release source code from GitHub.
 - The latest release is always [available on this page](https://github.com/karma-coin/karmachain/releases/).
-- The current latest release is `v0.1.0`, so we'll use it in the code below
-- Clone the repo and checkout the release tag
+- The current latest release is `v0.1.0`.
+- Clone the repo and checkout the release tag.
 
 ```bash
 git clone https://github.com/karma-coin/karmachain
@@ -74,17 +74,17 @@ docker run \
 		--bootnodes /dns/testnet.karmaco.in/tcp/30333/p2p/12D3KooWFgrbXqQE1kp3ytTGTsgsVVFBp5P3TGYyGa2KaVs9nQta
 ```
 
-### Create Stash and Controller Accounts
-- To start validating, you need to create two accounts - a `Stash account` and a `Controller account`
-- The `Stash account` is where you keep most of your coins. It is the custodian of your staking funds
-- The `Controller account` is used to start and stop validation
-- You can use any Substrate-compatible wallet to create these accounts. We recommend using the [polkadot.js extension](https://chrome.google.com/webstore/detail/polkadot%7Bjs%7D-extension/mopnmbcafieddcagagdcbnhejhlodfdd). Reffer to this guide [Create an Account using Polkadot JS Extension](https://www.youtube.com/watch?v=sy7lvAqyzkY) for more information on using the extension
+### Create Accounts
+- To start validating, you need to create two accounts - a `Stash account` and a `Controller account`.
+- The `Stash account` is where you keep most of your coins. It is the custodian of your staking funds.
+- The `Controller account` is used to start and stop validation.
+- You can use any Substrate-compatible wallet to create these accounts. We recommend using the [polkadot.js extension](https://chrome.google.com/webstore/detail/polkadot%7Bjs%7D-extension/mopnmbcafieddcagagdcbnhejhlodfdd). Reffer to this guide [Create an Account using Polkadot JS Extension](https://www.youtube.com/watch?v=sy7lvAqyzkY) for more information about using the extension.
 
 ## Request Coins for your bond
-- Join the Karma Coin [Testnet Telegram Channel](https://t.me/karmacoinapp/293)
-- The basic accounting unit of Karmachain is `Karma Cents` (KCENTs). One million Karma Cents are 1 Karma Coin
-- Share the public address of you `Stash account` and request testnet KCENTs for your bond
-- Keep most of your funds in the `Stash account since it is meant to be the custodian of your staking funds and move some coins to your `Controller account`
+- Join the Karma Coin [Testnet Telegram Channel](https://t.me/karmacoinapp/293).
+- The basic accounting unit of Karmachain is `Karma Cents` (KCENTs). One million Karma Cents are 1 Karma Coin.
+- Share the public address of you `Stash account` and request testnet KCENTs for your bond.
+- Keep most of your funds in the `Stash account` since it is meant to be the custodian of your staking funds and move some coins to your `Controller account` so you can pay transaction fees for transactions from this account.
 
 ## Bond Karma Coins
 Follow these steps to set up your validator.
@@ -96,16 +96,13 @@ Follow these steps to set up your validator.
 - Go to the Staking section. Click on `Account Actions`, and then the `+ Stash` button.`
 ![bond](./images/run-a-validator/bond.png)
 
-- `Stash account` - Select your Stash account. In this example, we will bond 1 DOT, where the minimum bonding amount is 1. Make sure that your Stash account contains at least this much. You can, of course, stake more than this.
+- `Stash account` - Select your Stash account. Make sure that your `Stash account` contains at least this much. You can, of course, stake more than this.
 - `Controller account` - Select the Controller account created earlier. This account will also need a small amount of DOT in order to start and stop validating.
-- `Value bonded` - How much DOT from the Stash account you want to bond/stake. Note that you do not need to bond all of the DOT in that account. Also note that you can always bond more KCs later. However, withdrawing any bonded amount requires the duration of the unbonding period.
+- `Value bonded` - How much KCENTS from the Stash account you want to bond/stake. Note that you do not need to bond all of the KCENTS in that account. Also note that you can always bond more KCENTS later. However, withdrawing any bonded amount requires the duration of the unbonding period.
 - `Payment destination` - The account where the rewards from validating are sent. Payouts can go to any account. If you'd like to redirect payments to an account that is neither the controller nor the stash account, set one up. Note that it is extremely unsafe to set an exchange address as the recipient of your staking rewards.
-
-Next, click `Bond` and sign the transaction with your `Stash account`. You should see an ExtrinsicSuccess message in about a minute.
-
-Your bonded account will available under `Stashes`. 
-
-You should now see a new card with all of your accounts (note: you may need to refresh the page). The bonded amount on the right corresponds to the funds bonded by the `Stash account`.
+- Next, click `Bond` and sign the transaction with your `Stash account`. You should see an ExtrinsicSuccess message in about a minute.
+- Your bonded account will available under `Stashes`. 
+- You should now see a new card with all of your accounts (note: you may need to refresh the page). The bonded amount on the right corresponds to the funds bonded by the `Stash account`.
 
 ![bond](./images/run-a-validator/stash.png)
 
