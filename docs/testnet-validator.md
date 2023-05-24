@@ -90,6 +90,8 @@ docker run \
 ## Bond Karma Coins
 Follow these steps to set up your validator.
 
+- Access the testnet's web app [here](https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Ftestnet.karmaco.in%2Ftestnet%2Fws#/explorer) and complete the steps below in this app.
+
 - Bond coins in your `Stash account`. These coins will will be used as stake for the security of the network and can be slashed. Make sure not to bond your entire coin balance since in that case you will be unable to pay transaction fees from your `Stash account`.
 
 - Select your `Controller account`. This account wil be used by you to decide when to start or to stop validating.
