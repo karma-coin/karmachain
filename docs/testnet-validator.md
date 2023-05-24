@@ -4,7 +4,7 @@ This technical guide walks you thorugh the steps of running a validator node on 
 ## System Requirements
 - The specs posted below are not a hard requirement to run a validator, but are considered best practice. 
 - Running a validator is a responsible task. Using professional hardware is a must in any way.
-- The most common way for a beginner to run a validator is on a cloud server running Linux. You may choose whatever VPS provider that your prefer. As OS it is best to use a recent Debian Linux or Ubuntu.
+- The most common way for a beginner to run a validator is on a cloud server running Linux. You may choose whatever VPS provider that your prefer. As OS it is best to use a recent Debian-based Linux (Debian or Ubuntu).
 
 ### CPU
 - x86-64 compatible
@@ -21,7 +21,8 @@ This technical guide walks you thorugh the steps of running a validator node on 
 Linux Kernel 5.16 or newer
 
 ### Network
-The minimum symmetric networking speed is set to 500 Mbit/s (= 62.5 MB/s)
+- The minimum symmetric networking speed is set to 500 Mbit/s (= 62.5 MB/s)
+- Make sure your system is configured to run NTP to sync its local time
 
 ---
 
