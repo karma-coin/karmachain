@@ -6,12 +6,12 @@ use crate::*;
 /// up by `pallet_babe` to implement `fn slot_duration()`.
 ///
 /// Change this to adjust the block time.
-pub const MILLISECS_PER_BLOCK: u64 = 60_000;
+pub const MILLISECS_PER_BLOCK: u64 = 12_000;
 
 // NOTE: Currently it is not possible to change the slot duration after the chain has started.
 //       Attempting to do so will brick block production.
 pub const SLOT_DURATION: u64 = MILLISECS_PER_BLOCK;
-pub const EPOCH_DURATION_IN_SLOTS: BlockNumber = 4 * HOURS;
+pub const EPOCH_DURATION_IN_SLOTS: BlockNumber = 1 * HOURS;
 pub const ERA_DURATION_IN_EPOCH: u32 = 6;
 
 // Time is measured by number of blocks.
