@@ -1,7 +1,31 @@
 use crate::*;
+use frame_support::weights::WeightToFee;
 
 parameter_types! {
 	pub FeeMultiplier: Multiplier = Multiplier::one();
+}
+
+pub struct ConstWeightFee;
+
+impl WeightToFee for ConstWeightFee {
+	type Balance = Balance;
+
+	fn weight_to_fee(_weight: &Weight) -> Self::Balance {
+		// In order to get fee equal to 100 use value of 50,
+		// because actual fee calculation include weight fee two times
+		// first time as `base_fee` and second time  as `adjusted_weight_fee`.
+		50_u32.into()
+	}
+}
+
+pub struct ConstLengthFee;
+
+impl WeightToFee for ConstLengthFee {
+	type Balance = Balance;
+
+	fn weight_to_fee(_weight: &Weight) -> Self::Balance {
+		0_u32.into()
+	}
 }
 
 impl pallet_transaction_payment::Config for Runtime {
@@ -37,9 +61,9 @@ impl pallet_transaction_payment::Config for Runtime {
 	/// transactions.
 	type OperationalFeeMultiplier = ConstU8<5>;
 	/// Convert a weight value into a deductible fee based on the currency type.
-	type WeightToFee = IdentityFee<Balance>;
+	type WeightToFee = ConstWeightFee;
 	/// Convert a length value into a deductible fee based on the currency type.
-	type LengthToFee = IdentityFee<Balance>;
+	type LengthToFee = ConstLengthFee;
 	/// Update the multiplier of the next block, based on the previous block's weight.
 	type FeeMultiplierUpdate = ConstFeeMultiplier<FeeMultiplier>;
 }
