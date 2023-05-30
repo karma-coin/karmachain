@@ -227,14 +227,7 @@ pub mod pallet {
 	>;
 
 	#[pallet::storage]
-	pub type Referrals<T: Config> = StorageDoubleMap<
-		_,
-		Blake2_128Concat,
-		T::PhoneNumber,
-		Blake2_128Concat,
-		AccountIdentity<T::AccountId, T::Username, T::PhoneNumber>,
-		(),
-	>;
+	pub type Referral<T: Config> = StorageValue<_, bool, ValueQuery>;
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
@@ -314,12 +307,10 @@ pub mod pallet {
 			char_trait_id: Option<CharTraitId>,
 		) -> DispatchResult {
 			let payer = ensure_signed(origin)?;
-			let payer_phone_number =
-				T::IdentityProvider::identity_by_id(&payer).ok_or(Error::<T>::NotFound)?.number;
-			let referral = Referrals::<T>::take(&payer_phone_number, &to).is_some();
 			let payee = Self::get_account_id(to).ok_or(Error::<T>::NotFound)?;
 			let community_id = community_id.unwrap_or(NoCommunityId::<T>::get()?);
 			let char_trait_id = char_trait_id.unwrap_or(NoCharTraitId::<T>::get()?);
+			let referral = Referral::<T>::take();
 
 			let new_member =
 				Self::process_appreciation(&payer, &payee, community_id, char_trait_id, referral)?;
@@ -411,6 +402,10 @@ impl<T: pallet::Config> Pallet<T> {
 		}
 	}
 
+	pub fn set_referral_flag(flag: bool) {
+		Referral::<T>::put(flag);
+	}
+
 	pub fn increment_trait_score(
 		account_id: &T::AccountId,
 		phone_number: &T::PhoneNumber,
@@ -451,8 +446,6 @@ impl<T: pallet::Config> Pallet<T> {
 			.number;
 
 		// TODO: whether to check `char_trait_id` for existence?
-
-		// TODO: if this transfer lead to user signup set `true`
 		if referral {
 			// Give payer karma points for helping to grow the network
 			Self::increment_trait_score(
@@ -461,6 +454,8 @@ impl<T: pallet::Config> Pallet<T> {
 				NoCommunityId::<T>::get()?,
 				AmbassadorCharTraitId::<T>::get()?,
 			);
+
+			T::Hooks::on_referral(payer_account_id.clone(), payee_account_id.clone())?;
 		}
 
 		// Standard appreciation w/o a community context

@@ -290,4 +290,17 @@ impl<T: Config> KarmaHooks<T::AccountId, T::Balance, T::Username, T::PhoneNumber
 		Self::issue_signup_reward(&who, reward)?;
 		Ok(())
 	}
+
+	fn on_referral(who: T::AccountId, _whom: T::AccountId) -> DispatchResult {
+		let total_allocated = ReferralRewardTotalAllocated::<T>::get();
+
+		let reward = if total_allocated < ReferralRewardPhase1Alloc::<T>::get() {
+			ReferralRewardPhase1Amount::<T>::get()
+		} else {
+			ReferralRewardPhase2Amount::<T>::get()
+		};
+
+		Self::issue_referral_reward(&who, reward)?;
+		Ok(())
+	}
 }

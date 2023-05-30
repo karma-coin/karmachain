@@ -2,12 +2,13 @@ use crate::*;
 use codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use sp_runtime::{
-	traits::{DispatchInfoOf, SignedExtension},
+	traits::{DispatchInfoOf, PostDispatchInfoOf, SignedExtension},
 	transaction_validity::{
 		InvalidTransaction, TransactionValidity, TransactionValidityError, ValidTransaction,
 	},
+	DispatchResult,
 };
-use sp_std::{default::Default, marker::PhantomData, vec};
+use sp_std::vec;
 
 pub type AccountIdentityTag = AccountIdentity<
 	<Runtime as frame_system::Config>::AccountId,
@@ -15,11 +16,17 @@ pub type AccountIdentityTag = AccountIdentity<
 	<Runtime as pallet_identity::Config>::PhoneNumber,
 >;
 
-#[derive(Encode, Decode, Default, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(Encode, Decode, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(skip_type_params(T))]
-pub struct CheckAccount(PhantomData<Runtime>);
+pub struct CheckAccount<T>(PhantomData<T>);
 
-impl sp_std::fmt::Debug for CheckAccount {
+impl<T> CheckAccount<T> {
+	pub fn new() -> Self {
+		Self(Default::default())
+	}
+}
+
+impl<T> sp_std::fmt::Debug for CheckAccount<T> {
 	#[cfg(feature = "std")]
 	fn fmt(&self, f: &mut sp_std::fmt::Formatter) -> sp_std::fmt::Result {
 		write!(f, "CheckAccount")
@@ -31,34 +38,21 @@ impl sp_std::fmt::Debug for CheckAccount {
 	}
 }
 
-impl SignedExtension for CheckAccount {
+impl<T> SignedExtension for CheckAccount<T>
+where
+	T: Send + Sync,
+	T: pallet_appreciation::Config,
+	T::IdentityProvider: IdentityProvider<AccountId, Username, PhoneNumber>,
+	T: pallet_timestamp::Config<Moment = u64>,
+{
+	const IDENTIFIER: &'static str = "CheckAccount";
 	type AccountId = AccountId;
 	type Call = RuntimeCall;
 	type AdditionalSigned = ();
-	type Pre = ();
-	const IDENTIFIER: &'static str = "CheckAccount";
+	type Pre = RuntimeCall;
 
 	fn additional_signed(&self) -> sp_std::result::Result<(), TransactionValidityError> {
 		Ok(())
-	}
-
-	fn pre_dispatch(
-		self,
-		_who: &Self::AccountId,
-		call: &Self::Call,
-		_info: &DispatchInfoOf<Self::Call>,
-		_len: usize,
-	) -> Result<(), TransactionValidityError> {
-		match call {
-			RuntimeCall::Appreciation(pallet_appreciation::Call::appreciation { to, .. }) =>
-				if <Runtime as pallet_appreciation::Config>::IdentityProvider::exist_by_identity(to)
-				{
-					Ok(())
-				} else {
-					Err(InvalidTransaction::Custom(u8::MAX).into())
-				},
-			_ => Ok(()),
-		}
 	}
 
 	fn validate(
@@ -68,54 +62,90 @@ impl SignedExtension for CheckAccount {
 		_info: &DispatchInfoOf<Self::Call>,
 		_len: usize,
 	) -> TransactionValidity {
-		match call {
-			// In case this is `appreciation` transaction
-			RuntimeCall::Appreciation(pallet_appreciation::Call::appreciation { to, .. }) =>
+		// In case this is `appreciation` transaction
+		if let Some(to) = call.map_appreciation() {
 			// Check if the user is registered
-			{
-				if <Runtime as pallet_appreciation::Config>::IdentityProvider::exist_by_identity(to)
-				{
-					// User already is registered, can execute transaction
-					Ok(ValidTransaction::default())
-				} else {
-					// User is not registered need to provide tag to wait,
-					// until `new_user` transaction provide this tag
-					let requires = vec![Encode::encode(&(to))];
+			return if T::IdentityProvider::exist_by_identity(&to) {
+				// User already is registered, can execute transaction
+				Ok(ValidTransaction::default())
+			} else {
+				// User is not registered need to provide tag to wait,
+				// until `new_user` transaction provide this tag
+				let requires = vec![Encode::encode(&(to))];
 
-					// These transactions should be stored in the pool for a period of 14 days
-					// `longevity` time sets in blocks
-					let longevity = 14 * DAYS;
+				// These transactions should be stored in the pool for a period of 14 days
+				// `longevity` time sets in blocks
+				let longevity = 14 * DAYS;
 
-					Ok(ValidTransaction {
-						requires,
-						longevity: longevity.into(),
-						..Default::default()
-					})
-				}
-			},
-			// In case this is `new_user` transaction
-			RuntimeCall::Identity(pallet_identity::Call::new_user {
-				account_id,
-				phone_number,
-				username,
-				..
-			}) => {
-				let account_id_tag: AccountIdentityTag =
-					AccountIdentity::AccountId(account_id.clone());
-				let number_tag: AccountIdentityTag =
-					AccountIdentity::PhoneNumber(phone_number.clone());
-				let name_tag: AccountIdentityTag = AccountIdentity::Name(username.clone());
-
-				// This transaction provides tag, that may unlock some `appreciation` transactions
-				let provides = vec![
-					Encode::encode(&account_id_tag),
-					Encode::encode(&number_tag),
-					Encode::encode(&name_tag),
-				];
-
-				Ok(ValidTransaction { provides, ..Default::default() })
-			},
-			_ => Ok(ValidTransaction::default()),
+				Ok(ValidTransaction { requires, longevity: longevity.into(), ..Default::default() })
+			}
 		}
+
+		// In case this is `new_user` transaction
+		if let Some((account_id, username, phone_number)) = call.map_new_user() {
+			let account_id_tag: AccountIdentityTag = AccountIdentity::AccountId(account_id.clone());
+			let number_tag: AccountIdentityTag = AccountIdentity::PhoneNumber(phone_number.clone());
+			let name_tag: AccountIdentityTag = AccountIdentity::Name(username.clone());
+
+			// This transaction provides tag, that may unlock some `appreciation` transactions
+			let provides = vec![
+				Encode::encode(&account_id_tag),
+				Encode::encode(&number_tag),
+				Encode::encode(&name_tag),
+			];
+
+			return Ok(ValidTransaction { provides, ..Default::default() })
+		}
+
+		Ok(ValidTransaction::default())
+	}
+
+	fn pre_dispatch(
+		self,
+		who: &Self::AccountId,
+		call: &Self::Call,
+		_info: &DispatchInfoOf<Self::Call>,
+		_len: usize,
+	) -> Result<Self::Pre, TransactionValidityError> {
+		// In case this is `appreciation` transaction
+		if let Some(to) = call.map_appreciation() {
+			if T::IdentityProvider::exist_by_identity(&to) {
+				// TODO: Use value from self
+				let now = Timestamp::now();
+
+				let referral = Identity::get_registration_time(who)
+					.map(|registration_time| registration_time <= now)
+					.unwrap_or_default();
+
+				Appreciation::set_referral_flag(referral);
+
+				Ok(call.clone())
+			} else {
+				Err(InvalidTransaction::Custom(u8::MAX).into())
+			}
+		} else {
+			Ok(call.clone())
+		}
+	}
+
+	fn post_dispatch(
+		pre: Option<Self::Pre>,
+		_info: &DispatchInfoOf<Self::Call>,
+		_post_info: &PostDispatchInfoOf<Self::Call>,
+		_len: usize,
+		result: &DispatchResult,
+	) -> Result<(), TransactionValidityError> {
+		if result.is_ok() && pre.is_some() {
+			let call = pre.unwrap();
+			if let Some((to, _, _)) = call.map_new_user() {
+				// TODO: Use value from self
+				let now = Timestamp::now();
+				if !Identity::set_registration_time(&to, now) {
+					return Err(InvalidTransaction::Custom(u8::MAX).into())
+				}
+			}
+		}
+
+		Ok(())
 	}
 }

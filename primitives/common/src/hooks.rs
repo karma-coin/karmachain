@@ -36,7 +36,7 @@ pub trait Hooks<AccountId, Balance, Username, PhoneNumber> {
 		Ok(())
 	}
 
-	/// User appreciated via `update_user` transactions. Implement to have something happen.
+	/// User appreciated via `appreciation` transactions. Implement to have something happen.
 	/// This hook called after all checks performed and all values wrote to the storage.
 	///
 	/// # Arguments
@@ -72,6 +72,20 @@ pub trait Hooks<AccountId, Balance, Username, PhoneNumber> {
 	///
 	/// `Err` cause to abort transaction and revert state
 	fn on_set_admin(_who: AccountId, _new_admin: AccountId) -> DispatchResult {
+		Ok(())
+	}
+
+	/// New user joined after someones appreciation. This hook actually happens after `new_user` tx
+	/// has been processed and in the middle of `appreciation` transaction processing right after
+	/// all checks
+	///
+	/// # Arguments
+	/// * `_who` - `AccountId` whose tx leads to referral
+	/// * `_whon` - `AccountId` of account who joined by referral
+	/// # Returns
+	///
+	/// `Err` cause to abort transaction and revert state
+	fn on_referral(_who: AccountId, _whom: AccountId) -> DispatchResult {
 		Ok(())
 	}
 }
@@ -121,5 +135,10 @@ where
 	fn on_set_admin(who: AccountId, new_admin: AccountId) -> DispatchResult {
 		H1::on_set_admin(who.clone(), new_admin.clone())?;
 		H2::on_set_admin(who, new_admin)
+	}
+
+	fn on_referral(who: AccountId, whom: AccountId) -> DispatchResult {
+		H1::on_referral(who.clone(), whom.clone())?;
+		H2::on_referral(who, whom)
 	}
 }

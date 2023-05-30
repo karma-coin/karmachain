@@ -22,13 +22,15 @@ use sp_common::{
 };
 
 #[derive(Clone, Encode, Decode, Eq, MaxEncodedLen, PartialEq, Debug, TypeInfo)]
-pub struct IdentityStore<Username, PhoneNumber>
+pub struct IdentityStore<Username, PhoneNumber, Moment>
 where
 	Username: Codec,
 	PhoneNumber: Codec,
+	Moment: Codec,
 {
 	pub name: Username,
 	pub phone_number: PhoneNumber,
+	pub registration_time: Option<Moment>,
 }
 
 #[frame_support::pallet]
@@ -40,7 +42,9 @@ pub mod pallet {
 	use sp_std::fmt::Debug;
 
 	#[pallet::config]
-	pub trait Config: frame_system::Config + pallet_balances::Config {
+	pub trait Config:
+		frame_system::Config + pallet_balances::Config + pallet_timestamp::Config
+	{
 		/// The overarching event type.
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 		/// Max length of username
@@ -119,7 +123,7 @@ pub mod pallet {
 		_,
 		Blake2_128Concat,
 		T::AccountId,
-		IdentityStore<T::Username, T::PhoneNumber>,
+		IdentityStore<T::Username, T::PhoneNumber, T::Moment>,
 	>;
 
 	#[pallet::storage]
@@ -259,6 +263,17 @@ impl<T: Config> IdentityProvider<T::AccountId, T::Username, T::PhoneNumber> for 
 }
 
 impl<T: Config> Pallet<T> {
+	/// Set user registration time
+	pub fn set_registration_time(account_id: &T::AccountId, time: T::Moment) -> bool {
+		IdentityOf::<T>::mutate(account_id, |query| {
+			query.as_mut().map(|identity| identity.registration_time = Some(time)).is_some()
+		})
+	}
+
+	pub fn get_registration_time(account_id: &T::AccountId) -> Option<T::Moment> {
+		IdentityOf::<T>::get(account_id).and_then(|identity| identity.registration_time)
+	}
+
 	/// Perform validation for input parameters of `new_user` tx
 	pub fn verify(
 		account_id: &T::AccountId,
@@ -318,7 +333,11 @@ impl<T: Config> Pallet<T> {
 		PhoneNumberFor::<T>::insert(&phone_number, account_id.clone());
 		IdentityOf::<T>::insert(
 			&account_id,
-			IdentityStore { name: username.clone(), phone_number: phone_number.clone() },
+			IdentityStore {
+				name: username.clone(),
+				phone_number: phone_number.clone(),
+				registration_time: None,
+			},
 		);
 
 		T::Hooks::on_new_user(
@@ -358,7 +377,11 @@ impl<T: Config> Pallet<T> {
 		PhoneNumberFor::<T>::insert(&phone_number, new_account_id.clone());
 		IdentityOf::<T>::insert(
 			&new_account_id,
-			IdentityStore { name: old_identity_store.name, phone_number },
+			IdentityStore {
+				name: old_identity_store.name,
+				phone_number,
+				registration_time: old_identity_store.registration_time,
+			},
 		);
 
 		// No need to transfer trait score and reward info
@@ -391,7 +414,7 @@ where
 	/// Search for registered user who's username start with given `prefix`
 	pub fn get_contacts(
 		prefix: T::Username,
-	) -> Vec<(T::AccountId, IdentityStore<T::Username, T::PhoneNumber>)> {
+	) -> Vec<(T::AccountId, IdentityStore<T::Username, T::PhoneNumber, T::Moment>)> {
 		IdentityOf::<T>::iter()
 			.filter(|(_key, value)| value.name.0.starts_with(&prefix.0))
 			.collect()

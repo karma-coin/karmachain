@@ -61,6 +61,26 @@ impl RuntimeCall {
 			_ => None,
 		}
 	}
+
+	pub fn map_appreciation(&self) -> Option<types::AccountIdentity> {
+		match self {
+			RuntimeCall::Appreciation(pallet_appreciation::Call::appreciation { to, .. }) =>
+				Some(to.clone()),
+			_ => None,
+		}
+	}
+
+	pub fn map_new_user(&self) -> Option<(AccountId, Username, PhoneNumber)> {
+		match self {
+			RuntimeCall::Identity(pallet_identity::Call::new_user {
+				account_id,
+				phone_number,
+				username,
+				..
+			}) => Some((account_id.clone(), username.clone(), phone_number.clone())),
+			_ => None,
+		}
+	}
 }
 
 #[cfg(feature = "std")]
