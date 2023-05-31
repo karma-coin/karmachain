@@ -18,11 +18,14 @@ pub type AccountIdentityTag = AccountIdentity<
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(skip_type_params(T))]
-pub struct CheckAccount<T>(PhantomData<T>);
+pub struct CheckAccount<T> {
+	timestamp: u64,
+	_marker: PhantomData<T>,
+}
 
 impl<T> CheckAccount<T> {
 	pub fn new() -> Self {
-		Self(Default::default())
+		Self { timestamp: 0, _marker: Default::default() }
 	}
 }
 
@@ -49,7 +52,7 @@ where
 	type AccountId = AccountId;
 	type Call = RuntimeCall;
 	type AdditionalSigned = ();
-	type Pre = RuntimeCall;
+	type Pre = (u64, RuntimeCall);
 
 	fn additional_signed(&self) -> sp_std::result::Result<(), TransactionValidityError> {
 		Ok(())
@@ -107,24 +110,23 @@ where
 		_info: &DispatchInfoOf<Self::Call>,
 		_len: usize,
 	) -> Result<Self::Pre, TransactionValidityError> {
+		let now = self.timestamp;
+
 		// In case this is `appreciation` transaction
 		if let Some(to) = call.map_appreciation() {
 			if T::IdentityProvider::exist_by_identity(&to) {
-				// TODO: Use value from self
-				let now = Timestamp::now();
-
 				let referral = Identity::get_registration_time(who)
 					.map(|registration_time| registration_time <= now)
 					.unwrap_or_default();
 
 				Appreciation::set_referral_flag(referral);
 
-				Ok(call.clone())
+				Ok((now, call.clone()))
 			} else {
 				Err(InvalidTransaction::Custom(u8::MAX).into())
 			}
 		} else {
-			Ok(call.clone())
+			Ok((now, call.clone()))
 		}
 	}
 
@@ -136,10 +138,8 @@ where
 		result: &DispatchResult,
 	) -> Result<(), TransactionValidityError> {
 		if result.is_ok() && pre.is_some() {
-			let call = pre.unwrap();
+			let (now, call) = pre.unwrap();
 			if let Some((to, _, _)) = call.map_new_user() {
-				// TODO: Use value from self
-				let now = Timestamp::now();
 				if !Identity::set_registration_time(&to, now) {
 					return Err(InvalidTransaction::Custom(u8::MAX).into())
 				}
