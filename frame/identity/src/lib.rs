@@ -361,8 +361,8 @@ impl<T: Config> Pallet<T> {
 			IdentityStore { name: old_identity_store.name, phone_number },
 		);
 
-		// No need to transfer trait score and reward info
-		// because of they are indexed by `PhoneNumber`
+		// No need to transfer trait score
+		// because of it is indexed by `PhoneNumber`
 
 		// Transfer balance
 		let amount = T::Currency::free_balance(&old_account_id);
@@ -372,6 +372,8 @@ impl<T: Config> Pallet<T> {
 			amount,
 			ExistenceRequirement::AllowDeath,
 		)?;
+
+		T::Hooks::on_update_user(old_account_id.clone(), new_account_id.clone())?;
 
 		Self::deposit_event(Event::<T>::UpdateAccountId {
 			phone_verifier,

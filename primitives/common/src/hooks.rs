@@ -32,7 +32,7 @@ pub trait Hooks<AccountId, Balance, Username, PhoneNumber> {
 	/// # Returns
 	///
 	/// `Err` cause to abort transaction and revert state
-	fn on_update_user() -> DispatchResult {
+	fn on_update_user(_old_account_id: AccountId, _new_account_id: AccountId) -> DispatchResult {
 		Ok(())
 	}
 
@@ -96,9 +96,9 @@ where
 		H2::on_new_user(verifier, who, name, phone_number)
 	}
 
-	fn on_update_user() -> DispatchResult {
-		H1::on_update_user()?;
-		H2::on_update_user()
+	fn on_update_user(old_account_id: AccountId, new_account_id: AccountId) -> DispatchResult {
+		H1::on_update_user(old_account_id.clone(), new_account_id.clone())?;
+		H2::on_update_user(old_account_id, new_account_id)
 	}
 
 	fn on_appreciation(

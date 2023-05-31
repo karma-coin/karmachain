@@ -6,13 +6,12 @@ pub use pallet::*;
 pub use types::*;
 
 use frame_support::{pallet_prelude::*, traits::Currency};
-use sp_common::{hooks::Hooks as KarmaHooks, traits::IdentityProvider};
+use sp_common::hooks::Hooks as KarmaHooks;
 
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
 	use frame_system::pallet_prelude::*;
-	use sp_common::traits::IdentityProvider;
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
@@ -20,8 +19,6 @@ pub mod pallet {
 		frame_system::Config + pallet_balances::Config + pallet_identity::Config
 	{
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
-
-		type IdentityProvider: IdentityProvider<Self::AccountId, Self::Username, Self::PhoneNumber>;
 	}
 
 	#[pallet::pallet]
@@ -153,7 +150,7 @@ pub mod pallet {
 
 	#[pallet::storage]
 	pub type AccountRewardInfo<T: Config> =
-		StorageMap<_, Blake2_128Concat, T::PhoneNumber, AccountRewardsData, ValueQuery>;
+		StorageMap<_, Blake2_128Concat, T::AccountId, AccountRewardsData, ValueQuery>;
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
@@ -164,13 +161,16 @@ pub mod pallet {
 	#[pallet::error]
 	pub enum Error<T> {
 		AlreadyRewarded,
-		///
+		/// Account isn't found
 		NotFound,
+		/// Account ID is already use
+		AlreadyInUse,
 	}
 
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
 		fn offchain_worker(_n: BlockNumberFor<T>) {
+
 			// all_users
 			//	.iter()
 			// 	.filter(|who| !already_get_reward(who))
@@ -183,17 +183,14 @@ pub mod pallet {
 }
 
 impl<T: Config> Pallet<T> {
-	pub fn issue_signup_reward(who: &T::AccountId, amount: T::Balance) -> DispatchResult {
-		let phone_number =
-			T::IdentityProvider::identity_by_id(who).ok_or(Error::<T>::NotFound)?.number;
-
+	pub(crate) fn issue_signup_reward(who: &T::AccountId, amount: T::Balance) -> DispatchResult {
 		// Check that user do not get the reward earlier
-		let mut account_reward_info = AccountRewardInfo::<T>::get(&phone_number);
+		let mut account_reward_info = AccountRewardInfo::<T>::get(&who);
 		ensure!(!account_reward_info.signup_reward, Error::<T>::AlreadyRewarded);
 
 		// Mark that user get the reward
 		account_reward_info.signup_reward = true;
-		AccountRewardInfo::<T>::set(&phone_number, account_reward_info);
+		AccountRewardInfo::<T>::set(&who, account_reward_info);
 
 		// Increase total allocated amount of the reward and deposit the reward to user
 		SignupRewardTotalAllocated::<T>::mutate(|value| *value += amount);
@@ -208,17 +205,14 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	pub fn issue_referral_reward(who: &T::AccountId, amount: T::Balance) -> DispatchResult {
-		let phone_number =
-			T::IdentityProvider::identity_by_id(who).ok_or(Error::<T>::NotFound)?.number;
-
+	pub(crate) fn issue_referral_reward(who: &T::AccountId, amount: T::Balance) -> DispatchResult {
 		// Check that user do not get the reward earlier
-		let mut account_reward_info = AccountRewardInfo::<T>::get(&phone_number);
+		let mut account_reward_info = AccountRewardInfo::<T>::get(&who);
 		ensure!(!account_reward_info.referral_reward, Error::<T>::AlreadyRewarded);
 
 		// Mark that user get the reward
 		account_reward_info.referral_reward = true;
-		AccountRewardInfo::<T>::set(&phone_number, account_reward_info);
+		AccountRewardInfo::<T>::set(&who, account_reward_info);
 
 		// Increase total allocated amount of the reward and deposit the reward to user
 		ReferralRewardTotalAllocated::<T>::mutate(|value| *value += amount);
@@ -233,17 +227,14 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	pub fn issue_karma_reward(who: &T::AccountId, amount: T::Balance) -> DispatchResult {
-		let phone_number =
-			T::IdentityProvider::identity_by_id(who).ok_or(Error::<T>::NotFound)?.number;
-
+	pub(crate) fn issue_karma_reward(who: &T::AccountId, amount: T::Balance) -> DispatchResult {
 		// Check that user do not get the reward earlier
-		let mut account_reward_info = AccountRewardInfo::<T>::get(&phone_number);
+		let mut account_reward_info = AccountRewardInfo::<T>::get(&who);
 		ensure!(!account_reward_info.karma_reward, Error::<T>::AlreadyRewarded);
 
 		// Mark that user get the reward
 		account_reward_info.karma_reward = true;
-		AccountRewardInfo::<T>::set(&phone_number, account_reward_info);
+		AccountRewardInfo::<T>::set(&who, account_reward_info);
 
 		// Increase total allocated amount of the reward and deposit the reward to user
 		KarmaRewardTotalAllocated::<T>::mutate(|value| *value += amount);
@@ -254,6 +245,27 @@ impl<T: Config> Pallet<T> {
 			amount: amount.clone(),
 			reward_type: RewardType::Karma,
 		});
+
+		Ok(())
+	}
+
+	/// Move reward information from one `AccountId` to another
+	///
+	/// # Params
+	/// `from` - the `AccountId` from which info should be moved
+	/// `to` - the `AccountId` to which info should be moved
+	///
+	/// # Return
+	/// `Ok` - success
+	/// `Err(NotFound)` - the account from which info should be moved not found in storage
+	/// `Err(AlreadyInUse)` - the account to which info should be moved already store some other
+	/// reward info
+	pub(crate) fn move_reward_info(from: &T::AccountId, to: &T::AccountId) -> DispatchResult {
+		ensure!(AccountRewardInfo::<T>::contains_key(from), Error::<T>::NotFound);
+		ensure!(!AccountRewardInfo::<T>::contains_key(to), Error::<T>::AlreadyInUse);
+
+		let reward_info = AccountRewardInfo::<T>::take(from);
+		AccountRewardInfo::<T>::insert(to, reward_info);
 
 		Ok(())
 	}
@@ -289,5 +301,12 @@ impl<T: Config> KarmaHooks<T::AccountId, T::Balance, T::Username, T::PhoneNumber
 
 		Self::issue_signup_reward(&who, reward)?;
 		Ok(())
+	}
+
+	fn on_update_user(
+		old_account_id: T::AccountId,
+		new_account_id: T::AccountId,
+	) -> DispatchResult {
+		Self::move_reward_info(&old_account_id, &new_account_id)
 	}
 }
