@@ -5,12 +5,17 @@ mod types;
 pub use pallet::*;
 pub use types::*;
 
-use frame_support::{pallet_prelude::*, traits::Currency};
-use sp_common::hooks::Hooks as KarmaHooks;
+use frame_support::{
+	pallet_prelude::*,
+	traits::{Currency, Randomness},
+};
+use sp_common::{hooks::Hooks as KarmaHooks, traits::ScoreProvider};
+use sp_std::vec::Vec;
 
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
+	use frame_support::{traits::Randomness, PalletId};
 	use frame_system::pallet_prelude::*;
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
@@ -18,7 +23,22 @@ pub mod pallet {
 	pub trait Config:
 		frame_system::Config + pallet_balances::Config + pallet_identity::Config
 	{
+		/// The Reward's pallet id
+		#[pallet::constant]
+		type PalletId: Get<PalletId>;
+
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
+
+		type ScoreProvider: ScoreProvider<Self::AccountId>;
+
+		/// Number of time we should try to generate a random number that has no modulo bias.
+		/// The larger this number, the more potential computation is used for picking the winner,
+		/// but also the more likely that the chosen winner is done fairly.
+		#[pallet::constant]
+		type MaxGenerateRandom: Get<u32>;
+
+		/// Something that provides randomness in the runtime.
+		type Randomness: Randomness<Self::Hash, Self::BlockNumber>;
 	}
 
 	#[pallet::pallet]
@@ -46,7 +66,8 @@ pub mod pallet {
 
 		pub karma_reward_amount: T::Balance,
 		pub karma_reward_alloc: T::Balance,
-		pub karma_reward_top_n_users: u32,
+		pub karma_reward_users_participates: u32,
+		pub karma_reward_users_win: u32,
 	}
 
 	#[cfg(feature = "std")]
@@ -72,7 +93,8 @@ pub mod pallet {
 
 				karma_reward_amount: 10_000_000_u128.try_into().ok().unwrap(),
 				karma_reward_alloc: 300_000_000_000_000_u128.try_into().ok().unwrap(),
-				karma_reward_top_n_users: 1000,
+				karma_reward_users_participates: 1000,
+				karma_reward_users_win: 100,
 			}
 		}
 	}
@@ -99,7 +121,8 @@ pub mod pallet {
 
 			KarmaRewardAmount::<T>::put(self.karma_reward_amount);
 			MaxKarmaRewardAlloc::<T>::put(self.karma_reward_alloc);
-			KarmaRewardTopNUsers::<T>::put(self.karma_reward_top_n_users);
+			KarmaRewardUsersParticipates::<T>::put(self.karma_reward_users_participates);
+			KarmaRewardUsersWin::<T>::put(self.karma_reward_users_win);
 		}
 	}
 
@@ -146,7 +169,9 @@ pub mod pallet {
 	#[pallet::storage]
 	pub type KarmaRewardAmount<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
 	#[pallet::storage]
-	pub type KarmaRewardTopNUsers<T: Config> = StorageValue<_, u32, ValueQuery>;
+	pub type KarmaRewardUsersParticipates<T: Config> = StorageValue<_, u32, ValueQuery>;
+	#[pallet::storage]
+	pub type KarmaRewardUsersWin<T: Config> = StorageValue<_, u32, ValueQuery>;
 
 	#[pallet::storage]
 	pub type AccountRewardInfo<T: Config> =
@@ -169,15 +194,10 @@ pub mod pallet {
 
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
-		fn offchain_worker(_n: BlockNumberFor<T>) {
+		fn on_initialize(_n: BlockNumberFor<T>) -> Weight {
+			let _result = Self::distribute_karma_rewards();
 
-			// all_users
-			//	.iter()
-			// 	.filter(|who| !already_get_reward(who))
-			//  .sort_by_score()
-			// 	.take(KarmaRewardTopNUsers::<T>::get())
-			//  .for_each(|who| Self::issue_karma_reward(who, reward))
-			// TODO:
+			Weight::zero()
 		}
 	}
 }
@@ -277,6 +297,76 @@ impl<T: Config> Pallet<T> {
 		let karma_reward = KarmaRewardTotalAllocated::<T>::get();
 
 		signup_reward + referral_reward + fee_subsidies + karma_reward
+	}
+
+	/// Randomly choose a number from 0 to `total`.
+	fn choose_number(max: u32) -> u32 {
+		let mut random_number = Self::generate_random_number(0);
+
+		// Best effort attempt to remove bias from modulus operator.
+		for i in 1..T::MaxGenerateRandom::get() {
+			if random_number < u32::MAX - u32::MAX % max {
+				break
+			}
+
+			random_number = Self::generate_random_number(i);
+		}
+
+		random_number % max
+	}
+
+	/// Generate a random number from a given seed.
+	/// Note that there is potential bias introduced by using modulus operator.
+	/// You should call this function with different seed values until the random
+	/// number lies within `u32::MAX - u32::MAX % n`.
+	/// TODO: deal with randomness freshness
+	/// https://github.com/paritytech/substrate/issues/8311
+	fn generate_random_number(seed: u32) -> u32 {
+		let (random_seed, _) = T::Randomness::random(&(T::PalletId::get(), seed).encode());
+		let random_number = <u32>::decode(&mut random_seed.as_ref())
+			.expect("secure hashes should always be bigger than u32; qed");
+		random_number
+	}
+
+	fn distribute_karma_rewards() -> Result<(), &'static str> {
+		let participates_number = KarmaRewardUsersParticipates::<T>::get();
+		let winners_number = KarmaRewardUsersWin::<T>::get();
+
+		let mut accounts = AccountRewardInfo::<T>::iter()
+			.filter(|(_, info)| !info.karma_reward)
+			.map(|(account_id, _)| (T::ScoreProvider::score_of(&account_id), account_id))
+			.collect::<Vec<_>>();
+
+		accounts.sort_by(|(score_a, _), (score_b, _)| score_b.cmp(score_a));
+
+		let mut participate_accounts = accounts
+			.into_iter()
+			.map(|(_, account_id)| account_id)
+			.take(participates_number as usize)
+			.collect::<Vec<_>>();
+
+		// Winners can't be more than participates
+		let winner_accounts = if participate_accounts.len() <= winners_number as usize {
+			participate_accounts
+		} else {
+			(0..winners_number)
+				.map(|_| {
+					let index = Self::choose_number(participate_accounts.len() as u32);
+					participate_accounts.remove(index as usize)
+				})
+				.collect::<Vec<_>>()
+		};
+
+		let reward = KarmaRewardAmount::<T>::get();
+		winner_accounts.iter().for_each(|account_id| {
+			let total_allocated = KarmaRewardTotalAllocated::<T>::get();
+
+			if total_allocated < MaxKarmaRewardAlloc::<T>::get() {
+				let _result = Self::issue_karma_reward(account_id, reward);
+			}
+		});
+
+		Ok(())
 	}
 }
 
