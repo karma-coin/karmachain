@@ -10,6 +10,7 @@ use frame_support::{
 	traits::{Currency, Randomness},
 };
 use sp_common::{hooks::Hooks as KarmaHooks, traits::ScoreProvider};
+use sp_runtime::traits::Zero;
 use sp_std::vec::Vec;
 
 #[frame_support::pallet]
@@ -64,6 +65,7 @@ pub mod pallet {
 		pub tx_fee_subsidies_alloc: T::Balance,
 		pub tx_fee_subsidy_max_amount: T::Balance,
 
+		pub karma_reward_frequency: T::BlockNumber,
 		pub karma_reward_amount: T::Balance,
 		pub karma_reward_alloc: T::Balance,
 		pub karma_reward_users_participates: u32,
@@ -91,6 +93,7 @@ pub mod pallet {
 				tx_fee_subsidies_alloc: 250_000_000_000_000_u128.try_into().ok().unwrap(),
 				tx_fee_subsidy_max_amount: 1_000_u128.try_into().ok().unwrap(),
 
+				karma_reward_frequency: 5_u32.into(),
 				karma_reward_amount: 10_000_000_u128.try_into().ok().unwrap(),
 				karma_reward_alloc: 300_000_000_000_000_u128.try_into().ok().unwrap(),
 				karma_reward_users_participates: 1000,
@@ -119,6 +122,7 @@ pub mod pallet {
 			TxFeeSubsidyMaxAmount::<T>::put(self.tx_fee_subsidy_max_amount);
 			TxFeeSubsidiesAlloc::<T>::put(self.tx_fee_subsidies_alloc);
 
+			KarmaRewardFrequency::<T>::put(self.karma_reward_frequency);
 			KarmaRewardAmount::<T>::put(self.karma_reward_amount);
 			MaxKarmaRewardAlloc::<T>::put(self.karma_reward_alloc);
 			KarmaRewardUsersParticipates::<T>::put(self.karma_reward_users_participates);
@@ -163,6 +167,8 @@ pub mod pallet {
 	pub type TxFeeSubsidiesAlloc<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
 
 	#[pallet::storage]
+	pub type KarmaRewardFrequency<T: Config> = StorageValue<_, T::BlockNumber, ValueQuery>;
+	#[pallet::storage]
 	pub type KarmaRewardTotalAllocated<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
 	#[pallet::storage]
 	pub type MaxKarmaRewardAlloc<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
@@ -194,8 +200,8 @@ pub mod pallet {
 
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
-		fn on_initialize(_n: BlockNumberFor<T>) -> Weight {
-			let _result = Self::distribute_karma_rewards();
+		fn on_initialize(n: BlockNumberFor<T>) -> Weight {
+			let _result = Self::distribute_karma_rewards(n);
 
 			Weight::zero()
 		}
@@ -328,7 +334,12 @@ impl<T: Config> Pallet<T> {
 		random_number
 	}
 
-	fn distribute_karma_rewards() -> Result<(), &'static str> {
+	fn distribute_karma_rewards(block_number: T::BlockNumber) -> Result<(), &'static str> {
+		if block_number % KarmaRewardFrequency::<T>::get() != T::BlockNumber::zero() {
+			// Too early, skipping rewards for now
+			return Ok(())
+		}
+
 		let participates_number = KarmaRewardUsersParticipates::<T>::get();
 		let winners_number = KarmaRewardUsersWin::<T>::get();
 
