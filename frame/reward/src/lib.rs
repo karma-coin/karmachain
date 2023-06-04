@@ -1,5 +1,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
+pub mod crypto;
 mod types;
 
 pub use pallet::*;
@@ -9,6 +10,7 @@ use frame_support::{
 	pallet_prelude::*,
 	traits::{Currency, Randomness},
 };
+use frame_system::offchain::{SendSignedTransaction, Signer};
 use sp_common::{hooks::Hooks as KarmaHooks, traits::ScoreProvider};
 use sp_runtime::traits::Zero;
 use sp_std::vec::Vec;
@@ -16,30 +18,42 @@ use sp_std::vec::Vec;
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
-	use frame_support::{traits::Randomness, PalletId};
-	use frame_system::pallet_prelude::*;
+	use frame_support::{log, traits::Randomness, PalletId};
+	use frame_system::{
+		offchain::{AppCrypto, CreateSignedTransaction, SigningTypes},
+		pallet_prelude::*,
+	};
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
 	pub trait Config:
-		frame_system::Config + pallet_balances::Config + pallet_identity::Config
+		frame_system::Config
+		+ pallet_balances::Config
+		+ pallet_identity::Config
+		+ CreateSignedTransaction<Call<Self>>
 	{
 		/// The Reward's pallet id
 		#[pallet::constant]
 		type PalletId: Get<PalletId>;
-
+		/// The overarching event type.
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
-
+		/// Something that provides trait score in the runtime
 		type ScoreProvider: ScoreProvider<Self::AccountId>;
-
 		/// Number of time we should try to generate a random number that has no modulo bias.
 		/// The larger this number, the more potential computation is used for picking the winner,
 		/// but also the more likely that the chosen winner is done fairly.
 		#[pallet::constant]
 		type MaxGenerateRandom: Get<u32>;
-
 		/// Something that provides randomness in the runtime.
 		type Randomness: Randomness<Self::Hash, Self::BlockNumber>;
+		/// Maximum number of winners in karma rewards per one round
+		#[pallet::constant]
+		type MaxWinners: Get<u32>;
+		/// Maximum number of offchain account that can sign `submit_karma_rewards` tx
+		#[pallet::constant]
+		type MaxOffchainAccounts: Get<u32>;
+		/// The identifier type for an offchain worker.
+		type AuthorityId: AppCrypto<Self::Public, <Self as SigningTypes>::Signature>;
 	}
 
 	#[pallet::pallet]
@@ -48,6 +62,8 @@ pub mod pallet {
 
 	#[pallet::genesis_config]
 	pub struct GenesisConfig<T: Config> {
+		pub offchain_accounts: Vec<T::AccountId>,
+
 		pub signup_reward_phase1_alloc: T::Balance,
 		pub signup_reward_phase2_alloc: T::Balance,
 
@@ -69,13 +85,14 @@ pub mod pallet {
 		pub karma_reward_amount: T::Balance,
 		pub karma_reward_alloc: T::Balance,
 		pub karma_reward_users_participates: u32,
-		pub karma_reward_users_win: u32,
 	}
 
 	#[cfg(feature = "std")]
 	impl<T: Config> Default for GenesisConfig<T> {
 		fn default() -> Self {
 			Self {
+				offchain_accounts: vec![],
+
 				signup_reward_phase1_alloc: 100_000_000_000_000_u128.try_into().ok().unwrap(),
 				signup_reward_phase2_alloc: 200_000_000_000_000_u128.try_into().ok().unwrap(),
 
@@ -97,7 +114,6 @@ pub mod pallet {
 				karma_reward_amount: 10_000_000_u128.try_into().ok().unwrap(),
 				karma_reward_alloc: 300_000_000_000_000_u128.try_into().ok().unwrap(),
 				karma_reward_users_participates: 1000,
-				karma_reward_users_win: 100,
 			}
 		}
 	}
@@ -105,6 +121,10 @@ pub mod pallet {
 	#[pallet::genesis_build]
 	impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
 		fn build(&self) {
+			OffchainAccounts::<T>::put::<BoundedVec<_, T::MaxOffchainAccounts>>(
+				self.offchain_accounts.clone().try_into().expect("Too many offchain accounts"),
+			);
+
 			SignupRewardPhase1Alloc::<T>::put(self.signup_reward_phase1_alloc);
 			SignupRewardPhase2Alloc::<T>::put(self.signup_reward_phase2_alloc);
 
@@ -126,9 +146,12 @@ pub mod pallet {
 			KarmaRewardAmount::<T>::put(self.karma_reward_amount);
 			MaxKarmaRewardAlloc::<T>::put(self.karma_reward_alloc);
 			KarmaRewardUsersParticipates::<T>::put(self.karma_reward_users_participates);
-			KarmaRewardUsersWin::<T>::put(self.karma_reward_users_win);
 		}
 	}
+
+	#[pallet::storage]
+	pub type OffchainAccounts<T: Config> =
+		StorageValue<_, BoundedVec<T::AccountId, T::MaxOffchainAccounts>, ValueQuery>;
 
 	#[pallet::storage]
 	pub type SignupRewardTotalAllocated<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
@@ -176,8 +199,6 @@ pub mod pallet {
 	pub type KarmaRewardAmount<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
 	#[pallet::storage]
 	pub type KarmaRewardUsersParticipates<T: Config> = StorageValue<_, u32, ValueQuery>;
-	#[pallet::storage]
-	pub type KarmaRewardUsersWin<T: Config> = StorageValue<_, u32, ValueQuery>;
 
 	#[pallet::storage]
 	pub type AccountRewardInfo<T: Config> =
@@ -196,14 +217,56 @@ pub mod pallet {
 		NotFound,
 		/// Account ID is already use
 		AlreadyInUse,
+		/// Not enough karma reward allocated to pay to all winners
+		TooManyWinners,
+		/// Account try to submit transaction without having privilege to do this
+		///
+		/// This may happen when someone calls `submit_karma_rewards` or if keys for offchain
+		/// account different from those which passed throw `GenesisConfig`
+		NotAllowed,
 	}
 
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
-		fn on_initialize(n: BlockNumberFor<T>) -> Weight {
-			let _result = Self::distribute_karma_rewards(n);
+		fn offchain_worker(n: BlockNumberFor<T>) {
+			let winners = Self::distribute_karma_rewards(n);
 
-			Weight::zero()
+			if winners.is_empty() {
+				return
+			}
+
+			match Self::sign_and_send_submit_karma_rewards(winners) {
+				Ok(()) => log::info!("Submit karma reward tx successfully sent!"),
+				Err(e) => log::error!("Fail to submit karma reward tx: {}", e),
+			}
+		}
+	}
+
+	#[pallet::call]
+	impl<T: Config> Pallet<T> {
+		#[pallet::call_index(0)]
+		#[pallet::weight(10_000 + T::DbWeight::get().reads_writes(3,1).ref_time())]
+		pub fn submit_karma_rewards(
+			origin: OriginFor<T>,
+			winners: BoundedVec<T::AccountId, T::MaxWinners>,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+			ensure!(OffchainAccounts::<T>::get().contains(&who), Error::<T>::NotAllowed);
+
+			let reward_total_allocated = KarmaRewardTotalAllocated::<T>::get();
+			let reward_allocated = MaxKarmaRewardAlloc::<T>::get();
+			let reward = KarmaRewardAmount::<T>::get();
+
+			// How many accounts can be rewarded due to remained reward amount
+			let can_reward_n_accounts = (reward_total_allocated - reward_allocated) / reward;
+			let winners_number: T::Balance = (winners.len() as u32).into();
+			ensure!(can_reward_n_accounts >= winners_number, Error::<T>::TooManyWinners);
+
+			for winner in winners {
+				Self::issue_karma_reward(&winner, reward)?;
+			}
+
+			Ok(())
 		}
 	}
 }
@@ -334,14 +397,14 @@ impl<T: Config> Pallet<T> {
 		random_number
 	}
 
-	fn distribute_karma_rewards(block_number: T::BlockNumber) -> Result<(), &'static str> {
+	fn distribute_karma_rewards(block_number: T::BlockNumber) -> Vec<T::AccountId> {
 		if block_number % KarmaRewardFrequency::<T>::get() != T::BlockNumber::zero() {
 			// Too early, skipping rewards for now
-			return Ok(())
+			return sp_std::vec![]
 		}
 
 		let participates_number = KarmaRewardUsersParticipates::<T>::get();
-		let winners_number = KarmaRewardUsersWin::<T>::get();
+		let winners_number = T::MaxWinners::get();
 
 		let mut accounts = AccountRewardInfo::<T>::iter()
 			.filter(|(_, info)| !info.karma_reward)
@@ -368,16 +431,27 @@ impl<T: Config> Pallet<T> {
 				.collect::<Vec<_>>()
 		};
 
-		let reward = KarmaRewardAmount::<T>::get();
-		winner_accounts.iter().for_each(|account_id| {
-			let total_allocated = KarmaRewardTotalAllocated::<T>::get();
+		winner_accounts
+	}
 
-			if total_allocated < MaxKarmaRewardAlloc::<T>::get() {
-				let _result = Self::issue_karma_reward(account_id, reward);
-			}
+	fn sign_and_send_submit_karma_rewards(winners: Vec<T::AccountId>) -> Result<(), &'static str> {
+		let winners: BoundedVec<T::AccountId, T::MaxWinners> =
+			winners.try_into().map_err(|_| "Too many winner")?;
+
+		let signer = Signer::<T, T::AuthorityId>::any_account();
+
+		// Using `send_signed_transaction` associated type we create and submit a transaction
+		// representing the call, we've just created.
+		let result = signer.send_signed_transaction(|_account| Call::submit_karma_rewards {
+			winners: winners.clone(),
 		});
 
-		Ok(())
+		match result {
+			Some((_, Ok(_))) => Ok(()),
+			Some((_, Err(_))) => Err("Failed to submit transaction"),
+			None =>
+				Err("No local accounts available. Consider adding one via `author_insertKey` RPC."),
+		}
 	}
 }
 
