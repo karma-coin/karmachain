@@ -112,7 +112,6 @@ impl<T: Config> sp_common::hooks::Hooks<T::AccountId, T::Balance, T::Username, T
 	) -> DispatchResult {
 		UpdateUserTransactionsCount::<T>::mutate(|value| *value += 1);
 
-		Self::index_transaction(old_account_id)?;
 		Self::index_transaction(new_account_id)?;
 
 		Ok(())
