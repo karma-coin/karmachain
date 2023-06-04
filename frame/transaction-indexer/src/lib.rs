@@ -107,7 +107,7 @@ impl<T: Config> sp_common::hooks::Hooks<T::AccountId, T::Balance, T::Username, T
 	}
 
 	fn on_update_user(
-		old_account_id: T::AccountId,
+		_old_account_id: T::AccountId,
 		new_account_id: T::AccountId,
 	) -> DispatchResult {
 		UpdateUserTransactionsCount::<T>::mutate(|value| *value += 1);
