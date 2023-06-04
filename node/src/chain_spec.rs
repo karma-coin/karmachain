@@ -1,7 +1,7 @@
 use karmachain_node_runtime::{
 	opaque::SessionKeys, AccountId, AppreciationConfig, BabeConfig, BalancesConfig, GenesisConfig,
-	GrandpaConfig, IdentityConfig, PhoneNumber, SessionConfig, Signature, StakingConfig,
-	SudoConfig, SystemConfig, KCOINS, WASM_BINARY,
+	GrandpaConfig, IdentityConfig, PhoneNumber, RewardConfig, SessionConfig, Signature,
+	StakingConfig, SudoConfig, SystemConfig, KCOINS, WASM_BINARY,
 };
 use pallet_appreciation::*;
 use pallet_staking::{Forcing, StakerStatus};
@@ -73,6 +73,7 @@ pub fn development_config() -> Result<ChainSpec, String> {
 					(vec![0].try_into().unwrap(), 1, CommunityRole::Admin),
 					(vec![1].try_into().unwrap(), 1, CommunityRole::Member),
 				],
+				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
 				true,
 			)
 		},
@@ -147,6 +148,7 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 					(vec![0].try_into().unwrap(), 1, CommunityRole::Admin),
 					(vec![1].try_into().unwrap(), 1, CommunityRole::Member),
 				],
+				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
 				true,
 			)
 		},
@@ -181,6 +183,7 @@ fn testnet_genesis(
 	endowed_accounts: Vec<AccountId>,
 	phone_verifiers: Vec<AccountId>,
 	community_membership: Vec<(PhoneNumber, CommunityId, CommunityRole)>,
+	offchain_accounts: Vec<AccountId>,
 	_enable_println: bool,
 ) -> GenesisConfig {
 	const ENDOWMENT: u128 = 1_000_000_000 * KCOINS;
@@ -313,6 +316,6 @@ fn testnet_genesis(
 			..Default::default()
 		},
 		identity: IdentityConfig { phone_verifiers },
-		reward: Default::default(),
+		reward: RewardConfig { offchain_accounts, ..Default::default() },
 	}
 }
