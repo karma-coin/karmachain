@@ -1,4 +1,9 @@
-use crate::{extensions::check_account::CheckAccount, *};
+use crate::{
+	extensions::{
+		check_account::CheckAccount, transaction_payment::ChargeTransactionPaymentWithSubsidies,
+	},
+	*,
+};
 use codec::Encode;
 use sp_runtime::{generic::Era, traits, MultiAddress, SaturatedConversion};
 
@@ -29,7 +34,7 @@ where
 			frame_system::CheckEra::<Runtime>::from(era),
 			frame_system::CheckNonce::<Runtime>::from(nonce),
 			frame_system::CheckWeight::<Runtime>::new(),
-			pallet_transaction_payment::ChargeTransactionPayment::<Runtime>::from(0),
+			ChargeTransactionPaymentWithSubsidies::from(0),
 			CheckAccount::default(),
 		);
 		let raw_payload = SignedPayload::new(call, extra)

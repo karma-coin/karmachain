@@ -345,12 +345,18 @@ impl<T: Config> Pallet<T> {
 		}
 
 		// Fee is too big
-		if TxFeeSubsidyMaxAmount::<T>::get() > amount {
+		if amount > TxFeeSubsidyMaxAmount::<T>::get() {
 			return false
 		}
 
 		AccountRewardInfo::<T>::mutate(who, |info| info.transaction_subsidized += 1);
 		TxFeeSubsidiesTotalAllocated::<T>::mutate(|value| *value += amount);
+
+		Self::deposit_event(Event::<T>::RewardIssued {
+			who: who.clone(),
+			amount: amount.clone(),
+			reward_type: RewardType::Subsidy,
+		});
 
 		true
 	}

@@ -43,7 +43,7 @@ pub type SignedExtra = (
 	frame_system::CheckEra<Runtime>,
 	frame_system::CheckNonce<Runtime>,
 	frame_system::CheckWeight<Runtime>,
-	pallet_transaction_payment::ChargeTransactionPayment<Runtime>,
+	extensions::transaction_payment::ChargeTransactionPaymentWithSubsidies,
 	extensions::check_account::CheckAccount,
 );
 
