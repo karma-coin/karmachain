@@ -13,7 +13,7 @@ use frame_support::{
 use frame_system::offchain::{SendSignedTransaction, Signer};
 use sp_common::{hooks::Hooks as KarmaHooks, traits::ScoreProvider};
 use sp_runtime::traits::Zero;
-use sp_std::vec::Vec;
+use sp_std::{default::Default, vec::Vec};
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -370,14 +370,34 @@ impl<T: Config> Pallet<T> {
 	/// # Return
 	/// `Ok` - success
 	/// `Err(NotFound)` - the account from which info should be moved not found in storage
-	/// `Err(AlreadyInUse)` - the account to which info should be moved already store some other
 	/// reward info
 	pub(crate) fn move_reward_info(from: &T::AccountId, to: &T::AccountId) -> DispatchResult {
 		ensure!(AccountRewardInfo::<T>::contains_key(from), Error::<T>::NotFound);
-		ensure!(!AccountRewardInfo::<T>::contains_key(to), Error::<T>::AlreadyInUse);
 
-		let reward_info = AccountRewardInfo::<T>::take(from);
-		AccountRewardInfo::<T>::insert(to, reward_info);
+		let from_reward_info = AccountRewardInfo::<T>::take(from);
+		let to_reward_info = AccountRewardInfo::<T>::take(to);
+
+		ensure!(
+			!to_reward_info.karma_reward &&
+				!to_reward_info.signup_reward &&
+				!to_reward_info.referral_reward,
+			Error::<T>::AlreadyInUse
+		);
+
+		AccountRewardInfo::<T>::insert(
+			from,
+			AccountRewardsData {
+				transaction_subsidized: from_reward_info.transaction_subsidized,
+				..Default::default()
+			},
+		);
+		AccountRewardInfo::<T>::insert(
+			to,
+			AccountRewardsData {
+				transaction_subsidized: to_reward_info.transaction_subsidized,
+				..from_reward_info
+			},
+		);
 
 		Ok(())
 	}
