@@ -338,6 +338,23 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
+	pub fn subsidies_tx_fee(who: &T::AccountId, amount: T::Balance) -> bool {
+		// Not more tokens left
+		if TxFeeSubsidiesTotalAllocated::<T>::get() >= TxFeeSubsidiesAlloc::<T>::get() {
+			return false
+		}
+
+		// Fee is too big
+		if TxFeeSubsidyMaxAmount::<T>::get() > amount {
+			return false
+		}
+
+		AccountRewardInfo::<T>::mutate(who, |info| info.transaction_subsidized += 1);
+		TxFeeSubsidiesTotalAllocated::<T>::mutate(|value| *value += amount);
+
+		true
+	}
+
 	/// Move reward information from one `AccountId` to another
 	///
 	/// # Params
