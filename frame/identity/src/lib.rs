@@ -172,15 +172,8 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-		// TODO: disable verifier evidence check for TN1, should be rollbacked after TN1
-		// `Pays::No` allow to call this tx without paying any fee, this is a temporary solution and
-		// should be removed after fee subsudies mechanism will be implemented
 		#[pallet::call_index(0)]
-		#[pallet::weight((
-			10_000 + T::DbWeight::get().reads_writes(3,1).ref_time(),
-			DispatchClass::Normal,
-			Pays::No,
-		))]
+		#[pallet::weight(10_000 + T::DbWeight::get().reads_writes(3,1).ref_time())]
 		pub fn new_user(
 			origin: OriginFor<T>,
 			// verifier_public_key: T::PublicKey,
