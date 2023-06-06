@@ -35,6 +35,27 @@ Use Rust's native `cargo` command to build and launch the template node:
 cargo run --release -- --dev
 ```
 
+#### Run local node 
+
+Firstly you need to create chain specification file or use existed one:
+
+```sh
+cargo run -- build-spec --dev > chain-spec/chainSpec.json
+```
+
+Now you can modify `chainSpec.json` to change blockchain genesis params.
+ * balances - here can specify genesis balance for specific account
+ * sudo - set sudo account
+ * identity - set phone verifiers account
+ * appreciation - set character traits, communities etc.
+
+Then to run local node use next command, because of this is dev environment use 
+alice session keys and account as validator:
+
+```shell
+ cargo run -- --chain=chain-spec/chainSpec.json --alice --validator
+```
+
 #### Run verifier node 
 
 Use Rust's native `cargo` command to build and launch the template node:
@@ -60,25 +81,29 @@ curl --location 'http://localhost:9933/' \
 }'
 ```
 
-#### Run local node 
+#### Enable offchain worker
 
-Firstly you need to create chain specification file or use existed one:
-
-```sh
-cargo run -- build-spec --dev > chain-spec/chainSpec.json
-```
-
-Now you can modify `chainSpec.json` to change blockchain genesis params.
- * balances - here can specify genesis balance for specific account
- * sudo - set sudo account
- * identity - set phone verifiers account
- * appreciation - set character traits, communities etc.
-
-Then to run local node use next command, because of this is dev environment use 
-alice session keys and account as validator:
+Use Rust's native `cargo` command to build and launch node with enabled offchain worker to distribute karma rewards:
 
 ```shell
- cargo run -- --chain=chain-spec/chainSpec.json --alice --validator
+cargo run --release -- --dev --offchain-worker always
+```
+
+Inserting offchain keys:
+
+```sh
+curl --location 'http://localhost:9933/' \
+--header 'Content-Type: application/json' \
+--data '{
+    "id": 1,
+    "jsonrpc": "2.0",
+    "method": "author_insertKey",
+    "params": {
+        "key_type": "rewa",
+        "suri": "//Alice",
+        "public": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d"
+    }
+}'
 ```
 
 ### Build

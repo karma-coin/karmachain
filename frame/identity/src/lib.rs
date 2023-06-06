@@ -172,15 +172,8 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-		// TODO: disable verifier evidence check for TN1, should be rollbacked after TN1
-		// `Pays::No` allow to call this tx without paying any fee, this is a temporary solution and
-		// should be removed after fee subsudies mechanism will be implemented
 		#[pallet::call_index(0)]
-		#[pallet::weight((
-			10_000 + T::DbWeight::get().reads_writes(3,1).ref_time(),
-			DispatchClass::Normal,
-			Pays::No,
-		))]
+		#[pallet::weight(10_000 + T::DbWeight::get().reads_writes(3,1).ref_time())]
 		pub fn new_user(
 			origin: OriginFor<T>,
 			// verifier_public_key: T::PublicKey,
@@ -361,8 +354,8 @@ impl<T: Config> Pallet<T> {
 			IdentityStore { name: old_identity_store.name, phone_number },
 		);
 
-		// No need to transfer trait score and reward info
-		// because of they are indexed by `PhoneNumber`
+		// No need to transfer trait score
+		// because of it is indexed by `PhoneNumber`
 
 		// Transfer balance
 		let amount = T::Currency::free_balance(&old_account_id);
@@ -372,6 +365,8 @@ impl<T: Config> Pallet<T> {
 			amount,
 			ExistenceRequirement::AllowDeath,
 		)?;
+
+		T::Hooks::on_update_user(old_account_id.clone(), new_account_id.clone())?;
 
 		Self::deposit_event(Event::<T>::UpdateAccountId {
 			phone_verifier,

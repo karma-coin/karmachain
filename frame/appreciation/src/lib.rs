@@ -10,7 +10,10 @@ mod types;
 
 pub use crate::types::*;
 pub use pallet::*;
-use sp_common::types::{CharTraitId, CommunityId};
+use sp_common::{
+	traits::ScoreProvider,
+	types::{CharTraitId, CommunityId, Score},
+};
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -598,5 +601,11 @@ impl<T: Config> Hooks<T::AccountId, T::Balance, T::Username, T::PhoneNumber> for
 		Self::increment_trait_score(&who_account_id, &who, no_community_id, signup_char_trait_id);
 
 		Ok(())
+	}
+}
+
+impl<T: Config> ScoreProvider<T::AccountId> for Pallet<T> {
+	fn score_of(account_id: &T::AccountId) -> Score {
+		Self::trait_scores_of(account_id).iter().map(|(_, _, score)| score).sum()
 	}
 }
