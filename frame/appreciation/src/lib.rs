@@ -14,6 +14,7 @@ use sp_common::{
 	traits::ScoreProvider,
 	types::{CharTraitId, CommunityId, Score},
 };
+use sp_std::vec::Vec;
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -60,7 +61,7 @@ pub mod pallet {
 		pub ambassador_char_trait_id: CharTraitId,
 
 		pub communities: Vec<GenesisCommunity>,
-		pub community_membership: Vec<(T::PhoneNumber, CommunityId, CommunityRole)>,
+		pub community_membership: Vec<(T::AccountId, CommunityId, CommunityRole)>,
 		pub no_community_id: CommunityId,
 	}
 
@@ -143,8 +144,8 @@ pub mod pallet {
 				.expect("Initial number of communities should be lower than T::MaxCommunities");
 			Communities::<T>::put(bounded_communities);
 
-			self.community_membership.iter().for_each(|(phone_number, community_id, role)| {
-				CommunityMembership::<T>::insert(phone_number, community_id, role);
+			self.community_membership.iter().for_each(|(account_id, community_id, role)| {
+				CommunityMembership::<T>::insert(account_id, community_id, role);
 			});
 
 			NoCommunityId::<T>::put(self.no_community_id);
@@ -210,7 +211,7 @@ pub mod pallet {
 	pub type CommunityMembership<T: Config> = StorageDoubleMap<
 		_,
 		Blake2_128Concat,
-		T::PhoneNumber,
+		T::AccountId,
 		Blake2_128Concat,
 		CommunityId,
 		CommunityRole,
@@ -221,7 +222,7 @@ pub mod pallet {
 	pub type TraitScores<T: Config> = StorageNMap<
 		_,
 		(
-			NMapKey<Blake2_128Concat, T::PhoneNumber>,
+			NMapKey<Blake2_128Concat, T::AccountId>,
 			NMapKey<Blake2_128Concat, CommunityId>,
 			NMapKey<Blake2_128Concat, CharTraitId>,
 		),
@@ -364,11 +365,9 @@ pub mod pallet {
 			new_admin: AccountIdentity<T::AccountId, T::Username, T::PhoneNumber>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-			let phone_number =
-				T::IdentityProvider::identity_by_id(&who).ok_or(Error::<T>::NotFound)?.number;
 			ensure!(
 				matches!(
-					CommunityMembership::<T>::get(&phone_number, community_id),
+					CommunityMembership::<T>::get(&who, community_id),
 					Some(CommunityRole::Admin)
 				),
 				Error::<T>::NotEnoughPermission
@@ -381,7 +380,7 @@ pub mod pallet {
 			let new_admin_identity =
 				T::IdentityProvider::get_identity_info(&new_admin).ok_or(Error::<T>::NotFound)?;
 			CommunityMembership::<T>::insert(
-				&new_admin_identity.number,
+				&new_admin_identity.account_id,
 				community_id,
 				CommunityRole::Admin,
 			);
@@ -416,11 +415,10 @@ impl<T: pallet::Config> Pallet<T> {
 
 	pub fn increment_trait_score(
 		account_id: &T::AccountId,
-		phone_number: &T::PhoneNumber,
 		community_id: CommunityId,
 		char_trait_id: CharTraitId,
 	) {
-		TraitScores::<T>::mutate((phone_number, community_id, char_trait_id), |value| {
+		TraitScores::<T>::mutate((account_id, community_id, char_trait_id), |value| {
 			*value = Some(value.unwrap_or_default() + 1)
 		});
 
@@ -436,8 +434,8 @@ impl<T: pallet::Config> Pallet<T> {
 	/// `true` - if appreciation lead to adding `payee` to community as a new member,
 	/// 	otherwise `false`
 	pub fn process_appreciation(
-		payer_account_id: &T::AccountId,
-		payee_account_id: &T::AccountId,
+		payer: &T::AccountId,
+		payee: &T::AccountId,
 		community_id: CommunityId,
 		char_trait_id: CharTraitId,
 		referral: bool,
@@ -446,20 +444,12 @@ impl<T: pallet::Config> Pallet<T> {
 			return Ok(false)
 		}
 
-		let payer = T::IdentityProvider::identity_by_id(payer_account_id)
-			.ok_or(Error::<T>::NotFound)?
-			.number;
-		let payee = T::IdentityProvider::identity_by_id(payee_account_id)
-			.ok_or(Error::<T>::NotFound)?
-			.number;
-
 		// TODO: whether to check `char_trait_id` for existence?
 
 		// TODO: if this transfer lead to user signup set `true`
 		if referral {
 			// Give payer karma points for helping to grow the network
 			Self::increment_trait_score(
-				&payer_account_id,
 				&payer,
 				NoCommunityId::<T>::get()?,
 				AmbassadorCharTraitId::<T>::get()?,
@@ -468,13 +458,8 @@ impl<T: pallet::Config> Pallet<T> {
 
 		// Standard appreciation w/o a community context
 		if NoCommunityId::<T>::get()? == community_id {
-			Self::increment_trait_score(
-				&payer_account_id,
-				&payer,
-				community_id,
-				SpenderCharTraitId::<T>::get()?,
-			);
-			Self::increment_trait_score(&payee_account_id, &payee, community_id, char_trait_id);
+			Self::increment_trait_score(&payer, community_id, SpenderCharTraitId::<T>::get()?);
+			Self::increment_trait_score(&payee, community_id, char_trait_id);
 			return Ok(false)
 		}
 
@@ -495,46 +480,29 @@ impl<T: pallet::Config> Pallet<T> {
 		let new_member = match (payer_membership, payee_membership) {
 			(CommunityRole::None, _) => return Err(Error::<T>::NotMember.into()),
 			(_, CommunityRole::Admin) | (_, CommunityRole::Member) => {
-				Self::increment_trait_score(
-					&payer_account_id,
-					&payer,
-					community_id,
-					SpenderCharTraitId::<T>::get()?,
-				);
-				Self::increment_trait_score(&payee_account_id, &payee, community_id, char_trait_id);
+				Self::increment_trait_score(&payer, community_id, SpenderCharTraitId::<T>::get()?);
+				Self::increment_trait_score(&payee, community_id, char_trait_id);
 				false
 			},
 			(CommunityRole::Admin, CommunityRole::None) => {
+				Self::increment_trait_score(&payer, community_id, SpenderCharTraitId::<T>::get()?);
 				Self::increment_trait_score(
-					&payer_account_id,
-					&payer,
-					community_id,
-					SpenderCharTraitId::<T>::get()?,
-				);
-				Self::increment_trait_score(
-					&payer_account_id,
 					&payer,
 					community_id,
 					AmbassadorCharTraitId::<T>::get()?,
 				);
-				Self::increment_trait_score(&payee_account_id, &payee, community_id, char_trait_id);
+				Self::increment_trait_score(&payee, community_id, char_trait_id);
 				CommunityMembership::<T>::insert(&payee, community_id, CommunityRole::Member);
 				true
 			},
 			(CommunityRole::Member, CommunityRole::None) if !is_community_closed => {
+				Self::increment_trait_score(&payer, community_id, SpenderCharTraitId::<T>::get()?);
 				Self::increment_trait_score(
-					&payer_account_id,
-					&payer,
-					community_id,
-					SpenderCharTraitId::<T>::get()?,
-				);
-				Self::increment_trait_score(
-					&payer_account_id,
 					&payer,
 					community_id,
 					AmbassadorCharTraitId::<T>::get()?,
 				);
-				Self::increment_trait_score(&payee_account_id, &payee, community_id, char_trait_id);
+				Self::increment_trait_score(&payee, community_id, char_trait_id);
 				CommunityMembership::<T>::insert(&payee, community_id, CommunityRole::Member);
 				true
 			},
@@ -549,56 +517,75 @@ impl<T: pallet::Config> Pallet<T> {
 		account_id: &T::AccountId,
 	) -> scale_info::prelude::vec::Vec<(CommunityId, CharTraitId, Score)> {
 		let no_community_id = NoCommunityId::<T>::get().unwrap();
-		T::IdentityProvider::identity_by_id(account_id)
-			.map(|identity_info| {
-				CommunityMembership::<T>::iter_prefix(&identity_info.number)
-					.map(|(community_id, _)| community_id)
-					.chain([no_community_id])
-					.flat_map(|community_id| {
-						TraitScores::<T>::iter_prefix((&identity_info.number, community_id))
-							.map(move |(char_trait_id, score)| (community_id, char_trait_id, score))
-					})
-					.collect()
+		CommunityMembership::<T>::iter_prefix(&account_id)
+			.map(|(community_id, _)| community_id)
+			.chain([no_community_id])
+			.flat_map(|community_id| {
+				TraitScores::<T>::iter_prefix((&account_id, community_id))
+					.map(move |(char_trait_id, score)| (community_id, char_trait_id, score))
 			})
-			.unwrap_or_default()
+			.collect()
 	}
 
 	pub fn community_membership_of(
 		account_id: &T::AccountId,
 	) -> scale_info::prelude::vec::Vec<(CommunityId, Score, bool)> {
-		T::IdentityProvider::identity_by_id(account_id)
-			.map(|identity_info| {
-				CommunityMembership::<T>::iter_prefix(&identity_info.number)
-					.map(|(community_id, role)| {
-						let score =
-							TraitScores::<T>::iter_prefix((&identity_info.number, community_id))
-								.map(|(_, score)| score)
-								.sum::<u32>();
-						let is_admin = role.is_admin();
+		CommunityMembership::<T>::iter_prefix(&account_id)
+			.map(|(community_id, role)| {
+				let score = TraitScores::<T>::iter_prefix((&account_id, community_id))
+					.map(|(_, score)| score)
+					.sum::<u32>();
+				let is_admin = role.is_admin();
 
-						(community_id, score, is_admin)
-					})
-					.collect()
+				(community_id, score, is_admin)
 			})
-			.unwrap_or_default()
+			.collect()
 	}
 }
 
 impl<T: Config> Hooks<T::AccountId, T::Balance, T::Username, T::PhoneNumber> for Pallet<T> {
 	fn on_new_user(
 		_verifier: T::AccountId,
-		who_account_id: T::AccountId,
+		account_id: T::AccountId,
 		_name: T::Username,
 		_phone_number: T::PhoneNumber,
 	) -> DispatchResult {
 		let no_community_id = NoCommunityId::<T>::get()?;
 		let signup_char_trait_id = SignupCharTraitId::<T>::get()?;
 
-		let who = T::IdentityProvider::identity_by_id(&who_account_id)
-			.ok_or(Error::<T>::NotFound)?
-			.number;
+		Self::increment_trait_score(&account_id, no_community_id, signup_char_trait_id);
 
-		Self::increment_trait_score(&who_account_id, &who, no_community_id, signup_char_trait_id);
+		Ok(())
+	}
+
+	fn on_update_user(
+		old_account_id: T::AccountId,
+		new_account_id: T::AccountId,
+	) -> DispatchResult {
+		// Migrate user community membership
+		// Drain first to do not get undefined behavior from storage while simultaneously drain and
+		// insert
+		let communities_membership: Vec<_> =
+			CommunityMembership::<T>::drain_prefix(&old_account_id).collect();
+		communities_membership.iter().for_each(|(community_id, community_role)| {
+			CommunityMembership::<T>::insert(&new_account_id, community_id, community_role);
+		});
+
+		// Migrate user trait score
+		let no_community_id = NoCommunityId::<T>::get()?;
+		communities_membership
+			.iter()
+			.map(|(community_id, _)| community_id)
+			.chain(Some(&no_community_id))
+			.for_each(|community_id| {
+				// Drain first to do not get undefined behavior from storage while simultaneously
+				// drain and insert
+				let traits_score: Vec<_> =
+					TraitScores::<T>::drain_prefix((&old_account_id, community_id)).collect();
+				traits_score.iter().for_each(|(char_trait_id, score)| {
+					TraitScores::<T>::insert((&new_account_id, community_id, char_trait_id), score);
+				})
+			});
 
 		Ok(())
 	}

@@ -1,7 +1,7 @@
 use karmachain_node_runtime::{
 	opaque::SessionKeys, AccountId, AppreciationConfig, BabeConfig, BalancesConfig, GenesisConfig,
-	GrandpaConfig, IdentityConfig, PhoneNumber, RewardConfig, SessionConfig, Signature,
-	StakingConfig, SudoConfig, SystemConfig, KCOINS, WASM_BINARY,
+	GrandpaConfig, IdentityConfig, RewardConfig, SessionConfig, Signature, StakingConfig,
+	SudoConfig, SystemConfig, KCOINS, WASM_BINARY,
 };
 use pallet_appreciation::*;
 use pallet_staking::{Forcing, StakerStatus};
@@ -70,8 +70,8 @@ pub fn development_config() -> Result<ChainSpec, String> {
 				],
 				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
 				vec![
-					(vec![0].try_into().unwrap(), 1, CommunityRole::Admin),
-					(vec![1].try_into().unwrap(), 1, CommunityRole::Member),
+					(get_account_id_from_seed::<sr25519::Public>("Alice"), 1, CommunityRole::Admin),
+					(get_account_id_from_seed::<sr25519::Public>("Bob"), 1, CommunityRole::Member),
 				],
 				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
 				true,
@@ -145,8 +145,8 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 				],
 				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
 				vec![
-					(vec![0].try_into().unwrap(), 1, CommunityRole::Admin),
-					(vec![1].try_into().unwrap(), 1, CommunityRole::Member),
+					(get_account_id_from_seed::<sr25519::Public>("Alice"), 1, CommunityRole::Admin),
+					(get_account_id_from_seed::<sr25519::Public>("Bob"), 1, CommunityRole::Member),
 				],
 				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
 				true,
@@ -182,7 +182,7 @@ fn testnet_genesis(
 	root_key: AccountId,
 	endowed_accounts: Vec<AccountId>,
 	phone_verifiers: Vec<AccountId>,
-	community_membership: Vec<(PhoneNumber, CommunityId, CommunityRole)>,
+	community_membership: Vec<(AccountId, CommunityId, CommunityRole)>,
 	offchain_accounts: Vec<AccountId>,
 	_enable_println: bool,
 ) -> GenesisConfig {

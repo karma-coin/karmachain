@@ -419,9 +419,6 @@ impl<T: Config> Pallet<T> {
 			IdentityStore { name: old_identity_store.name, phone_number },
 		);
 
-		// No need to transfer trait score
-		// because of it is indexed by `PhoneNumber`
-
 		// Transfer balance
 		let amount = T::Currency::free_balance(&old_account_id);
 		T::Currency::transfer(
@@ -431,6 +428,8 @@ impl<T: Config> Pallet<T> {
 			ExistenceRequirement::AllowDeath,
 		)?;
 
+		// Appreciation pallet will migrate traits score and communities membership
+		// Transaction indexing pallet will migrate transactions
 		T::Hooks::on_update_user(old_account_id.clone(), new_account_id.clone())?;
 
 		Self::deposit_event(Event::<T>::AccountMigrated {
