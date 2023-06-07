@@ -150,6 +150,9 @@ pub mod pallet {
 		AccountIdMismatch,
 		/// Signature do not match to passed parameters
 		InvalidSignature,
+		/// Provided `Username` or `PhoneNumber` to update user data must be different from
+		/// existed one. Or missed parameters for update
+		InvalidArguments,
 	}
 
 	#[pallet::event]
@@ -162,18 +165,26 @@ pub mod pallet {
 			username: T::Username,
 			phone_number: T::PhoneNumber,
 		},
-		/// User updated `AccountId`
-		UpdateAccountId {
+		/// User change its `AccountId`
+		AccountMigrated {
 			phone_verifier: T::AccountId,
 			old_account_id: T::AccountId,
 			new_account_id: T::AccountId,
+		},
+		/// User change its `Username` and/or `PhoneNumber`
+		AccountUpdated {
+			account_id: T::AccountId,
+			username: T::Username,
+			new_username: Option<T::Username>,
+			phone_number: T::PhoneNumber,
+			new_phone_number: Option<T::PhoneNumber>,
 		},
 	}
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		#[pallet::call_index(0)]
-		#[pallet::weight(10_000 + T::DbWeight::get().reads_writes(3,1).ref_time())]
+		#[pallet::weight(10_000 + T::DbWeight::get().reads_writes(3, 1).ref_time())]
 		pub fn new_user(
 			origin: OriginFor<T>,
 			// verifier_public_key: T::PublicKey,
@@ -213,6 +224,60 @@ pub mod pallet {
 				VerificationResult::AccountIdExists => Err(Error::<T>::AlreadyRegistered.into()),
 				VerificationResult::UsernameExists => Err(Error::<T>::UserNameTaken.into()),
 			}
+		}
+
+		#[pallet::call_index(1)]
+		#[pallet::weight(10_000 + T::DbWeight::get().reads_writes(3, 1).ref_time())]
+		pub fn update_user(
+			origin: OriginFor<T>,
+			username: Option<T::Username>,
+			phone_number: Option<T::PhoneNumber>,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+			ensure!(username.is_some() || phone_number.is_some(), Error::<T>::InvalidArguments);
+			ensure!(IdentityOf::<T>::contains_key(&who), Error::<T>::NotFound);
+			// Safety: because of check above unwrap do not panics
+			let mut identity = IdentityOf::<T>::get(&who).unwrap();
+
+			if let Some(username) = username.clone() {
+				ensure!(identity.name != username, Error::<T>::InvalidArguments);
+				// Check username for uniqueness
+				ensure!(!UsernameFor::<T>::contains_key(&username), Error::<T>::UserNameTaken);
+				// Remove old `Username` <-> `AccountId` relation
+				UsernameFor::<T>::remove(identity.name);
+				UsernameFor::<T>::insert(&username, &who);
+				// Set new username
+				identity.name = username;
+			}
+
+			if let Some(phone_number) = phone_number.clone() {
+				ensure!(identity.phone_number != phone_number, Error::<T>::InvalidArguments);
+				// Check phone number for uniqueness
+				ensure!(
+					!PhoneNumberFor::<T>::contains_key(&phone_number),
+					Error::<T>::PhoneNumberTaken
+				);
+				// Remove old `PhoneNumber` <-> `AccountId` relation
+				PhoneNumberFor::<T>::remove(identity.phone_number);
+				PhoneNumberFor::<T>::insert(&phone_number, &who);
+				// Set new phone number
+				identity.phone_number = phone_number;
+			}
+
+			// Save identity changes
+			IdentityOf::<T>::insert(&who, &identity);
+
+			// TODO: call hook
+
+			Self::deposit_event(Event::<T>::AccountUpdated {
+				account_id: who,
+				username: identity.name,
+				new_username: username,
+				phone_number: identity.phone_number,
+				new_phone_number: phone_number,
+			});
+
+			Ok(())
 		}
 	}
 }
@@ -368,7 +433,7 @@ impl<T: Config> Pallet<T> {
 
 		T::Hooks::on_update_user(old_account_id.clone(), new_account_id.clone())?;
 
-		Self::deposit_event(Event::<T>::UpdateAccountId {
+		Self::deposit_event(Event::<T>::AccountMigrated {
 			phone_verifier,
 			old_account_id,
 			new_account_id,
