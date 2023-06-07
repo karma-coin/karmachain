@@ -19,13 +19,18 @@ pub type AccountIdentityTag = AccountIdentity<
 #[derive(Encode, Decode, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(skip_type_params(T))]
 pub struct CheckAccount<T> {
-	timestamp: u64,
+	// TODO: commenting for now to do not break integration with polkadot-ui & polkadot-api
+	// more info here: https://github.com/polkadot-js/api/issues/5662
+	// timestamp: u64,
 	_marker: PhantomData<T>,
 }
 
 impl<T> CheckAccount<T> {
 	pub fn new() -> Self {
-		Self { timestamp: 0, _marker: Default::default() }
+		Self {
+			// timestamp: 0,
+			_marker: Default::default(),
+		}
 	}
 }
 
@@ -110,7 +115,7 @@ where
 		_info: &DispatchInfoOf<Self::Call>,
 		_len: usize,
 	) -> Result<Self::Pre, TransactionValidityError> {
-		let now = self.timestamp;
+		let now = pallet_timestamp::Pallet::<T>::now();
 
 		// In case this is `appreciation` transaction
 		if let Some(to) = call.map_appreciation() {

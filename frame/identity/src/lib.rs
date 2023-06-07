@@ -180,8 +180,8 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().reads_writes(3,1).ref_time())]
 		pub fn new_user(
 			origin: OriginFor<T>,
-			// verifier_public_key: T::PublicKey,
-			// verifier_signature: T::Signature,
+			verifier_public_key: T::PublicKey,
+			verifier_signature: T::Signature,
 			account_id: T::AccountId,
 			username: T::Username,
 			phone_number: T::PhoneNumber,
