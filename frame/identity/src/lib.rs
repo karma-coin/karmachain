@@ -325,17 +325,17 @@ impl<T: Config> Pallet<T> {
 	) -> VerificationResult {
 		// If such phone number exists migrate those account
 		// balance, trait score, etc to this new account
-		if PhoneNumberFor::<T>::contains_key(&phone_number) {
+		if PhoneNumberFor::<T>::contains_key(phone_number) {
 			return VerificationResult::Migration
 		}
 
 		// Such `AccountId` registered by other account
-		if IdentityOf::<T>::contains_key(&account_id) {
+		if IdentityOf::<T>::contains_key(account_id) {
 			return VerificationResult::AccountIdExists
 		}
 
 		// Such `Username` registered by other account
-		if UsernameFor::<T>::contains_key(&username) {
+		if UsernameFor::<T>::contains_key(username) {
 			return VerificationResult::UsernameExists
 		}
 

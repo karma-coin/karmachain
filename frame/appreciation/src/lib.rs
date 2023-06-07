@@ -450,7 +450,7 @@ impl<T: pallet::Config> Pallet<T> {
 		if referral {
 			// Give payer karma points for helping to grow the network
 			Self::increment_trait_score(
-				&payer,
+				payer,
 				NoCommunityId::<T>::get()?,
 				AmbassadorCharTraitId::<T>::get()?,
 			);
@@ -458,8 +458,8 @@ impl<T: pallet::Config> Pallet<T> {
 
 		// Standard appreciation w/o a community context
 		if NoCommunityId::<T>::get()? == community_id {
-			Self::increment_trait_score(&payer, community_id, SpenderCharTraitId::<T>::get()?);
-			Self::increment_trait_score(&payee, community_id, char_trait_id);
+			Self::increment_trait_score(payer, community_id, SpenderCharTraitId::<T>::get()?);
+			Self::increment_trait_score(payee, community_id, char_trait_id);
 			return Ok(false)
 		}
 
@@ -473,37 +473,37 @@ impl<T: pallet::Config> Pallet<T> {
 		let is_community_closed = community.closed;
 
 		let payer_membership =
-			CommunityMembership::<T>::get(&payer, community_id).unwrap_or_default();
+			CommunityMembership::<T>::get(payer, community_id).unwrap_or_default();
 		let payee_membership =
-			CommunityMembership::<T>::get(&payee, community_id).unwrap_or_default();
+			CommunityMembership::<T>::get(payee, community_id).unwrap_or_default();
 
 		let new_member = match (payer_membership, payee_membership) {
 			(CommunityRole::None, _) => return Err(Error::<T>::NotMember.into()),
 			(_, CommunityRole::Admin) | (_, CommunityRole::Member) => {
-				Self::increment_trait_score(&payer, community_id, SpenderCharTraitId::<T>::get()?);
-				Self::increment_trait_score(&payee, community_id, char_trait_id);
+				Self::increment_trait_score(payer, community_id, SpenderCharTraitId::<T>::get()?);
+				Self::increment_trait_score(payee, community_id, char_trait_id);
 				false
 			},
 			(CommunityRole::Admin, CommunityRole::None) => {
-				Self::increment_trait_score(&payer, community_id, SpenderCharTraitId::<T>::get()?);
+				Self::increment_trait_score(payer, community_id, SpenderCharTraitId::<T>::get()?);
 				Self::increment_trait_score(
-					&payer,
+					payer,
 					community_id,
 					AmbassadorCharTraitId::<T>::get()?,
 				);
-				Self::increment_trait_score(&payee, community_id, char_trait_id);
-				CommunityMembership::<T>::insert(&payee, community_id, CommunityRole::Member);
+				Self::increment_trait_score(payee, community_id, char_trait_id);
+				CommunityMembership::<T>::insert(payee, community_id, CommunityRole::Member);
 				true
 			},
 			(CommunityRole::Member, CommunityRole::None) if !is_community_closed => {
-				Self::increment_trait_score(&payer, community_id, SpenderCharTraitId::<T>::get()?);
+				Self::increment_trait_score(payer, community_id, SpenderCharTraitId::<T>::get()?);
 				Self::increment_trait_score(
-					&payer,
+					payer,
 					community_id,
 					AmbassadorCharTraitId::<T>::get()?,
 				);
-				Self::increment_trait_score(&payee, community_id, char_trait_id);
-				CommunityMembership::<T>::insert(&payee, community_id, CommunityRole::Member);
+				Self::increment_trait_score(payee, community_id, char_trait_id);
+				CommunityMembership::<T>::insert(payee, community_id, CommunityRole::Member);
 				true
 			},
 			(CommunityRole::Member, CommunityRole::None) =>
@@ -517,7 +517,7 @@ impl<T: pallet::Config> Pallet<T> {
 		account_id: &T::AccountId,
 	) -> scale_info::prelude::vec::Vec<(CommunityId, CharTraitId, Score)> {
 		let no_community_id = NoCommunityId::<T>::get().unwrap();
-		CommunityMembership::<T>::iter_prefix(&account_id)
+		CommunityMembership::<T>::iter_prefix(account_id)
 			.map(|(community_id, _)| community_id)
 			.chain([no_community_id])
 			.flat_map(|community_id| {
@@ -530,7 +530,7 @@ impl<T: pallet::Config> Pallet<T> {
 	pub fn community_membership_of(
 		account_id: &T::AccountId,
 	) -> scale_info::prelude::vec::Vec<(CommunityId, Score, bool)> {
-		CommunityMembership::<T>::iter_prefix(&account_id)
+		CommunityMembership::<T>::iter_prefix(account_id)
 			.map(|(community_id, role)| {
 				let score = TraitScores::<T>::iter_prefix((&account_id, community_id))
 					.map(|(_, score)| score)

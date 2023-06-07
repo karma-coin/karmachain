@@ -177,8 +177,7 @@ pub fn new_full(
 			Ok(k) => keystore_container.set_remote_keystore(k),
 			Err(e) =>
 				return Err(ServiceError::Other(format!(
-					"Error hooking up remote keystore for {}: {}",
-					url, e
+					"Error hooking up remote keystore for {url}: {e}"
 				))),
 		};
 	}

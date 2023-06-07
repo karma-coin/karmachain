@@ -46,7 +46,7 @@ where
 			CallError::Custom(ErrorObject::owned(
 				0,
 				"Unable to query user info.",
-				Some(format!("{:?}", e)),
+				Some(format!("{e:?}")),
 			))
 		})?)
 	}
@@ -63,7 +63,7 @@ where
 			CallError::Custom(ErrorObject::owned(
 				0,
 				"Name length out of bounds.",
-				Some(format!("{:?}", e)),
+				Some(format!("{e:?}")),
 			))
 		})?;
 
@@ -71,7 +71,7 @@ where
 			CallError::Custom(ErrorObject::owned(
 				0,
 				"Unable to query user info.",
-				Some(format!("{:?}", e)),
+				Some(format!("{e:?}")),
 			))
 		})?)
 	}
@@ -88,7 +88,7 @@ where
 			CallError::Custom(ErrorObject::owned(
 				0,
 				"Name length out of bounds.",
-				Some(format!("{:?}", e)),
+				Some(format!("{e:?}")),
 			))
 		})?;
 
@@ -96,7 +96,7 @@ where
 			CallError::Custom(ErrorObject::owned(
 				0,
 				"Unable to query user info.",
-				Some(format!("{:?}", e)),
+				Some(format!("{e:?}")),
 			))
 		})?)
 	}
@@ -113,7 +113,7 @@ where
 			CallError::Custom(ErrorObject::owned(
 				0,
 				"Unable to query community members.",
-				Some(format!("{:?}", e)),
+				Some(format!("{e:?}")),
 			))
 		})?)
 	}
@@ -131,7 +131,7 @@ where
 			CallError::Custom(ErrorObject::owned(
 				0,
 				"Unable to query community members.",
-				Some(format!("{:?}", e)),
+				Some(format!("{e:?}")),
 			))
 		})?)
 	}

@@ -520,7 +520,7 @@ impl_runtime_apis! {
 					// If `community_id` provided filter by it
 					community_id
 						.map(|community_id|
-							pallet_appreciation::CommunityMembership::<Runtime>::get(&account_id, community_id)
+							pallet_appreciation::CommunityMembership::<Runtime>::get(account_id, community_id)
 								.is_some()
 						)
 						.unwrap_or(true)
@@ -578,8 +578,8 @@ impl_runtime_apis! {
 			let to = extrinsic.function.get_recipient().and_then(|account_identity| {
 				match account_identity {
 					AccountIdentity::AccountId(account_id) => Self::get_user_info_by_account(account_id),
-					AccountIdentity::Name(name) => Self::get_user_info_by_name(name.into()),
-					AccountIdentity::PhoneNumber(phone_number) => Self::get_user_info_by_number(phone_number.into()),
+					AccountIdentity::Name(name) => Self::get_user_info_by_name(name),
+					AccountIdentity::PhoneNumber(phone_number) => Self::get_user_info_by_number(phone_number),
 				}
 			});
 

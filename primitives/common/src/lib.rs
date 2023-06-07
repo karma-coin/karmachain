@@ -138,7 +138,7 @@ impl<MaxLength: Get<u32>> PartialEq<String> for BoundedString<MaxLength> {
 
 impl<MaxLength: Get<u32>> PartialOrd<String> for BoundedString<MaxLength> {
 	fn partial_cmp(&self, other: &String) -> Option<sp_std::cmp::Ordering> {
-		String::try_from(self.clone()).ok().map(|v| v.partial_cmp(other)).flatten()
+		String::try_from(self.clone()).ok().and_then(|v| v.partial_cmp(other))
 	}
 }
 
@@ -150,7 +150,7 @@ impl<MaxLength: Get<u32>> PartialEq<BoundedString<MaxLength>> for String {
 
 impl<MaxLength: Get<u32>> PartialOrd<BoundedString<MaxLength>> for String {
 	fn partial_cmp(&self, other: &BoundedString<MaxLength>) -> Option<sp_std::cmp::Ordering> {
-		String::try_from(other.clone()).ok().map(|v| v.partial_cmp(self)).flatten()
+		String::try_from(other.clone()).ok().and_then(|v| v.partial_cmp(self))
 	}
 }
 

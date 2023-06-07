@@ -10,7 +10,7 @@ use crate::{
 /// `get_block_info`, `get_blockchain_data`, `get_genesis_data`
 mod chain {
 	use karmachain_node_runtime::{AccountId, Hash};
-	use reqwest;
+	
 	use serde_json::{json, Value};
 	use sp_core::crypto::Ss58Codec;
 	use sp_rpc::{Block, BlockchainStats, GenesisData};
@@ -88,7 +88,7 @@ mod chain {
 			serde_json::from_value(response.get("result").unwrap().clone()).unwrap();
 		let alice =
 			AccountId::from_string("5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY").unwrap();
-		assert!(response.verifiers.iter().find(|value| value.account_id == alice).is_some());
+		assert!(response.verifiers.iter().any(|value| value.account_id == alice));
 
 		Ok(())
 	}

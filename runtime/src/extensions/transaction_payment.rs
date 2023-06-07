@@ -53,7 +53,7 @@ impl SignedExtension for ChargeTransactionPaymentWithSubsidies {
 		len: usize,
 	) -> TransactionValidity {
 		let fee = TransactionPayment::compute_fee(len as u32, info, self.0.tip());
-		if !Reward::subsidies_tx_fee(who, fee.into()) {
+		if !Reward::subsidies_tx_fee(who, fee) {
 			self.0.validate(who, call, info, len)
 		} else {
 			Ok(Default::default())
@@ -68,7 +68,7 @@ impl SignedExtension for ChargeTransactionPaymentWithSubsidies {
 		len: usize,
 	) -> Result<Self::Pre, TransactionValidityError> {
 		let fee = TransactionPayment::compute_fee(len as u32, info, self.0.tip());
-		if !Reward::subsidies_tx_fee(who, fee.into()) {
+		if !Reward::subsidies_tx_fee(who, fee) {
 			self.0.pre_dispatch(who, call, info, len).map(Some)
 		} else {
 			Ok(None)
