@@ -64,7 +64,7 @@ pub trait TestUtils {
 	fn with_community_member(
 		&mut self,
 		community_id: CommunityId,
-		phone_number: &str,
+		account_id: &str,
 		role: CommunityRole,
 	) -> &mut Self;
 
@@ -93,16 +93,16 @@ impl TestUtils for sp_io::TestExternalities {
 			let phone_number =
 				BoundedString::try_from(phone_number).expect("Invalid phone number length");
 
-			let (public_key, signature) = get_verification_evidence(
-				account_id.clone(),
-				username.clone(),
-				phone_number.clone(),
-			);
+			// let (public_key, signature) = get_verification_evidence(
+			// 	account_id.clone(),
+			// 	username.clone(),
+			// 	phone_number.clone(),
+			// );
 
 			assert_ok!(Identity::new_user(
 				RuntimeOrigin::signed(account_id.clone()),
-				public_key,
-				signature,
+				// public_key,
+				// signature,
 				account_id,
 				username,
 				phone_number,
@@ -150,17 +150,16 @@ impl TestUtils for sp_io::TestExternalities {
 	fn with_community_member(
 		&mut self,
 		community_id: CommunityId,
-		phone_number: &str,
+		account_id: &str,
 		role: CommunityRole,
 	) -> &mut Self {
 		self.execute_with(|| {
 			// TODO: check community exists
 
-			let phone_number: BoundedString<PhoneNumberLimit> =
-				phone_number.try_into().expect("Invalid phone number length");
+			let account_id = get_account_id_from_seed::<sr25519::Public>(account_id);
 
 			pallet_appreciation::CommunityMembership::<Runtime>::insert(
-				phone_number,
+				account_id,
 				community_id,
 				role,
 			);

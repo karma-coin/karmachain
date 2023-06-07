@@ -126,9 +126,9 @@ mod community {
 		new_test_ext()
 			.with_community(COMMUNITY_ID, "test", true)
 			.with_user("Bob", "1111")
-			.with_community_member(COMMUNITY_ID, "1111", CommunityRole::Member)
+			.with_community_member(COMMUNITY_ID, "Bob", CommunityRole::Member)
 			.with_user("Charlie", "2222")
-			.with_community_member(COMMUNITY_ID, "2222", CommunityRole::Member)
+			.with_community_member(COMMUNITY_ID, "Charlie", CommunityRole::Member)
 			.execute_with(|| {
 				let users = Runtime::get_all_users(COMMUNITY_ID);
 				assert_eq!(users.len(), 2);
@@ -239,7 +239,7 @@ mod transactions {
 			.with_user("Alice", "1111")
 			.with_user("Bob", "2222")
 			.with_community(COMMUNITY_ID, "test", false)
-			.with_community_member(COMMUNITY_ID, "2222", CommunityRole::Admin)
+			.with_community_member(COMMUNITY_ID, "Bob", CommunityRole::Admin)
 			.with_set_admin(COMMUNITY_ID, "Bob", "Alice")
 			.execute_with(|| {
 				let bob_account_id = get_account_id_from_seed::<sr25519::Public>("Bob");
