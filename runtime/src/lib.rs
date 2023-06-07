@@ -66,6 +66,7 @@ pub use sp_runtime::{Perbill, Permill};
 pub mod api;
 pub mod consts;
 pub mod extensions;
+pub mod offchain;
 pub mod opaque;
 pub mod pallets;
 pub mod types;

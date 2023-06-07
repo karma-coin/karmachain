@@ -327,7 +327,7 @@ impl_runtime_apis! {
 
 			let karma_reward_amount = pallet_reward::KarmaRewardAmount::<Runtime>::get();
 			let karma_reward_alloc = pallet_reward::MaxKarmaRewardAlloc::<Runtime>::get();
-			let karma_reward_top_n_users = pallet_reward::KarmaRewardTopNUsers::<Runtime>::get().into();
+			let karma_reward_top_n_users = pallet_reward::KarmaRewardUsersParticipates::<Runtime>::get().into();
 
 			// let treasury_premint_amount = 0; // TODO:
 			// let treasury_account_id = todo!(); // TODO:

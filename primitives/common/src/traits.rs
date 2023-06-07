@@ -1,4 +1,7 @@
-use crate::identity::{AccountIdentity, IdentityInfo};
+use crate::{
+	identity::{AccountIdentity, IdentityInfo},
+	types::Score,
+};
 use codec::{Decode, Encode, MaxEncodedLen};
 use sp_std::fmt::Debug;
 
@@ -31,4 +34,8 @@ where
 	fn identity_by_number(
 		number: &PhoneNumber,
 	) -> Option<IdentityInfo<AccountId, Username, PhoneNumber>>;
+}
+
+pub trait ScoreProvider<AccountId> {
+	fn score_of(account_id: &AccountId) -> Score;
 }

@@ -10,8 +10,6 @@ use sp_common::{
 	BoundedString,
 };
 
-pub type Score = u32;
-
 pub type GenesisCommunity = (
 	CommunityId,
 	String,
