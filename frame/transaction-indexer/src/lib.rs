@@ -101,12 +101,18 @@ impl<T: Config> sp_common::hooks::Hooks<T::AccountId, T::Balance, T::Username, T
 
 	fn on_update_user(
 		old_account_id: T::AccountId,
-		new_account_id: T::AccountId,
+		new_account_id: Option<T::AccountId>,
+		_username: T::Username,
+		_new_username: Option<T::Username>,
+		_phone_number: T::PhoneNumber,
+		_new_phone_number: Option<T::PhoneNumber>,
 	) -> DispatchResult {
 		UpdateUserTransactionsCount::<T>::mutate(|value| *value += 1);
 
 		Self::index_transaction(old_account_id)?;
-		Self::index_transaction(new_account_id)?;
+		if let Some(new_account_id) = new_account_id {
+			Self::index_transaction(new_account_id)?;
+		}
 
 		Ok(())
 	}

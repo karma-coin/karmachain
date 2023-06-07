@@ -408,15 +408,15 @@ impl<T: Config> Pallet<T> {
 		// Remove old account date
 		// Save unwrap because of check above
 		let old_account_id = PhoneNumberFor::<T>::take(&phone_number).unwrap();
-		let old_identity_store = IdentityOf::<T>::take(&old_account_id).unwrap();
-		UsernameFor::<T>::remove(&old_identity_store.name);
+		let identity = IdentityOf::<T>::take(&old_account_id).unwrap();
+		UsernameFor::<T>::remove(&identity.name);
 
 		// Save old nickname and new `AccountId`
-		UsernameFor::<T>::insert(&old_identity_store.name, new_account_id.clone());
+		UsernameFor::<T>::insert(&identity.name, new_account_id.clone());
 		PhoneNumberFor::<T>::insert(&phone_number, new_account_id.clone());
 		IdentityOf::<T>::insert(
 			&new_account_id,
-			IdentityStore { name: old_identity_store.name, phone_number },
+			IdentityStore { name: identity.name.clone(), phone_number },
 		);
 
 		// Transfer balance
@@ -430,7 +430,14 @@ impl<T: Config> Pallet<T> {
 
 		// Appreciation pallet will migrate traits score and communities membership
 		// Transaction indexing pallet will migrate transactions
-		T::Hooks::on_update_user(old_account_id.clone(), new_account_id.clone())?;
+		T::Hooks::on_update_user(
+			old_account_id.clone(),
+			Some(new_account_id.clone()),
+			identity.name,
+			None,
+			identity.phone_number,
+			None,
+		)?;
 
 		Self::deposit_event(Event::<T>::AccountMigrated {
 			phone_verifier,

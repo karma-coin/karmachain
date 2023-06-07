@@ -560,32 +560,41 @@ impl<T: Config> Hooks<T::AccountId, T::Balance, T::Username, T::PhoneNumber> for
 
 	fn on_update_user(
 		old_account_id: T::AccountId,
-		new_account_id: T::AccountId,
+		new_account_id: Option<T::AccountId>,
+		_username: T::Username,
+		_new_username: Option<T::Username>,
+		_phone_number: T::PhoneNumber,
+		_new_phone_number: Option<T::PhoneNumber>,
 	) -> DispatchResult {
-		// Migrate user community membership
-		// Drain first to do not get undefined behavior from storage while simultaneously drain and
-		// insert
-		let communities_membership: Vec<_> =
-			CommunityMembership::<T>::drain_prefix(&old_account_id).collect();
-		communities_membership.iter().for_each(|(community_id, community_role)| {
-			CommunityMembership::<T>::insert(&new_account_id, community_id, community_role);
-		});
-
-		// Migrate user trait score
-		let no_community_id = NoCommunityId::<T>::get()?;
-		communities_membership
-			.iter()
-			.map(|(community_id, _)| community_id)
-			.chain(Some(&no_community_id))
-			.for_each(|community_id| {
-				// Drain first to do not get undefined behavior from storage while simultaneously
-				// drain and insert
-				let traits_score: Vec<_> =
-					TraitScores::<T>::drain_prefix((&old_account_id, community_id)).collect();
-				traits_score.iter().for_each(|(char_trait_id, score)| {
-					TraitScores::<T>::insert((&new_account_id, community_id, char_trait_id), score);
-				})
+		if let Some(new_account_id) = new_account_id {
+			// Migrate user community membership
+			// Drain first to do not get undefined behavior from storage while simultaneously drain
+			// and insert
+			let communities_membership: Vec<_> =
+				CommunityMembership::<T>::drain_prefix(&old_account_id).collect();
+			communities_membership.iter().for_each(|(community_id, community_role)| {
+				CommunityMembership::<T>::insert(&new_account_id, community_id, community_role);
 			});
+
+			// Migrate user trait score
+			let no_community_id = NoCommunityId::<T>::get()?;
+			communities_membership
+				.iter()
+				.map(|(community_id, _)| community_id)
+				.chain(Some(&no_community_id))
+				.for_each(|community_id| {
+					// Drain first to do not get undefined behavior from storage while
+					// simultaneously drain and insert
+					let traits_score: Vec<_> =
+						TraitScores::<T>::drain_prefix((&old_account_id, community_id)).collect();
+					traits_score.iter().for_each(|(char_trait_id, score)| {
+						TraitScores::<T>::insert(
+							(&new_account_id, community_id, char_trait_id),
+							score,
+						);
+					})
+				});
+		}
 
 		Ok(())
 	}
