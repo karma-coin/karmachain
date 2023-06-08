@@ -87,7 +87,7 @@ pub fn development_config() -> Result<ChainSpec, String> {
 		// Properties
 		Some(
 			serde_json::json!({
-			  "tokenDecimals": 0,
+			  "tokenDecimals": 6,
 			  "tokenSymbol": "KCent",
 			})
 			.as_object()
@@ -162,7 +162,7 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 		// Properties
 		Some(
 			serde_json::json!({
-			  "tokenDecimals": 0,
+			  "tokenDecimals": 6,
 			  "tokenSymbol": "KCent",
 			})
 			.as_object()
