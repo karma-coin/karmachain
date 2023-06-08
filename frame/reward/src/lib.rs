@@ -521,6 +521,20 @@ impl<T: Config> KarmaHooks<T::AccountId, T::Balance, T::Username, T::PhoneNumber
 		Ok(())
 	}
 
+	fn on_referral(who: T::AccountId, _whom: T::AccountId) -> DispatchResult {
+		let total_allocated = ReferralRewardTotalAllocated::<T>::get();
+
+		let reward = if total_allocated < ReferralRewardPhase1Alloc::<T>::get() {
+			ReferralRewardPhase1Amount::<T>::get()
+		} else {
+			ReferralRewardPhase2Amount::<T>::get()
+		};
+
+		Self::issue_referral_reward(&who, reward)?;
+
+		Ok(())
+	}
+
 	fn on_update_user(
 		old_account_id: T::AccountId,
 		new_account_id: Option<T::AccountId>,

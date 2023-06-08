@@ -121,7 +121,7 @@ pub fn create_benchmark_extrinsic(
 		frame_system::CheckNonce::<runtime::Runtime>::from(nonce),
 		frame_system::CheckWeight::<runtime::Runtime>::new(),
 		extensions::transaction_payment::ChargeTransactionPaymentWithSubsidies::from(0),
-		extensions::check_account::CheckAccount::default(),
+		extensions::check_account::CheckAccount::<runtime::Runtime>::new(),
 	);
 
 	let raw_payload = runtime::SignedPayload::from_raw(
