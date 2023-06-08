@@ -37,7 +37,7 @@ impl serde::Serialize for RuntimeEvent {
 		S: serde::Serializer,
 	{
 		// Serialize the `RuntimeEvent` type as a string
-		serializer.serialize_str(&format!("{:?}", self))
+		serializer.serialize_str(&format!("{self:?}"))
 	}
 }
 

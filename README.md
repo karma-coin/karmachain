@@ -106,6 +106,14 @@ curl --location 'http://localhost:9933/' \
 }'
 ```
 
+### Run node for tests
+
+Running node for tests purpose requires both verifier and offchain features enabled:
+
+```sh
+cargo run --release -- --dev --verifier --bypass-token="dummy" --auth-dst="https://localhost:8080" --offchain-worker always
+```
+
 ### Build
 
 The `cargo run` command will perform an initial build. Use the following command to build the node

@@ -2,10 +2,7 @@
 
 use frame_support::dispatch::DispatchResult;
 pub use pallet::*;
-use sp_common::{
-	traits::IdentityProvider,
-	types::{CharTraitId, CommunityId},
-};
+use sp_common::types::{CharTraitId, CommunityId};
 use sp_runtime::traits::{BlockNumberProvider, Hash};
 
 #[frame_support::pallet]
@@ -38,7 +35,7 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn accounts_tx)]
 	pub type AccountTransactions<T: Config> =
-		StorageMap<_, Blake2_128Concat, T::PhoneNumber, Vec<(T::BlockNumber, u32)>>;
+		StorageMap<_, Blake2_128Concat, T::AccountId, Vec<(T::BlockNumber, u32)>>;
 
 	#[pallet::storage]
 	pub type TransactionsCount<T: Config> = StorageValue<_, u64, ValueQuery>;
@@ -83,12 +80,8 @@ impl<T: Config> Pallet<T> {
 		let extrinsic_data = <frame_system::Pallet<T>>::extrinsic_data(extrinsic_index);
 		let hash = T::Hashing::hash(&extrinsic_data);
 
-		let who = T::IdentityProvider::identity_by_id(&account_id)
-			.ok_or(Error::<T>::NotFound)?
-			.number;
-
 		TxHashes::<T>::insert(hash, (block_number, extrinsic_index));
-		AccountTransactions::<T>::append(who, (block_number, extrinsic_index));
+		AccountTransactions::<T>::append(account_id, (block_number, extrinsic_index));
 
 		Ok(())
 	}
@@ -107,12 +100,19 @@ impl<T: Config> sp_common::hooks::Hooks<T::AccountId, T::Balance, T::Username, T
 	}
 
 	fn on_update_user(
-		_old_account_id: T::AccountId,
-		new_account_id: T::AccountId,
+		old_account_id: T::AccountId,
+		new_account_id: Option<T::AccountId>,
+		_username: T::Username,
+		_new_username: Option<T::Username>,
+		_phone_number: T::PhoneNumber,
+		_new_phone_number: Option<T::PhoneNumber>,
 	) -> DispatchResult {
 		UpdateUserTransactionsCount::<T>::mutate(|value| *value += 1);
 
-		Self::index_transaction(new_account_id)?;
+		Self::index_transaction(old_account_id)?;
+		if let Some(new_account_id) = new_account_id {
+			Self::index_transaction(new_account_id)?;
+		}
 
 		Ok(())
 	}

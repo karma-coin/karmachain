@@ -16,21 +16,21 @@ fn new_user_happy_flow() {
 		let username: Username = "Bob".try_into().unwrap();
 		let phone_number: PhoneNumber = "+0123456789".try_into().unwrap();
 
-		let (public_key, signature) =
-			get_verification_evidence(account_id.clone(), username.clone(), phone_number.clone());
+		// let (public_key, signature) =
+		// 	get_verification_evidence(account_id.clone(), username.clone(), phone_number.clone());
 
 		assert_ok!(Identity::new_user(
 			RuntimeOrigin::signed(account_id.clone()),
-			public_key,
-			signature,
+			// public_key,
+			// signature,
 			account_id.clone(),
 			username.clone(),
 			phone_number.clone(),
 		));
 
 		let user_info = Runtime::get_user_info_by_account(account_id).expect("Missing user info");
-		assert_eq!(user_info.user_name, username.clone());
-		assert_eq!(user_info.mobile_number, phone_number.clone());
+		assert_eq!(user_info.user_name, username);
+		assert_eq!(user_info.mobile_number, phone_number);
 		assert_eq!(user_info.nonce, 0);
 		// TODO:
 		// assert_eq!(user_info.balance, SIGN_UP_REWARD, "expected signup rewards balance");
@@ -46,9 +46,9 @@ fn new_user_happy_flow() {
 		);
 
 		let user_info =
-			Runtime::get_user_info_by_name(username.clone().into()).expect("Missing user info");
-		assert_eq!(user_info.user_name, username.clone());
-		assert_eq!(user_info.mobile_number, phone_number.clone());
+			Runtime::get_user_info_by_name(username.clone()).expect("Missing user info");
+		assert_eq!(user_info.user_name, username);
+		assert_eq!(user_info.mobile_number, phone_number);
 		assert_eq!(user_info.nonce, 0);
 		// TODO:
 		// assert_eq!(user_info.balance, SIGN_UP_REWARD, "expected signup rewards balance");
@@ -63,10 +63,10 @@ fn new_user_happy_flow() {
 			Some(1)
 		);
 
-		let user_info = Runtime::get_user_info_by_number(phone_number.clone().into())
+		let user_info = Runtime::get_user_info_by_number(phone_number.clone())
 			.expect("Missing user info");
-		assert_eq!(user_info.user_name, username.clone());
-		assert_eq!(user_info.mobile_number, phone_number.clone());
+		assert_eq!(user_info.user_name, username);
+		assert_eq!(user_info.mobile_number, phone_number);
 		assert_eq!(user_info.nonce, 0);
 		// TODO:
 		// assert_eq!(user_info.balance, SIGN_UP_REWARD, "expected signup rewards balance");
@@ -122,28 +122,28 @@ fn new_user_existing_user_name() {
 		let number_2: BoundedString<_> =
 			"9876543210".try_into().expect("Invalid phone number length");
 
-		let (public_key_1, signature_1) =
-			get_verification_evidence(account_id_1.clone(), name.clone(), number_1.clone());
-		let (public_key_2, signature_2) =
-			get_verification_evidence(account_id_2.clone(), name.clone(), number_2.clone());
+		// let (public_key_1, signature_1) =
+		// 	get_verification_evidence(account_id_1.clone(), name.clone(), number_1.clone());
+		// let (public_key_2, signature_2) =
+		// 	get_verification_evidence(account_id_2.clone(), name.clone(), number_2.clone());
 
 		assert_ok!(Identity::new_user(
 			RuntimeOrigin::signed(account_id_1.clone()),
-			public_key_1,
-			signature_1,
-			account_id_1.clone(),
+			// public_key_1,
+			// signature_1,
+			account_id_1,
 			name.clone(),
-			number_1.clone(),
+			number_1,
 		));
 
 		assert_noop!(
 			Identity::new_user(
 				RuntimeOrigin::signed(account_id_2.clone()),
-				public_key_2,
-				signature_2,
-				account_id_2.clone(),
-				name.clone(),
-				number_2.clone(),
+				// public_key_2,
+				// signature_2,
+				account_id_2,
+				name,
+				number_2,
 			),
 			pallet_identity::Error::<Runtime>::UserNameTaken
 		);
@@ -165,15 +165,15 @@ fn new_user_migrate_account_flow() {
 		let number: BoundedString<_> =
 			"0123456789".try_into().expect("Invalid phone number length");
 
-		let (public_key_1, signature_1) =
-			get_verification_evidence(bob_account_id.clone(), name.clone(), number.clone());
-		let (public_key_2, signature_2) =
-			get_verification_evidence(charlie_account_id.clone(), name.clone(), number.clone());
+		// let (public_key_1, signature_1) =
+		// 	get_verification_evidence(bob_account_id.clone(), name.clone(), number.clone());
+		// let (public_key_2, signature_2) =
+		// 	get_verification_evidence(charlie_account_id.clone(), name.clone(), number.clone());
 
 		assert_ok!(Identity::new_user(
 			RuntimeOrigin::signed(bob_account_id.clone()),
-			public_key_1,
-			signature_1,
+			// public_key_1,
+			// signature_1,
 			bob_account_id.clone(),
 			name.clone(),
 			number.clone(),
@@ -181,8 +181,8 @@ fn new_user_migrate_account_flow() {
 
 		assert_ok!(Identity::new_user(
 			RuntimeOrigin::signed(charlie_account_id.clone()),
-			public_key_2,
-			signature_2,
+			// public_key_2,
+			// signature_2,
 			charlie_account_id.clone(),
 			name.clone(),
 			number.clone(),
@@ -208,7 +208,7 @@ fn new_user_migrate_account_flow() {
 		);
 
 		System::assert_has_event(
-			pallet_identity::Event::<Runtime>::UpdateAccountId {
+			pallet_identity::Event::<Runtime>::AccountMigrated {
 				phone_verifier: alice,
 				old_account_id: bob_account_id,
 				new_account_id: charlie_account_id,

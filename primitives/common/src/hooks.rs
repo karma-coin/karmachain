@@ -29,10 +29,27 @@ pub trait Hooks<AccountId, Balance, Username, PhoneNumber> {
 	///
 	/// # Arguments
 	///
+	/// * `account_id` - `AccountId` of account who update, if `new_account_id` is None means
+	///   current `AccountId`, otherwise this is the old `AccountId`
+	/// * `new_account_id` - if `Some` new `AccountId` of a user
+	/// * `username` - `Username` of account who update, if `new_username` is None means current
+	///   `Username`, otherwise this is the old `Username`
+	/// * `new_username` - if `Some` new `AccountId` of a user
+	/// * `phone_number` - `PhoneNumber` of account who update, if `new_phone_number` is None means
+	///   current `PhoneNumber`, otherwise this is the old `AccountId`
+	/// * `new_phone_number` - if `Some` new `PhoneNumber` of a user
+	///
 	/// # Returns
 	///
 	/// `Err` cause to abort transaction and revert state
-	fn on_update_user(_old_account_id: AccountId, _new_account_id: AccountId) -> DispatchResult {
+	fn on_update_user(
+		_account_id: AccountId,
+		_new_account_id: Option<AccountId>,
+		_username: Username,
+		_new_username: Option<Username>,
+		_phone_number: PhoneNumber,
+		_new_phone_number: Option<PhoneNumber>,
+	) -> DispatchResult {
 		Ok(())
 	}
 
@@ -110,9 +127,30 @@ where
 		H2::on_new_user(verifier, who, name, phone_number)
 	}
 
-	fn on_update_user(old_account_id: AccountId, new_account_id: AccountId) -> DispatchResult {
-		H1::on_update_user(old_account_id.clone(), new_account_id.clone())?;
-		H2::on_update_user(old_account_id, new_account_id)
+	fn on_update_user(
+		account_id: AccountId,
+		new_account_id: Option<AccountId>,
+		username: Username,
+		new_username: Option<Username>,
+		phone_number: PhoneNumber,
+		new_phone_number: Option<PhoneNumber>,
+	) -> DispatchResult {
+		H1::on_update_user(
+			account_id.clone(),
+			new_account_id.clone(),
+			username.clone(),
+			new_username.clone(),
+			phone_number.clone(),
+			new_phone_number.clone(),
+		)?;
+		H2::on_update_user(
+			account_id,
+			new_account_id,
+			username,
+			new_username,
+			phone_number,
+			new_phone_number,
+		)
 	}
 
 	fn on_appreciation(
