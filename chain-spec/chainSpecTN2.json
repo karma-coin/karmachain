@@ -1,7 +1,7 @@
 {
-  "name": "Development",
-  "id": "dev",
-  "chainType": "Development",
+  "name": "Karmachain TN2",
+  "id": "testnet_2",
+  "chainType": "Live",
   "bootNodes": [],
   "telemetryEndpoints": null,
   "protocolId": null,
@@ -37,6 +37,10 @@
           ],
           [
             "5GKxNqbAwyT5tvWR9tVuHkDXjZXBqrLbdmJBuWxZUSrRGiow",
+            1000000000000000
+          ],
+          [
+            "5FCPrbdZRiwjWdDJhtSLGYVqnuqVvqHW7TXGncgT16VZV4Ls",
             1000000000000000
           ]
         ]
@@ -436,7 +440,7 @@
       },
       "reward": {
         "offchainAccounts": [
-          "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"
+          "5FENtYhgvnUURrWHWo2gf2uea9GT5hZqRg11daM45mjmXWPk"
         ],
         "signupRewardPhase1Alloc": 100000000000000,
         "signupRewardPhase2Alloc": 200000000000000,
