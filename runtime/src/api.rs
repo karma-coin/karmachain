@@ -506,7 +506,7 @@ impl_runtime_apis! {
 		) -> Vec<UserInfo<AccountId>> {
 			pallet_appreciation::CommunityMembership::<Runtime>::iter()
 				.filter(|(_, id, _)| *id == community_id)
-				.flat_map(|(phone_number, _, _)| Self::get_user_info_by_number(phone_number))
+				.flat_map(|(account_id, _, _)| Self::get_user_info_by_account(account_id))
 				.collect()
 		}
 
@@ -516,11 +516,11 @@ impl_runtime_apis! {
 		) -> Vec<Contact<AccountId>> {
 			Identity::get_contacts(prefix)
 				.into_iter()
-				.filter(|(_account_id, identity_store)| {
+				.filter(|(account_id, _)| {
 					// If `community_id` provided filter by it
 					community_id
 						.map(|community_id|
-							pallet_appreciation::CommunityMembership::<Runtime>::get(&identity_store.phone_number, community_id)
+							pallet_appreciation::CommunityMembership::<Runtime>::get(account_id, community_id)
 								.is_some()
 						)
 						.unwrap_or(true)
@@ -578,8 +578,8 @@ impl_runtime_apis! {
 			let to = extrinsic.function.get_recipient().and_then(|account_identity| {
 				match account_identity {
 					AccountIdentity::AccountId(account_id) => Self::get_user_info_by_account(account_id),
-					AccountIdentity::Name(name) => Self::get_user_info_by_name(name.into()),
-					AccountIdentity::PhoneNumber(phone_number) => Self::get_user_info_by_number(phone_number.into()),
+					AccountIdentity::Name(name) => Self::get_user_info_by_name(name),
+					AccountIdentity::PhoneNumber(phone_number) => Self::get_user_info_by_number(phone_number),
 				}
 			});
 
@@ -598,9 +598,7 @@ impl_runtime_apis! {
 
 	impl runtime_api::transactions::TransactionIndexer<Block, AccountId> for Runtime {
 		fn get_transactions_by_account(account_id: AccountId) -> Vec<(BlockNumber, u32)> {
-			Identity::identity_by_id(&account_id)
-				.and_then(|identity| TransactionIndexer::accounts_tx(identity.number))
-				.unwrap_or_default()
+			TransactionIndexer::accounts_tx(account_id).unwrap_or_default()
 		}
 
 		fn get_transaction(tx_hash: Hash) -> Option<(BlockNumber, u32)> {

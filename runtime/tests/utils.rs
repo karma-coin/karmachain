@@ -13,7 +13,7 @@ use sp_runtime::traits::{IdentifyAccount, Verify};
 
 /// Generate a crypto pair from seed.
 pub fn get_from_seed<TPublic: Public>(seed: &str) -> <TPublic::Pair as Pair>::Public {
-	TPublic::Pair::from_string(&format!("//{}", seed), None)
+	TPublic::Pair::from_string(&format!("//{seed}"), None)
 		.expect("static values are valid; qed")
 		.public()
 }
@@ -39,7 +39,7 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 	ext.execute_with(|| {
 		// Creating Alice's AccountId
 		let alice = get_account_id_from_seed::<sr25519::Public>("Alice");
-		let bounded_vec: BoundedVec<_, MaxPhoneVerifiers> = vec![alice.clone()].try_into().unwrap();
+		let bounded_vec: BoundedVec<_, MaxPhoneVerifiers> = vec![alice].try_into().unwrap();
 		// Set Alice as phone verifier
 		pallet_identity::PhoneVerifiers::<Runtime>::put(bounded_vec);
 		// Set default id for NoCharTrait
@@ -64,7 +64,7 @@ pub trait TestUtils {
 	fn with_community_member(
 		&mut self,
 		community_id: CommunityId,
-		phone_number: &str,
+		account_id: &str,
 		role: CommunityRole,
 	) -> &mut Self;
 
@@ -88,21 +88,21 @@ pub trait TestUtils {
 impl TestUtils for sp_io::TestExternalities {
 	fn with_user(&mut self, username: &str, phone_number: &str) -> &mut Self {
 		self.execute_with(|| {
-			let account_id = get_account_id_from_seed::<sr25519::Public>(&username);
+			let account_id = get_account_id_from_seed::<sr25519::Public>(username);
 			let username = BoundedString::try_from(username).expect("Invalid name length");
 			let phone_number =
 				BoundedString::try_from(phone_number).expect("Invalid phone number length");
 
-			let (public_key, signature) = get_verification_evidence(
-				account_id.clone(),
-				username.clone(),
-				phone_number.clone(),
-			);
+			// let (public_key, signature) = get_verification_evidence(
+			// 	account_id.clone(),
+			// 	username.clone(),
+			// 	phone_number.clone(),
+			// );
 
 			assert_ok!(Identity::new_user(
 				RuntimeOrigin::signed(account_id.clone()),
-				public_key,
-				signature,
+				// public_key,
+				// signature,
 				account_id,
 				username,
 				phone_number,
@@ -136,7 +136,7 @@ impl TestUtils for sp_io::TestExternalities {
 
 			let mut values = pallet_appreciation::Communities::<Runtime>::get().into_inner();
 			assert!(
-				values.iter().find(|community| community.id == community_id).is_none(),
+				!values.iter().any(|community| community.id == community_id),
 				"Such community already exists"
 			);
 			values.push(community);
@@ -150,17 +150,16 @@ impl TestUtils for sp_io::TestExternalities {
 	fn with_community_member(
 		&mut self,
 		community_id: CommunityId,
-		phone_number: &str,
+		account_id: &str,
 		role: CommunityRole,
 	) -> &mut Self {
 		self.execute_with(|| {
 			// TODO: check community exists
 
-			let phone_number: BoundedString<PhoneNumberLimit> =
-				phone_number.try_into().expect("Invalid phone number length");
+			let account_id = get_account_id_from_seed::<sr25519::Public>(account_id);
 
 			pallet_appreciation::CommunityMembership::<Runtime>::insert(
-				phone_number,
+				account_id,
 				community_id,
 				role,
 			);
@@ -226,13 +225,13 @@ pub fn get_verification_evidence(
 ) -> (sp_core::sr25519::Public, sp_core::sr25519::Signature) {
 	let pair = sp_core::sr25519::Pair::from_string("//Alice", None).unwrap();
 	let data = UserVerificationData::<sp_core::sr25519::Public, _, _, _> {
-		verifier_public_key: pair.public().into(),
+		verifier_public_key: pair.public(),
 		account_id,
 		username,
 		phone_number,
 	}
 	.encode();
-	let signature = pair.sign(&*data);
+	let signature = pair.sign(&data);
 
 	(pair.public(), signature)
 }

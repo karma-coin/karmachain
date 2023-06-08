@@ -92,7 +92,7 @@ where
 		let auth_dst = auth_dst.expect("Missing auth endpoint url");
 
 		module.merge(VerifierApiServer::<AccountId, Username, PhoneNumber>::into_rpc(
-			Verifier::new(client.clone(), keystore, bypass_token, auth_dst),
+			Verifier::new(client, keystore, bypass_token, auth_dst),
 		))?;
 	}
 
