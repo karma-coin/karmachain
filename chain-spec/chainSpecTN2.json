@@ -29,15 +29,15 @@
         "balances": [
           [
             "5FCPrbdZRiwjWdDJhtSLGYVqnuqVvqHW7TXGncgT16VZV4Ls",
-            1000000000000000
+            1000000000000000000000
           ],
           [
             "5F4Pv8CPnSoEwdgyxijkGtaXTbYErMfBZwLDb9tKRJTjFXEz",
-            1000000000000000
+            1000000000000000000000
           ],
           [
             "5GKxNqbAwyT5tvWR9tVuHkDXjZXBqrLbdmJBuWxZUSrRGiow",
-            1000000000000000
+            1000000000000000000000
           ]
         ]
       },
@@ -48,7 +48,7 @@
         "key": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"
       },
       "staking": {
-        "validatorCount": 1,
+        "validatorCount": 40,
         "minimumValidatorCount": 1,
         "invulnerables": [
           "5FCPrbdZRiwjWdDJhtSLGYVqnuqVvqHW7TXGncgT16VZV4Ls"
@@ -60,7 +60,7 @@
           [
             "5FCPrbdZRiwjWdDJhtSLGYVqnuqVvqHW7TXGncgT16VZV4Ls",
             "5FCPrbdZRiwjWdDJhtSLGYVqnuqVvqHW7TXGncgT16VZV4Ls",
-            2500000000000,
+            2500000000000000000,
             "Validator"
           ]
         ],
@@ -438,21 +438,21 @@
         "offchainAccounts": [
           "5FENtYhgvnUURrWHWo2gf2uea9GT5hZqRg11daM45mjmXWPk"
         ],
-        "signupRewardPhase1Alloc": 100000000000000,
-        "signupRewardPhase2Alloc": 200000000000000,
-        "signupRewardPhase1Amount": 10000000,
-        "signupRewardPhase2Amount": 1000000,
-        "signupRewardPhase3Amount": 1000,
-        "referralRewardPhase1Alloc": 100000000000000,
-        "referralRewardPhase2Alloc": 200000000000000,
-        "referralRewardPhase1Amount": 10000000,
-        "referralRewardPhase2Amount": 1000000,
+        "signupRewardPhase1Alloc": 100000000000000000000,
+        "signupRewardPhase2Alloc": 200000000000000000000,
+        "signupRewardPhase1Amount": 10000000000000,
+        "signupRewardPhase2Amount": 1000000000000,
+        "signupRewardPhase3Amount": 1000000000,
+        "referralRewardPhase1Alloc": 100000000000000000000,
+        "referralRewardPhase2Alloc": 200000000000000000000,
+        "referralRewardPhase1Amount": 10000000000000,
+        "referralRewardPhase2Amount": 1000000000000,
         "txFeeSubsidyMaxPerUser": 10,
-        "txFeeSubsidiesAlloc": 250000000000000,
-        "txFeeSubsidyMaxAmount": 1000,
+        "txFeeSubsidiesAlloc": 250000000000000000000,
+        "txFeeSubsidyMaxAmount": 1000000000,
         "karmaRewardFrequency": 5,
-        "karmaRewardAmount": 10000000,
-        "karmaRewardAlloc": 300000000000000,
+        "karmaRewardAmount": 10000000000000,
+        "karmaRewardAlloc": 300000000000000000000,
         "karmaRewardUsersParticipates": 1000
       }
     }
