@@ -93,26 +93,26 @@ pub mod pallet {
 			Self {
 				offchain_accounts: vec![],
 
-				signup_reward_phase1_alloc: 100_000_000_000_000_000_000_u128.try_into().ok().unwrap(),
-				signup_reward_phase2_alloc: 200_000_000_000_000_000_000_u128.try_into().ok().unwrap(),
+				signup_reward_phase1_alloc: 100_000_000_000_000_u128.try_into().ok().unwrap(),
+				signup_reward_phase2_alloc: 200_000_000_000_000_u128.try_into().ok().unwrap(),
 
-				signup_reward_phase1_amount: 10_000_000_000_000_u128.try_into().ok().unwrap(),
-				signup_reward_phase2_amount: 1_000_000_000_000_u128.try_into().ok().unwrap(),
-				signup_reward_phase3_amount: 1_000_000_000_u128.try_into().ok().unwrap(),
+				signup_reward_phase1_amount: 10_000_000_u128.try_into().ok().unwrap(),
+				signup_reward_phase2_amount: 1_000_000_u128.try_into().ok().unwrap(),
+				signup_reward_phase3_amount: 1_000_u128.try_into().ok().unwrap(),
 
-				referral_reward_phase1_alloc: 1_000_00000_000_000_000_000_u128.try_into().ok().unwrap(),
-				referral_reward_phase2_alloc: 2_000_00000_000_000_000_000_u128.try_into().ok().unwrap(),
+				referral_reward_phase1_alloc: 1_000_00000_000_000_u128.try_into().ok().unwrap(),
+				referral_reward_phase2_alloc: 2_000_00000_000_000_u128.try_into().ok().unwrap(),
 
-				referral_reward_phase1_amount: 1_000_0000_000_000_u128.try_into().ok().unwrap(),
-				referral_reward_phase2_amount: 1_000_000_000_000_u128.try_into().ok().unwrap(),
+				referral_reward_phase1_amount: 1_000_0000_u128.try_into().ok().unwrap(),
+				referral_reward_phase2_amount: 1_000_000_u128.try_into().ok().unwrap(),
 
 				tx_fee_subsidy_max_per_user: 10,
-				tx_fee_subsidies_alloc: 250_000_000_000_000_000_000_u128.try_into().ok().unwrap(),
-				tx_fee_subsidy_max_amount: 1_000_000_000_u128.try_into().ok().unwrap(),
+				tx_fee_subsidies_alloc: 250_000_000_000_000_u128.try_into().ok().unwrap(),
+				tx_fee_subsidy_max_amount: 1_000_u128.try_into().ok().unwrap(),
 
 				karma_reward_frequency: 5_u32.into(),
-				karma_reward_amount: 10_000_000_000_000_u128.try_into().ok().unwrap(),
-				karma_reward_alloc: 300_000_000_000_000_000_000_u128.try_into().ok().unwrap(),
+				karma_reward_amount: 10_000_000_u128.try_into().ok().unwrap(),
+				karma_reward_alloc: 300_000_000_000_000_u128.try_into().ok().unwrap(),
 				karma_reward_users_participates: 1000,
 			}
 		}
