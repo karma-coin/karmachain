@@ -43,32 +43,30 @@ impl<C, P> Verifier<C, P> {
 }
 
 #[async_trait]
-impl<C, Block, AccountId, Username, PhoneNumber> VerifierApiServer<AccountId, Username, PhoneNumber>
-	for Verifier<C, Block>
+impl<C, Block, AccountId, Username, PhoneNumberHash>
+	VerifierApiServer<AccountId, Username, PhoneNumberHash> for Verifier<C, Block>
 where
 	Block: BlockT + Send + Sync + 'static,
 	AccountId:
 		Codec + Clone + Send + Sync + 'static + From<sp_core::sr25519::Public> + Into<AccountId32>,
 	Username: Codec + Clone + Send + Sync + 'static,
-	PhoneNumber: Codec + Clone + Send + Sync + 'static + TryInto<String>,
-	<PhoneNumber as TryInto<String>>::Error: std::fmt::Display,
+	PhoneNumberHash: Codec + Clone + Send + Sync + 'static,
 	C: ProvideRuntimeApi<Block> + HeaderBackend<Block> + Send + Sync + 'static,
-	C::Api: VerifierApi<Block, AccountId, Username, PhoneNumber>,
+	C::Api: VerifierApi<Block, AccountId, Username, PhoneNumberHash>,
 {
 	async fn verify(
 		&self,
 		account_id: AccountId,
 		username: Username,
-		phone_number: PhoneNumber,
+		phone_number_hash: PhoneNumberHash,
 		bypass_token: Option<ByPassToken>,
-	) -> RpcResult<VerificationResponse<AccountId, Username, PhoneNumber>> {
-		// TODO: perform checks for parameters
+	) -> RpcResult<VerificationResponse<AccountId, Username, PhoneNumberHash>> {
 		let api = self.client.runtime_api();
 		let at = BlockId::hash(self.client.info().best_hash);
 
 		// Verify input parameters for `new_user` tx
 		match api
-			.verify(&at, &account_id, &username, &phone_number)
+			.verify(&at, &account_id, &username, &phone_number_hash)
 			.map_err(|e| map_err(Error::RuntimeError, e))?
 		{
 			VerificationResult::Verified => {},
@@ -77,7 +75,7 @@ where
 					verifier_account_id: None,
 					verification_result,
 					account_id: None,
-					phone_number: None,
+					phone_number_hash: None,
 					username: None,
 					signature: None,
 				}),
@@ -93,7 +91,7 @@ where
 			None => AuthServiceClient::connect(self.auth_dst.clone())
 				.await
 				.map_err(|e| map_err(Error::AuthServiceOffline, e))?
-				.authenticate(gen_auth_request(account_id.clone(), phone_number.clone())?)
+				.authenticate(gen_auth_request(account_id.clone(), phone_number_hash.clone())?)
 				.await
 				.map(|v| v.into_inner().result.into())
 				.unwrap_or(VerificationResult::Unverified),
@@ -103,7 +101,7 @@ where
 			verifier_account_id: None,
 			verification_result,
 			account_id: None,
-			phone_number: None,
+			phone_number_hash: None,
 			username: None,
 			signature: None,
 		};
@@ -115,12 +113,12 @@ where
 					.ok_or(map_err(Error::KeyNotFound, "No verifier keys"))?;
 			let key = CryptoTypePublicPair(sp_core::sr25519::CRYPTO_ID, public_key.to_raw_vec());
 
-			let verifier_account_id: AccountId = public_key.into();
+			let verifier_public_key: AccountId = public_key.into();
 			let data = VerificationEvidence {
-				verifier_account_id: verifier_account_id.clone(),
+				verifier_public_key: verifier_public_key.clone(),
 				account_id: account_id.clone(),
 				username: username.clone(),
-				phone_number: phone_number.clone(),
+				phone_number_hash: phone_number_hash.clone(),
 			}
 			.encode();
 
@@ -131,9 +129,9 @@ where
 			let signature = sp_core::sr25519::Signature::try_from(bytes.as_slice())
 				.map_err(|_| map_err(Error::SignatureFailed, "Fail to wrap signature"))?;
 
-			result.verifier_account_id = Some(verifier_account_id);
+			result.verifier_account_id = Some(verifier_public_key);
 			result.account_id = Some(account_id);
-			result.phone_number = Some(phone_number);
+			result.phone_number_hash = Some(phone_number_hash);
 			result.username = Some(username);
 			result.signature = Some(signature);
 		}
@@ -142,22 +140,11 @@ where
 	}
 }
 
-fn gen_auth_request<AccountId, PhoneNumber>(
-	account_id: AccountId,
-	phone_number: PhoneNumber,
-) -> Result<AuthRequest, CallError>
-where
-	AccountId: Into<AccountId32>,
-	PhoneNumber: TryInto<String>,
-	<PhoneNumber as TryInto<String>>::Error: std::fmt::Display,
-{
-	let account_id: AccountId32 = account_id.into();
-	let phone_number = phone_number.try_into().map_err(|e| map_err(Error::InvalidString, e))?;
-
-	Ok(AuthRequest {
-		account_id: Some(base::karma_coin::karma_coin_core_types::AccountId {
-			data: account_id.to_raw_vec(),
-		}),
-		phone_number,
-	})
+fn gen_auth_request<AccountId, PhoneNumberHash>(
+	_account_id: AccountId,
+	_phone_number_hash: PhoneNumberHash,
+) -> Result<AuthRequest, CallError> {
+	// Auth service do not support PhoneNumberHash
+	// for now to use verifier API - use bypass token
+	todo!()
 }

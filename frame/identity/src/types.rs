@@ -1,12 +1,16 @@
-use codec::{Decode, Encode, MaxEncodedLen};
+use codec::{Codec, Decode, Encode, MaxEncodedLen};
 use scale_info::TypeInfo;
 
-#[derive(Default, Decode, Encode, MaxEncodedLen, TypeInfo)]
-pub struct UserVerificationData<PublicKey, AccountId, Username, PhoneNumber> {
-	pub verifier_public_key: PublicKey,
-	pub account_id: AccountId,
+#[derive(Clone, Encode, Decode, Eq, MaxEncodedLen, PartialEq, Debug, TypeInfo)]
+pub struct IdentityStore<Username, PhoneNumberHash, Moment>
+where
+	Username: Codec,
+	PhoneNumberHash: Codec,
+	Moment: Codec,
+{
 	pub username: Username,
-	pub phone_number: PhoneNumber,
+	pub phone_number_hash: PhoneNumberHash,
+	pub registration_time: Option<Moment>,
 }
 
 pub enum VerificationResult {

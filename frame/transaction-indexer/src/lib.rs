@@ -87,14 +87,14 @@ impl<T: Config> Pallet<T> {
 	}
 }
 
-impl<T: Config> sp_common::hooks::Hooks<T::AccountId, T::Balance, T::Username, T::PhoneNumber>
+impl<T: Config> sp_common::hooks::Hooks<T::AccountId, T::Balance, T::Username, T::PhoneNumberHash>
 	for Pallet<T>
 {
 	fn on_new_user(
 		_verifier: T::AccountId,
 		who: T::AccountId,
 		_name: T::Username,
-		_phone_number: T::PhoneNumber,
+		_phone_number_hash: T::PhoneNumberHash,
 	) -> DispatchResult {
 		Self::index_transaction(who)
 	}
@@ -104,8 +104,8 @@ impl<T: Config> sp_common::hooks::Hooks<T::AccountId, T::Balance, T::Username, T
 		new_account_id: Option<T::AccountId>,
 		_username: T::Username,
 		_new_username: Option<T::Username>,
-		_phone_number: T::PhoneNumber,
-		_new_phone_number: Option<T::PhoneNumber>,
+		_phone_number_hash: T::PhoneNumberHash,
+		_new_phone_number_hash: Option<T::PhoneNumberHash>,
 	) -> DispatchResult {
 		UpdateUserTransactionsCount::<T>::mutate(|value| *value += 1);
 

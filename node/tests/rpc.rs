@@ -10,7 +10,7 @@ use crate::{
 /// `get_block_info`, `get_blockchain_data`, `get_genesis_data`
 mod chain {
 	use karmachain_node_runtime::{AccountId, Hash};
-	
+
 	use serde_json::{json, Value};
 	use sp_core::crypto::Ss58Codec;
 	use sp_rpc::{Block, BlockchainStats, GenesisData};

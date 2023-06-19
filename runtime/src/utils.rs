@@ -1,6 +1,4 @@
 use crate::*;
-#[cfg(feature = "std")]
-use serde::{Deserialize, Deserializer};
 
 pub struct OnChainSeqPhragmen;
 impl onchain::Config for OnChainSeqPhragmen {
@@ -62,35 +60,15 @@ impl RuntimeCall {
 		}
 	}
 
-	pub fn map_new_user(&self) -> Option<(AccountId, Username, PhoneNumber)> {
+	pub fn map_new_user(&self) -> Option<(AccountId, Username, PhoneNumberHash)> {
 		match self {
 			RuntimeCall::Identity(pallet_identity::Call::new_user {
 				account_id,
-				phone_number,
+				phone_number_hash,
 				username,
 				..
-			}) => Some((account_id.clone(), username.clone(), phone_number.clone())),
+			}) => Some((account_id.clone(), username.clone(), phone_number_hash.clone())),
 			_ => None,
 		}
-	}
-}
-
-#[cfg(feature = "std")]
-impl<'de> Deserialize<'de> for NameLimit {
-	fn deserialize<D>(_deserializer: D) -> Result<Self, D::Error>
-	where
-		D: Deserializer<'de>,
-	{
-		Ok(Self)
-	}
-}
-
-#[cfg(feature = "std")]
-impl<'de> Deserialize<'de> for PhoneNumberLimit {
-	fn deserialize<D>(_deserializer: D) -> Result<Self, D::Error>
-	where
-		D: Deserializer<'de>,
-	{
-		Ok(Self)
 	}
 }

@@ -5,35 +5,38 @@ use crate::{
 use codec::{Decode, Encode, MaxEncodedLen};
 use sp_std::fmt::Debug;
 
-pub trait IdentityProvider<AccountId, Username, PhoneNumber>
+pub trait IdentityProvider<AccountId, Username, PhoneNumberHash>
 where
 	AccountId: Encode + Decode + MaxEncodedLen + Eq + Debug + Clone,
 	Username: Encode + Decode + MaxEncodedLen + Eq + Debug + Clone,
-	PhoneNumber: Encode + Decode + MaxEncodedLen + Eq + Debug + Clone,
+	PhoneNumberHash: Encode + Decode + MaxEncodedLen + Eq + Debug + Clone,
 {
 	fn exist_by_identity(
-		account_identity: &AccountIdentity<AccountId, Username, PhoneNumber>,
+		account_identity: &AccountIdentity<AccountId, Username, PhoneNumberHash>,
 	) -> bool;
 
 	fn get_identity_info(
-		account_identity: &AccountIdentity<AccountId, Username, PhoneNumber>,
-	) -> Option<IdentityInfo<AccountId, Username, PhoneNumber>> {
+		account_identity: &AccountIdentity<AccountId, Username, PhoneNumberHash>,
+	) -> Option<IdentityInfo<AccountId, Username, PhoneNumberHash>> {
 		match account_identity {
 			AccountIdentity::AccountId(account_id) => Self::identity_by_id(account_id),
-			AccountIdentity::Name(name) => Self::identity_by_name(name),
-			AccountIdentity::PhoneNumber(phone_number) => Self::identity_by_number(phone_number),
+			AccountIdentity::Username(username) => Self::identity_by_name(username),
+			AccountIdentity::PhoneNumberHash(phone_number_hash) =>
+				Self::identity_by_number(phone_number_hash),
 		}
 	}
 
 	fn identity_by_id(
 		account_id: &AccountId,
-	) -> Option<IdentityInfo<AccountId, Username, PhoneNumber>>;
+	) -> Option<IdentityInfo<AccountId, Username, PhoneNumberHash>>;
 
-	fn identity_by_name(name: &Username) -> Option<IdentityInfo<AccountId, Username, PhoneNumber>>;
+	fn identity_by_name(
+		name: &Username,
+	) -> Option<IdentityInfo<AccountId, Username, PhoneNumberHash>>;
 
 	fn identity_by_number(
-		number: &PhoneNumber,
-	) -> Option<IdentityInfo<AccountId, Username, PhoneNumber>>;
+		number: &PhoneNumberHash,
+	) -> Option<IdentityInfo<AccountId, Username, PhoneNumberHash>>;
 }
 
 pub trait ScoreProvider<AccountId> {

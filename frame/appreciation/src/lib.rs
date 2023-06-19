@@ -45,7 +45,11 @@ pub mod pallet {
 		/// Max length of `Community`'s urls
 		type CommunityUrlLimit: Get<u32>;
 
-		type IdentityProvider: IdentityProvider<Self::AccountId, Self::Username, Self::PhoneNumber>;
+		type IdentityProvider: IdentityProvider<
+			Self::AccountId,
+			Self::Username,
+			Self::PhoneNumberHash,
+		>;
 	}
 
 	#[pallet::pallet]
@@ -274,7 +278,7 @@ pub mod pallet {
 			community_name: BoundedString<T::CommunityNameLimit>,
 			account_id: T::AccountId,
 			username: T::Username,
-			phone_number: T::PhoneNumber,
+			phone_number_hash: T::PhoneNumberHash,
 		},
 	}
 
@@ -305,7 +309,7 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
 		pub fn appreciation(
 			origin: OriginFor<T>,
-			to: AccountIdentity<T::AccountId, T::Username, T::PhoneNumber>,
+			to: AccountIdentity<T::AccountId, T::Username, T::PhoneNumberHash>,
 			amount: T::Balance,
 			community_id: Option<CommunityId>,
 			char_trait_id: Option<CharTraitId>,
@@ -353,7 +357,7 @@ pub mod pallet {
 		pub fn set_admin(
 			origin: OriginFor<T>,
 			community_id: CommunityId,
-			new_admin: AccountIdentity<T::AccountId, T::Username, T::PhoneNumber>,
+			new_admin: AccountIdentity<T::AccountId, T::Username, T::PhoneNumberHash>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			ensure!(
@@ -382,8 +386,8 @@ pub mod pallet {
 				community_id: community.id,
 				community_name: community.name,
 				account_id: new_admin_identity.account_id,
-				username: new_admin_identity.name,
-				phone_number: new_admin_identity.number,
+				username: new_admin_identity.username,
+				phone_number_hash: new_admin_identity.phone_number_hash,
 			});
 
 			Ok(())
@@ -393,14 +397,14 @@ pub mod pallet {
 
 impl<T: pallet::Config> Pallet<T> {
 	fn get_account_id(
-		to: AccountIdentity<T::AccountId, T::Username, T::PhoneNumber>,
+		to: AccountIdentity<T::AccountId, T::Username, T::PhoneNumberHash>,
 	) -> Option<T::AccountId> {
 		match to {
 			AccountIdentity::AccountId(account_id) => Some(account_id),
-			AccountIdentity::PhoneNumber(number) =>
-				T::IdentityProvider::identity_by_number(&number).map(|v| v.account_id),
-			AccountIdentity::Name(name) =>
-				T::IdentityProvider::identity_by_name(&name).map(|v| v.account_id),
+			AccountIdentity::PhoneNumberHash(phone_number_hash) =>
+				T::IdentityProvider::identity_by_number(&phone_number_hash).map(|v| v.account_id),
+			AccountIdentity::Username(username) =>
+				T::IdentityProvider::identity_by_name(&username).map(|v| v.account_id),
 		}
 	}
 
@@ -538,12 +542,12 @@ impl<T: pallet::Config> Pallet<T> {
 	}
 }
 
-impl<T: Config> Hooks<T::AccountId, T::Balance, T::Username, T::PhoneNumber> for Pallet<T> {
+impl<T: Config> Hooks<T::AccountId, T::Balance, T::Username, T::PhoneNumberHash> for Pallet<T> {
 	fn on_new_user(
 		_verifier: T::AccountId,
 		account_id: T::AccountId,
 		_name: T::Username,
-		_phone_number: T::PhoneNumber,
+		_phone_number: T::PhoneNumberHash,
 	) -> DispatchResult {
 		let no_community_id = NoCommunityId::<T>::get()?;
 		let signup_char_trait_id = SignupCharTraitId::<T>::get()?;
@@ -558,8 +562,8 @@ impl<T: Config> Hooks<T::AccountId, T::Balance, T::Username, T::PhoneNumber> for
 		new_account_id: Option<T::AccountId>,
 		_username: T::Username,
 		_new_username: Option<T::Username>,
-		_phone_number: T::PhoneNumber,
-		_new_phone_number: Option<T::PhoneNumber>,
+		_phone_numbe_hashr: T::PhoneNumberHash,
+		_new_phone_number_hash: Option<T::PhoneNumberHash>,
 	) -> DispatchResult {
 		if let Some(new_account_id) = new_account_id {
 			// Migrate user community membership

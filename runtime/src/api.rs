@@ -391,7 +391,7 @@ impl_runtime_apis! {
 		}
 	}
 
-	impl runtime_api::identity::IdentityApi<Block, AccountId, Username, PhoneNumber> for Runtime {
+	impl runtime_api::identity::IdentityApi<Block, AccountId, Username, PhoneNumberHash> for Runtime {
 		fn get_user_info_by_account(
 			account_id: AccountId,
 		) -> Option<UserInfo<AccountId>> {
@@ -418,8 +418,8 @@ impl_runtime_apis! {
 				UserInfo {
 					account_id: identity_info.account_id,
 					nonce: nonce.into(),
-					user_name: identity_info.name.try_into().unwrap_or_default(),
-					mobile_number: identity_info.number.try_into().unwrap_or_default(),
+					user_name: identity_info.username.try_into().unwrap_or_default(),
+					phone_number_hash: identity_info.phone_number_hash.try_into().unwrap_or_default(),
 					balance: balance as u64,
 					trait_scores,
 					karma_score,
@@ -429,7 +429,7 @@ impl_runtime_apis! {
 		}
 
 		fn get_user_info_by_name(
-			name: BoundedString<NameLimit>,
+			name: Username,
 		) -> Option<UserInfo<AccountId>> {
 			Identity::identity_by_name(&name).map(|identity_info| {
 				let nonce = System::account_nonce(&identity_info.account_id);
@@ -455,8 +455,8 @@ impl_runtime_apis! {
 				UserInfo {
 					account_id: identity_info.account_id,
 					nonce: nonce.into(),
-					user_name: identity_info.name.try_into().unwrap_or_default(),
-					mobile_number: identity_info.number.try_into().unwrap_or_default(),
+					user_name: identity_info.username.try_into().unwrap_or_default(),
+					phone_number_hash: identity_info.phone_number_hash.try_into().unwrap_or_default(),
 					balance: balance as u64,
 					trait_scores,
 					karma_score,
@@ -466,7 +466,7 @@ impl_runtime_apis! {
 		}
 
 		fn get_user_info_by_number(
-			number: BoundedString<PhoneNumberLimit>,
+			number: PhoneNumberHash,
 		) -> Option<UserInfo<AccountId>> {
 			Identity::identity_by_number(&number).map(|identity_info| {
 				let nonce = System::account_nonce(&identity_info.account_id);
@@ -491,8 +491,8 @@ impl_runtime_apis! {
 				UserInfo {
 					account_id: identity_info.account_id,
 					nonce: nonce.into(),
-					user_name: identity_info.name.try_into().unwrap_or_default(),
-					mobile_number: identity_info.number.try_into().unwrap_or_default(),
+					user_name: identity_info.username.try_into().unwrap_or_default(),
+					phone_number_hash: identity_info.phone_number_hash.try_into().unwrap_or_default(),
 					balance: balance as u64,
 					trait_scores,
 					karma_score,
@@ -542,9 +542,9 @@ impl_runtime_apis! {
 						.collect();
 
 					Contact {
-						user_name: identity_store.name.try_into().unwrap_or_default(),
+						user_name: identity_store.username.try_into().unwrap_or_default(),
 						account_id,
-						mobile_number: identity_store.phone_number.try_into().unwrap_or_default(),
+						phone_number_hash: identity_store.phone_number_hash,
 						community_membership,
 						trait_scores,
 					}
@@ -578,8 +578,8 @@ impl_runtime_apis! {
 			let to = extrinsic.function.get_recipient().and_then(|account_identity| {
 				match account_identity {
 					AccountIdentity::AccountId(account_id) => Self::get_user_info_by_account(account_id),
-					AccountIdentity::Name(name) => Self::get_user_info_by_name(name),
-					AccountIdentity::PhoneNumber(phone_number) => Self::get_user_info_by_number(phone_number),
+					AccountIdentity::Username(username) => Self::get_user_info_by_name(username),
+					AccountIdentity::PhoneNumberHash(phone_number_hash) => Self::get_user_info_by_number(phone_number_hash),
 				}
 			});
 
@@ -606,13 +606,13 @@ impl_runtime_apis! {
 		}
 	}
 
-	impl runtime_api::verifier::VerifierApi<Block, AccountId, Username, PhoneNumber> for Runtime {
+	impl runtime_api::verifier::VerifierApi<Block, AccountId, Username, PhoneNumberHash> for Runtime {
 		fn verify(
 			account_id: &AccountId,
 			username: &Username,
-			phone_number: &PhoneNumber,
+			phone_number_hash: &PhoneNumberHash,
 		) -> VerificationResult {
-			match Identity::verify(account_id, username, phone_number) {
+			match Identity::verify(account_id, username, phone_number_hash) {
 				IdentityVerificationResult::Valid => VerificationResult::Verified,
 				IdentityVerificationResult::Migration => VerificationResult::Verified,
 				IdentityVerificationResult::AccountIdExists => VerificationResult::AccountMismatch,

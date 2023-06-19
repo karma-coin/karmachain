@@ -498,12 +498,14 @@ impl<T: Config> Pallet<T> {
 	}
 }
 
-impl<T: Config> KarmaHooks<T::AccountId, T::Balance, T::Username, T::PhoneNumber> for Pallet<T> {
+impl<T: Config> KarmaHooks<T::AccountId, T::Balance, T::Username, T::PhoneNumberHash>
+	for Pallet<T>
+{
 	fn on_new_user(
 		_verifier: T::AccountId,
 		who: T::AccountId,
 		_name: T::Username,
-		_phone_number: T::PhoneNumber,
+		_phone_number_hash: T::PhoneNumberHash,
 	) -> DispatchResult {
 		let total_allocated = SignupRewardTotalAllocated::<T>::get();
 
@@ -540,8 +542,8 @@ impl<T: Config> KarmaHooks<T::AccountId, T::Balance, T::Username, T::PhoneNumber
 		new_account_id: Option<T::AccountId>,
 		_username: T::Username,
 		_new_username: Option<T::Username>,
-		_phone_number: T::PhoneNumber,
-		_new_phone_number: Option<T::PhoneNumber>,
+		_phone_number_hash: T::PhoneNumberHash,
+		_new_phone_number_hash: Option<T::PhoneNumberHash>,
 	) -> DispatchResult {
 		if let Some(new_account_id) = new_account_id {
 			Self::move_reward_info(&old_account_id, &new_account_id)
