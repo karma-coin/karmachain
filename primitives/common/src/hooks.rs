@@ -1,7 +1,7 @@
 use crate::types::{CharTraitId, CommunityId};
 use frame_support::dispatch::DispatchResult;
 
-pub trait Hooks<AccountId, Balance, Username, PhoneNumber> {
+pub trait Hooks<AccountId, Balance, Username, PhoneNumberHash> {
 	/// New user registered via `new_user` transactions. Implement to have something happen.
 	/// This hook called after all checks performed and all values wrote to the storage.
 	///
@@ -10,7 +10,7 @@ pub trait Hooks<AccountId, Balance, Username, PhoneNumber> {
 	/// * `verifier` - phone verifier, account that have permission to approve registration
 	/// * `who` - `AccountId` of registered user
 	/// * `name` - name of registered user, represented as byte vector
-	/// * `phone_number` - phone number of registered user, represented as byte vector
+	/// * `phone_number_hash` - phone number hash of registered user, represented as byte vector
 	///
 	/// # Returns
 	///
@@ -19,7 +19,7 @@ pub trait Hooks<AccountId, Balance, Username, PhoneNumber> {
 		_verifier: AccountId,
 		_who: AccountId,
 		_name: Username,
-		_phone_number: PhoneNumber,
+		_phone_number_hash: PhoneNumberHash,
 	) -> DispatchResult {
 		Ok(())
 	}
@@ -35,9 +35,9 @@ pub trait Hooks<AccountId, Balance, Username, PhoneNumber> {
 	/// * `username` - `Username` of account who update, if `new_username` is None means current
 	///   `Username`, otherwise this is the old `Username`
 	/// * `new_username` - if `Some` new `AccountId` of a user
-	/// * `phone_number` - `PhoneNumber` of account who update, if `new_phone_number` is None means
-	///   current `PhoneNumber`, otherwise this is the old `AccountId`
-	/// * `new_phone_number` - if `Some` new `PhoneNumber` of a user
+	/// * `phone_number_hash` - `PhoneNumberHash` of account who update, if `new_phone_number` is
+	///   None means current `PhoneNumberHash`, otherwise this is the old `AccountId`
+	/// * `new_phone_number_hash` - if `Some` new `PhoneNumberHash` of a user
 	///
 	/// # Returns
 	///
@@ -47,8 +47,8 @@ pub trait Hooks<AccountId, Balance, Username, PhoneNumber> {
 		_new_account_id: Option<AccountId>,
 		_username: Username,
 		_new_username: Option<Username>,
-		_phone_number: PhoneNumber,
-		_new_phone_number: Option<PhoneNumber>,
+		_phone_number_hash: PhoneNumberHash,
+		_new_phone_number_hash: Option<PhoneNumberHash>,
 	) -> DispatchResult {
 		Ok(())
 	}
@@ -107,24 +107,24 @@ pub trait Hooks<AccountId, Balance, Username, PhoneNumber> {
 	}
 }
 
-impl<AccountId, Balance, Username, PhoneNumber, H1, H2>
-	Hooks<AccountId, Balance, Username, PhoneNumber> for (H1, H2)
+impl<AccountId, Balance, Username, PhoneNumberHash, H1, H2>
+	Hooks<AccountId, Balance, Username, PhoneNumberHash> for (H1, H2)
 where
 	AccountId: Clone,
 	Balance: Clone,
 	Username: Clone,
-	PhoneNumber: Clone,
-	H1: Hooks<AccountId, Balance, Username, PhoneNumber>,
-	H2: Hooks<AccountId, Balance, Username, PhoneNumber>,
+	PhoneNumberHash: Clone,
+	H1: Hooks<AccountId, Balance, Username, PhoneNumberHash>,
+	H2: Hooks<AccountId, Balance, Username, PhoneNumberHash>,
 {
 	fn on_new_user(
 		verifier: AccountId,
 		who: AccountId,
 		name: Username,
-		phone_number: PhoneNumber,
+		phone_number_hash: PhoneNumberHash,
 	) -> DispatchResult {
-		H1::on_new_user(verifier.clone(), who.clone(), name.clone(), phone_number.clone())?;
-		H2::on_new_user(verifier, who, name, phone_number)
+		H1::on_new_user(verifier.clone(), who.clone(), name.clone(), phone_number_hash.clone())?;
+		H2::on_new_user(verifier, who, name, phone_number_hash)
 	}
 
 	fn on_update_user(
@@ -132,24 +132,24 @@ where
 		new_account_id: Option<AccountId>,
 		username: Username,
 		new_username: Option<Username>,
-		phone_number: PhoneNumber,
-		new_phone_number: Option<PhoneNumber>,
+		phone_number_hash: PhoneNumberHash,
+		new_phone_number_hash: Option<PhoneNumberHash>,
 	) -> DispatchResult {
 		H1::on_update_user(
 			account_id.clone(),
 			new_account_id.clone(),
 			username.clone(),
 			new_username.clone(),
-			phone_number.clone(),
-			new_phone_number.clone(),
+			phone_number_hash.clone(),
+			new_phone_number_hash.clone(),
 		)?;
 		H2::on_update_user(
 			account_id,
 			new_account_id,
 			username,
 			new_username,
-			phone_number,
-			new_phone_number,
+			phone_number_hash,
+			new_phone_number_hash,
 		)
 	}
 

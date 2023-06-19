@@ -5,28 +5,36 @@ use sp_common::types::CommunityId;
 use sp_rpc::{Contact, LeaderboardEntry, UserInfo};
 
 #[rpc(client, server)]
-pub trait IdentityApi<BlockHash, AccountId, Username, PhoneNumber> {
+pub trait IdentityApi<BlockHash, AccountId, Username, PhoneNumber, PhoneNumberHash> {
 	/// RPC method provides information about user account by `AccountId`
-	#[method(name = "identity_getUserInfoByAccount")]
-	fn get_user_info_by_account(
+	#[method(name = "identity_getUserInfoByAccountId")]
+	fn get_user_info_by_account_id(
 		&self,
 		account_id: AccountId,
 		at: Option<BlockHash>,
 	) -> RpcResult<Option<UserInfo<AccountId>>>;
 
-	/// RPC method provides information about user account by `Name`
-	#[method(name = "identity_getUserInfoByName")]
-	fn get_user_info_by_name(
+	/// RPC method provides information about user account by `Username`
+	#[method(name = "identity_getUserInfoByUsername")]
+	fn get_user_info_by_username(
 		&self,
-		name: Username,
+		username: Username,
 		at: Option<BlockHash>,
 	) -> RpcResult<Option<UserInfo<AccountId>>>;
 
 	/// RPC method provides information about user account by `PhoneNumber`
-	#[method(name = "identity_getUserInfoByNumber")]
-	fn get_user_info_by_number(
+	#[method(name = "identity_getUserInfoByPhoneNumber")]
+	fn get_user_info_by_phone_number(
 		&self,
-		number: PhoneNumber,
+		phone_number: PhoneNumber,
+		at: Option<BlockHash>,
+	) -> RpcResult<Option<UserInfo<AccountId>>>;
+
+	/// RPC method provides information about user account by `PhoneNumberHash`
+	#[method(name = "identity_getUserInfoByPhoneNumberHash")]
+	fn get_user_info_by_phone_number_hash(
+		&self,
+		phone_number_hash: PhoneNumberHash,
 		at: Option<BlockHash>,
 	) -> RpcResult<Option<UserInfo<AccountId>>>;
 

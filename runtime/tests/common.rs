@@ -46,6 +46,7 @@ mod signup_rewards {
 	use frame_support::traits::GenesisBuild;
 	use karmachain_node_runtime::Runtime;
 	use runtime_api::identity::runtime_decl_for_IdentityApi::IdentityApiV1;
+	use sp_common::identity::AccountIdentity;
 	use sp_core::sr25519;
 
 	/// In order to avoid `ExistentialDeposit` error when registering user,
@@ -62,7 +63,7 @@ mod signup_rewards {
 
 		test_executor.with_user("Bob", "1111").execute_with(|| {
 			let account_id = get_account_id_from_seed::<sr25519::Public>("Bob");
-			let info = Runtime::get_user_info_by_account(account_id).expect("Fail to get info");
+			let info = Runtime::get_user_info(AccountIdentity::AccountId(account_id)).expect("Fail to get info");
 
 			// Default signup reward to  10_000_000 KCents
 			assert_eq!(info.balance, 10_000_000)
@@ -92,7 +93,8 @@ mod signup_rewards {
 			let id = format!("user_{number}");
 			test_executor.with_user(&id, &id).execute_with(|| {
 				let account_id = get_account_id_from_seed::<sr25519::Public>(&id);
-				let info = Runtime::get_user_info_by_account(account_id).expect("Fail to get info");
+				let info = Runtime::get_user_info(AccountIdentity::AccountId(account_id))
+					.expect("Fail to get info");
 
 				// 10 KCoins
 				assert_eq!(info.balance, 10_000_000)
@@ -104,7 +106,8 @@ mod signup_rewards {
 			let id = format!("user_{number}");
 			test_executor.with_user(&id, &id).execute_with(|| {
 				let account_id = get_account_id_from_seed::<sr25519::Public>(&id);
-				let info = Runtime::get_user_info_by_account(account_id).expect("Fail to get info");
+				let info = Runtime::get_user_info(AccountIdentity::AccountId(account_id))
+					.expect("Fail to get info");
 
 				// 1 KCoins
 				assert_eq!(info.balance, 1_000_000)
@@ -116,7 +119,8 @@ mod signup_rewards {
 			let id = format!("user_{number}");
 			test_executor.with_user(&id, &id).execute_with(|| {
 				let account_id = get_account_id_from_seed::<sr25519::Public>(&id);
-				let info = Runtime::get_user_info_by_account(account_id).expect("Fail to get info");
+				let info = Runtime::get_user_info(AccountIdentity::AccountId(account_id))
+					.expect("Fail to get info");
 
 				// 1 KCent
 				assert_eq!(info.balance, 1_000)

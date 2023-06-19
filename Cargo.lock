@@ -5009,6 +5009,7 @@ dependencies = [
  "sp-common",
  "sp-core",
  "sp-io",
+ "sp-rpc 0.2.0",
  "sp-runtime",
  "sp-std",
 ]
@@ -6360,6 +6361,7 @@ dependencies = [
  "sp-keystore",
  "sp-rpc 0.2.0",
  "sp-runtime",
+ "sp-std",
 ]
 
 [[package]]
@@ -6423,6 +6425,7 @@ dependencies = [
  "sp-common",
  "sp-rpc 0.2.0",
  "sp-runtime",
+ "sp-std",
  "sp-weights",
 ]
 

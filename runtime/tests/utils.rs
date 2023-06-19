@@ -2,13 +2,13 @@ use codec::Encode;
 use frame_support::{assert_ok, traits::fungible::Mutate, BoundedVec};
 use karmachain_node_runtime::*;
 use pallet_appreciation::{Community, CommunityRole};
-use pallet_identity::types::UserVerificationData;
 use sp_common::{
 	identity::AccountIdentity,
 	types::{CharTraitId, CommunityId},
 	BoundedString,
 };
-use sp_core::{sr25519, Pair, Public};
+use sp_core::{hashing::blake2_512, sr25519, Pair, Public};
+use sp_rpc::types::VerificationEvidence;
 use sp_runtime::traits::{IdentifyAccount, Verify};
 
 /// Generate a crypto pair from seed.
@@ -90,8 +90,11 @@ impl TestUtils for sp_io::TestExternalities {
 		self.execute_with(|| {
 			let account_id = get_account_id_from_seed::<sr25519::Public>(username);
 			let username = BoundedString::try_from(username).expect("Invalid name length");
-			let phone_number =
+			let phone_number: PhoneNumber =
 				BoundedString::try_from(phone_number).expect("Invalid phone number length");
+
+			let phone_number_hash =
+				PhoneNumberHash::from(blake2_512(Vec::from(phone_number).as_slice()));
 
 			// let (public_key, signature) = get_verification_evidence(
 			// 	account_id.clone(),
@@ -105,7 +108,7 @@ impl TestUtils for sp_io::TestExternalities {
 				// signature,
 				account_id,
 				username,
-				phone_number,
+				phone_number_hash,
 			));
 		});
 
@@ -221,14 +224,14 @@ impl TestUtils for sp_io::TestExternalities {
 pub fn get_verification_evidence(
 	account_id: AccountId,
 	username: Username,
-	phone_number: PhoneNumber,
+	phone_number_hash: PhoneNumberHash,
 ) -> (sp_core::sr25519::Public, sp_core::sr25519::Signature) {
 	let pair = sp_core::sr25519::Pair::from_string("//Alice", None).unwrap();
-	let data = UserVerificationData::<sp_core::sr25519::Public, _, _, _> {
+	let data = VerificationEvidence::<sp_core::sr25519::Public, _, _, _> {
 		verifier_public_key: pair.public(),
 		account_id,
 		username,
-		phone_number,
+		phone_number_hash,
 	}
 	.encode();
 	let signature = pair.sign(&data);

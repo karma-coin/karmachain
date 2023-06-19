@@ -4,6 +4,7 @@ use scale_info::prelude::{string::String, vec::Vec};
 use serde::{Deserialize, Serialize};
 
 pub type ByPassToken = String;
+pub type PhoneNumberHash = sp_core::H512;
 
 #[derive(Encode, Decode)]
 #[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
@@ -11,7 +12,7 @@ pub struct UserInfo<AccountId> {
 	pub account_id: AccountId,
 	pub nonce: u64,
 	pub user_name: String,
-	pub mobile_number: String,
+	pub phone_number_hash: PhoneNumberHash,
 	pub balance: u64,
 	pub trait_scores: Vec<TraitScore>,
 	// pre_keys
@@ -173,7 +174,7 @@ pub struct PhoneVerifier<AccountId> {
 pub struct Contact<AccountId> {
 	pub user_name: String,
 	pub account_id: AccountId,
-	pub mobile_number: String,
+	pub phone_number_hash: PhoneNumberHash,
 	pub community_membership: Vec<CommunityMembership>,
 	pub trait_scores: Vec<TraitScore>,
 }
@@ -218,9 +219,9 @@ impl From<i32> for VerificationResult {
 
 #[derive(Encode, Decode)]
 #[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
-pub struct VerificationEvidence<PublicKey, AccountId, Username, PhoneNumber> {
-	pub verifier_account_id: PublicKey,
+pub struct VerificationEvidence<PublicKey, AccountId, Username, PhoneNumberHash> {
+	pub verifier_public_key: PublicKey,
 	pub account_id: AccountId,
 	pub username: Username,
-	pub phone_number: PhoneNumber,
+	pub phone_number_hash: PhoneNumberHash,
 }

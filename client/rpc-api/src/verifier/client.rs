@@ -13,6 +13,7 @@ use sp_api::ProvideRuntimeApi;
 use sp_blockchain::HeaderBackend;
 use sp_core::{
 	crypto::{AccountId32, CryptoTypePublicPair},
+	hashing::blake2_512,
 	ByteArray,
 };
 use sp_keystore::SyncCryptoStore;
@@ -43,8 +44,8 @@ impl<C, P> Verifier<C, P> {
 }
 
 #[async_trait]
-impl<C, Block, AccountId, Username, PhoneNumber> VerifierApiServer<AccountId, Username, PhoneNumber>
-	for Verifier<C, Block>
+impl<C, Block, AccountId, Username, PhoneNumber, PhoneNumberHash>
+	VerifierApiServer<AccountId, Username, PhoneNumber, PhoneNumberHash> for Verifier<C, Block>
 where
 	Block: BlockT + Send + Sync + 'static,
 	AccountId:
@@ -52,8 +53,10 @@ where
 	Username: Codec + Clone + Send + Sync + 'static,
 	PhoneNumber: Codec + Clone + Send + Sync + 'static + TryInto<String>,
 	<PhoneNumber as TryInto<String>>::Error: std::fmt::Display,
+	Vec<u8>: From<PhoneNumber>,
+	PhoneNumberHash: Codec + Clone + Send + Sync + 'static + From<[u8; 64]>,
 	C: ProvideRuntimeApi<Block> + HeaderBackend<Block> + Send + Sync + 'static,
-	C::Api: VerifierApi<Block, AccountId, Username, PhoneNumber>,
+	C::Api: VerifierApi<Block, AccountId, Username, PhoneNumberHash>,
 {
 	async fn verify(
 		&self,
@@ -61,14 +64,16 @@ where
 		username: Username,
 		phone_number: PhoneNumber,
 		bypass_token: Option<ByPassToken>,
-	) -> RpcResult<VerificationResponse<AccountId, Username, PhoneNumber>> {
-		// TODO: perform checks for parameters
+	) -> RpcResult<VerificationResponse<AccountId, Username, PhoneNumberHash>> {
 		let api = self.client.runtime_api();
 		let at = BlockId::hash(self.client.info().best_hash);
 
+		let phone_number_hash =
+			PhoneNumberHash::from(blake2_512(Vec::from(phone_number.clone()).as_slice()));
+
 		// Verify input parameters for `new_user` tx
 		match api
-			.verify(&at, &account_id, &username, &phone_number)
+			.verify(&at, &account_id, &username, &phone_number_hash)
 			.map_err(|e| map_err(Error::RuntimeError, e))?
 		{
 			VerificationResult::Verified => {},
@@ -77,7 +82,7 @@ where
 					verifier_account_id: None,
 					verification_result,
 					account_id: None,
-					phone_number: None,
+					phone_number_hash: None,
 					username: None,
 					signature: None,
 				}),
@@ -103,7 +108,7 @@ where
 			verifier_account_id: None,
 			verification_result,
 			account_id: None,
-			phone_number: None,
+			phone_number_hash: None,
 			username: None,
 			signature: None,
 		};
@@ -115,12 +120,12 @@ where
 					.ok_or(map_err(Error::KeyNotFound, "No verifier keys"))?;
 			let key = CryptoTypePublicPair(sp_core::sr25519::CRYPTO_ID, public_key.to_raw_vec());
 
-			let verifier_account_id: AccountId = public_key.into();
+			let verifier_public_key: AccountId = public_key.into();
 			let data = VerificationEvidence {
-				verifier_account_id: verifier_account_id.clone(),
+				verifier_public_key: verifier_public_key.clone(),
 				account_id: account_id.clone(),
 				username: username.clone(),
-				phone_number: phone_number.clone(),
+				phone_number_hash: phone_number_hash.clone(),
 			}
 			.encode();
 
@@ -131,9 +136,9 @@ where
 			let signature = sp_core::sr25519::Signature::try_from(bytes.as_slice())
 				.map_err(|_| map_err(Error::SignatureFailed, "Fail to wrap signature"))?;
 
-			result.verifier_account_id = Some(verifier_account_id);
+			result.verifier_account_id = Some(verifier_public_key);
 			result.account_id = Some(account_id);
-			result.phone_number = Some(phone_number);
+			result.phone_number_hash = Some(phone_number_hash);
 			result.username = Some(username);
 			result.signature = Some(signature);
 		}

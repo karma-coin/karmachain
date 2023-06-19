@@ -3,8 +3,8 @@ mod utils;
 use frame_support::{assert_noop, assert_ok};
 use karmachain_node_runtime::*;
 use runtime_api::identity::runtime_decl_for_IdentityApi::IdentityApiV1;
-use sp_common::BoundedString;
-use sp_core::sr25519;
+use sp_common::identity::AccountIdentity;
+use sp_core::{hashing::blake2_512, sr25519};
 use utils::*;
 
 #[test]
@@ -12,12 +12,18 @@ fn new_user_happy_flow() {
 	let mut ext: sp_io::TestExternalities = new_test_ext();
 
 	ext.execute_with(|| {
+		// Go past genesis block so events get deposited
+		System::set_block_number(1);
+
 		let account_id = get_account_id_from_seed::<sr25519::Public>("Bob");
 		let username: Username = "Bob".try_into().unwrap();
 		let phone_number: PhoneNumber = "+0123456789".try_into().unwrap();
+		let phone_number_hash =
+			PhoneNumberHash::from(blake2_512(Vec::from(phone_number).as_slice()));
 
 		// let (public_key, signature) =
-		// 	get_verification_evidence(account_id.clone(), username.clone(), phone_number.clone());
+		// 	get_verification_evidence(account_id.clone(), username.clone(),
+		// phone_number_hash.clone());
 
 		assert_ok!(Identity::new_user(
 			RuntimeOrigin::signed(account_id.clone()),
@@ -25,51 +31,46 @@ fn new_user_happy_flow() {
 			// signature,
 			account_id.clone(),
 			username.clone(),
-			phone_number.clone(),
+			phone_number_hash,
 		));
 
-		let user_info = Runtime::get_user_info_by_account(account_id).expect("Missing user info");
-		assert_eq!(user_info.user_name, username);
-		assert_eq!(user_info.mobile_number, phone_number);
-		assert_eq!(user_info.nonce, 0);
-		// TODO:
-		// assert_eq!(user_info.balance, SIGN_UP_REWARD, "expected signup rewards balance");
-		assert_eq!(user_info.karma_score, 1);
-		assert_eq!(user_info.trait_scores.len(), 1, "expected signup trait score");
-		assert_eq!(
-			user_info
-				.trait_scores
-				.iter()
-				.find(|v| v.trait_id == 1 && v.community_id == 0)
-				.map(|v| v.karma_score),
-			Some(1)
-		);
-
-		let user_info =
-			Runtime::get_user_info_by_name(username.clone()).expect("Missing user info");
-		assert_eq!(user_info.user_name, username);
-		assert_eq!(user_info.mobile_number, phone_number);
-		assert_eq!(user_info.nonce, 0);
-		// TODO:
-		// assert_eq!(user_info.balance, SIGN_UP_REWARD, "expected signup rewards balance");
-		assert_eq!(user_info.karma_score, 1);
-		assert_eq!(user_info.trait_scores.len(), 1, "expected signup trait score");
-		assert_eq!(
-			user_info
-				.trait_scores
-				.iter()
-				.find(|v| v.trait_id == 1 && v.community_id == 0)
-				.map(|v| v.karma_score),
-			Some(1)
-		);
-
-		let user_info = Runtime::get_user_info_by_number(phone_number.clone())
+		let user_info = Runtime::get_user_info(AccountIdentity::AccountId(account_id))
 			.expect("Missing user info");
 		assert_eq!(user_info.user_name, username);
-		assert_eq!(user_info.mobile_number, phone_number);
+		assert_eq!(user_info.phone_number_hash, phone_number_hash);
 		assert_eq!(user_info.nonce, 0);
-		// TODO:
-		// assert_eq!(user_info.balance, SIGN_UP_REWARD, "expected signup rewards balance");
+		assert_eq!(user_info.karma_score, 1);
+		assert_eq!(user_info.trait_scores.len(), 1, "expected signup trait score");
+		assert_eq!(
+			user_info
+				.trait_scores
+				.iter()
+				.find(|v| v.trait_id == 1 && v.community_id == 0)
+				.map(|v| v.karma_score),
+			Some(1)
+		);
+
+		let user_info = Runtime::get_user_info(AccountIdentity::Username(username.clone()))
+			.expect("Missing user info");
+		assert_eq!(user_info.user_name, username);
+		assert_eq!(user_info.phone_number_hash, phone_number_hash);
+		assert_eq!(user_info.nonce, 0);
+		assert_eq!(user_info.karma_score, 1);
+		assert_eq!(user_info.trait_scores.len(), 1, "expected signup trait score");
+		assert_eq!(
+			user_info
+				.trait_scores
+				.iter()
+				.find(|v| v.trait_id == 1 && v.community_id == 0)
+				.map(|v| v.karma_score),
+			Some(1)
+		);
+
+		let user_info = Runtime::get_user_info(AccountIdentity::PhoneNumberHash(phone_number_hash))
+			.expect("Missing user info");
+		assert_eq!(user_info.user_name, username);
+		assert_eq!(user_info.phone_number_hash, phone_number_hash);
+		assert_eq!(user_info.nonce, 0);
 		assert_eq!(user_info.karma_score, 1);
 		assert_eq!(user_info.trait_scores.len(), 1, "expected signup trait score");
 		assert_eq!(
@@ -85,24 +86,24 @@ fn new_user_happy_flow() {
 		// TODO: check chain stats
 		// Check that signup char trait score increasing emits event
 
-		// TODO: fix this assert fail but events exist
-		// System::assert_has_event(
-		// 	pallet_appreciation::Event::<Runtime>::CharTraitScoreIncreased {
-		// 		who: user_info.account_id.clone(),
-		// 		community_id: 0,
-		// 		char_trait_id: 1,
-		// 	}
-		// 	.into(),
-		// );
-		// System::assert_has_event(
-		// 	pallet_identity::Event::<Runtime>::NewUser {
-		// 		phone_verifier: alice,
-		// 		account_id: user_info.account_id,
-		// 		username,
-		// 		phone_number,
-		// 	}
-		// 	.into(),
-		// )
+		let alice = get_account_id_from_seed::<sr25519::Public>("Alice");
+		System::assert_has_event(
+			pallet_appreciation::Event::<Runtime>::CharTraitScoreIncreased {
+				who: user_info.account_id.clone(),
+				community_id: 0,
+				char_trait_id: 1,
+			}
+			.into(),
+		);
+		System::assert_has_event(
+			pallet_identity::Event::<Runtime>::NewUser {
+				phone_verifier: alice,
+				account_id: user_info.account_id,
+				username,
+				phone_number_hash,
+			}
+			.into(),
+		)
 	});
 }
 
@@ -116,16 +117,22 @@ fn new_user_existing_user_name() {
 
 		let account_id_1 = get_account_id_from_seed::<sr25519::Public>("Bob");
 		let account_id_2 = get_account_id_from_seed::<sr25519::Public>("Charlie");
-		let name: BoundedString<_> = "user1234567890".try_into().expect("Invalid name length");
-		let number_1: BoundedString<_> =
+		let name: Username = "user1234567890".try_into().expect("Invalid name length");
+		let phone_number_1: PhoneNumber =
 			"0123456789".try_into().expect("Invalid phone number length");
-		let number_2: BoundedString<_> =
+		let phone_number_2: PhoneNumber =
 			"9876543210".try_into().expect("Invalid phone number length");
 
+		let phone_number_1_hash =
+			PhoneNumberHash::from(blake2_512(Vec::from(phone_number_1).as_slice()));
+		let phone_number_2_hash =
+			PhoneNumberHash::from(blake2_512(Vec::from(phone_number_2).as_slice()));
+
 		// let (public_key_1, signature_1) =
-		// 	get_verification_evidence(account_id_1.clone(), name.clone(), number_1.clone());
-		// let (public_key_2, signature_2) =
-		// 	get_verification_evidence(account_id_2.clone(), name.clone(), number_2.clone());
+		// 	get_verification_evidence(account_id_1.clone(), name.clone(),
+		// phone_number_1_hash.clone()); let (public_key_2, signature_2) =
+		// 	get_verification_evidence(account_id_2.clone(), name.clone(),
+		// phone_number_2_hash.clone());
 
 		assert_ok!(Identity::new_user(
 			RuntimeOrigin::signed(account_id_1.clone()),
@@ -133,7 +140,7 @@ fn new_user_existing_user_name() {
 			// signature_1,
 			account_id_1,
 			name.clone(),
-			number_1,
+			phone_number_1_hash,
 		));
 
 		assert_noop!(
@@ -143,7 +150,7 @@ fn new_user_existing_user_name() {
 				// signature_2,
 				account_id_2,
 				name,
-				number_2,
+				phone_number_2_hash,
 			),
 			pallet_identity::Error::<Runtime>::UserNameTaken
 		);
@@ -161,14 +168,17 @@ fn new_user_migrate_account_flow() {
 
 		let bob_account_id = get_account_id_from_seed::<sr25519::Public>("Bob");
 		let charlie_account_id = get_account_id_from_seed::<sr25519::Public>("Charlie");
-		let name: BoundedString<_> = "user1234567890".try_into().expect("Invalid name length");
-		let number: BoundedString<_> =
+		let name: Username = "user1234567890".try_into().expect("Invalid name length");
+		let phone_number: PhoneNumber =
 			"0123456789".try_into().expect("Invalid phone number length");
+		let phone_number_hash =
+			PhoneNumberHash::from(blake2_512(Vec::from(phone_number).as_slice()));
 
 		// let (public_key_1, signature_1) =
-		// 	get_verification_evidence(bob_account_id.clone(), name.clone(), number.clone());
-		// let (public_key_2, signature_2) =
-		// 	get_verification_evidence(charlie_account_id.clone(), name.clone(), number.clone());
+		// 	get_verification_evidence(bob_account_id.clone(), name.clone(),
+		// phone_number_hash.clone()); let (public_key_2, signature_2) =
+		// 	get_verification_evidence(charlie_account_id.clone(), name.clone(),
+		// phone_number_hash.clone());
 
 		assert_ok!(Identity::new_user(
 			RuntimeOrigin::signed(bob_account_id.clone()),
@@ -176,7 +186,7 @@ fn new_user_migrate_account_flow() {
 			// signature_1,
 			bob_account_id.clone(),
 			name.clone(),
-			number.clone(),
+			phone_number_hash,
 		));
 
 		assert_ok!(Identity::new_user(
@@ -185,17 +195,18 @@ fn new_user_migrate_account_flow() {
 			// signature_2,
 			charlie_account_id.clone(),
 			name.clone(),
-			number.clone(),
+			phone_number_hash,
 		));
 
-		assert!(Runtime::get_user_info_by_account(bob_account_id.clone()).is_none());
-		let user_info = Runtime::get_user_info_by_account(charlie_account_id.clone())
-			.expect("Missing user info");
+		assert!(
+			Runtime::get_user_info(AccountIdentity::AccountId(bob_account_id.clone())).is_none()
+		);
+		let user_info =
+			Runtime::get_user_info(AccountIdentity::AccountId(charlie_account_id.clone()))
+				.expect("Missing user info");
 		assert_eq!(user_info.user_name, name);
-		assert_eq!(user_info.mobile_number, number);
+		assert_eq!(user_info.phone_number_hash, phone_number_hash);
 		assert_eq!(user_info.nonce, 0);
-		// TODO:
-		// assert_eq!(user_info.balance, SIGN_UP_REWARD, "expected signup rewards balance");
 		assert_eq!(user_info.karma_score, 1);
 		assert_eq!(user_info.trait_scores.len(), 1, "expected signup trait score");
 		assert_eq!(

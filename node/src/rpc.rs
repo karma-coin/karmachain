@@ -10,7 +10,8 @@ use std::sync::Arc;
 use jsonrpsee::RpcModule;
 use karmachain_node_runtime::{
 	opaque::{Block, UncheckedExtrinsic},
-	AccountId, Balance, Hash, Index, PhoneNumber, RuntimeEvent, Signature, Username,
+	AccountId, Balance, Hash, Index, PhoneNumber, PhoneNumberHash, RuntimeEvent, Signature,
+	Username,
 };
 use sc_client_api::{BlockBackend, StorageProvider};
 use sc_transaction_pool_api::TransactionPool;
@@ -55,7 +56,7 @@ where
 	C::Api: BlockBuilder<Block>,
 	C::Api: runtime_api::chain::BlockInfoProvider<Block, SignedBlock<Block>, AccountId, Hash>,
 	C::Api: runtime_api::events::EventProvider<Block, RuntimeEvent>,
-	C::Api: runtime_api::identity::IdentityApi<Block, AccountId, Username, PhoneNumber>,
+	C::Api: runtime_api::identity::IdentityApi<Block, AccountId, Username, PhoneNumberHash>,
 	C::Api: runtime_api::transactions::TransactionInfoProvider<
 		Block,
 		UncheckedExtrinsic,
@@ -63,7 +64,7 @@ where
 		Signature,
 	>,
 	C::Api: runtime_api::transactions::TransactionIndexer<Block, AccountId>,
-	C::Api: runtime_api::verifier::VerifierApi<Block, AccountId, Username, PhoneNumber>,
+	C::Api: runtime_api::verifier::VerifierApi<Block, AccountId, Username, PhoneNumberHash>,
 	P: TransactionPool + 'static,
 {
 	use pallet_transaction_payment_rpc::{TransactionPayment, TransactionPaymentApiServer};
@@ -81,7 +82,11 @@ where
 
 	module.merge(System::new(client.clone(), pool, deny_unsafe).into_rpc())?;
 	module.merge(TransactionPayment::new(client.clone()).into_rpc())?;
-	module.merge(Identity::new(client.clone()).into_rpc())?;
+	module.merge(
+		IdentityApiServer::<Hash, AccountId, Username, PhoneNumber, PhoneNumberHash>::into_rpc(
+			Identity::new(client.clone()),
+		),
+	)?;
 	module.merge(TransactionsIndexer::new(client.clone()).into_rpc())?;
 	module.merge(EventsProvider::new(client.clone()).into_rpc())?;
 	module.merge(BlocksProvider::new(client.clone()).into_rpc())?;
@@ -91,9 +96,11 @@ where
 		let bypass_token = bypass_token.expect("Missing bypass token");
 		let auth_dst = auth_dst.expect("Missing auth endpoint url");
 
-		module.merge(VerifierApiServer::<AccountId, Username, PhoneNumber>::into_rpc(
-			Verifier::new(client, keystore, bypass_token, auth_dst),
-		))?;
+		module.merge(
+			VerifierApiServer::<AccountId, Username, PhoneNumber, PhoneNumberHash>::into_rpc(
+				Verifier::new(client, keystore, bypass_token, auth_dst),
+			),
+		)?;
 	}
 
 	Ok(module)
