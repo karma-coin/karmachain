@@ -431,7 +431,7 @@ impl<T: pallet::Config> Pallet<T> {
 	/// # Returns
 	///
 	/// `true` - if appreciation lead to adding `payee` to community as a new member,
-	/// 	otherwise `false`
+	///     otherwise `false`
 	pub fn process_appreciation(
 		payer: &T::AccountId,
 		payee: &T::AccountId,

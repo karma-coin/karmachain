@@ -89,7 +89,7 @@ mod identity {
 			let bob_phone_number_hash = PhoneNumberHash::from(blake2_512(Vec::from(bob_phone_number).as_slice()));
 
 
-			let info = Runtime::get_user_info_by_number(bob_phone_number_hash.clone())
+			let info = Runtime::get_user_info_by_number(bob_phone_number_hash)
 				.expect("Fail to get info");
 
 			assert_eq!(info.account_id, bob_account_id);

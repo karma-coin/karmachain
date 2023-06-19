@@ -67,7 +67,7 @@ impl RuntimeCall {
 				phone_number_hash,
 				username,
 				..
-			}) => Some((account_id.clone(), username.clone(), phone_number_hash.clone())),
+			}) => Some((account_id.clone(), username.clone(), *phone_number_hash)),
 			_ => None,
 		}
 	}

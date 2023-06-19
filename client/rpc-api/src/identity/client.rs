@@ -59,14 +59,6 @@ where
 		let api = self.client.runtime_api();
 		let at = BlockId::hash(at.unwrap_or_else(|| self.client.info().best_hash));
 
-		let name = name.try_into().map_err(|e| {
-			CallError::Custom(ErrorObject::owned(
-				0,
-				"Name length out of bounds.",
-				Some(format!("{e:?}")),
-			))
-		})?;
-
 		Ok(api.get_user_info_by_name(&at, name).map_err(|e| {
 			CallError::Custom(ErrorObject::owned(
 				0,
@@ -83,14 +75,6 @@ where
 	) -> RpcResult<Option<UserInfo<AccountId>>> {
 		let api = self.client.runtime_api();
 		let at = BlockId::hash(at.unwrap_or_else(|| self.client.info().best_hash));
-
-		let number = number.try_into().map_err(|e| {
-			CallError::Custom(ErrorObject::owned(
-				0,
-				"Name length out of bounds.",
-				Some(format!("{e:?}")),
-			))
-		})?;
 
 		Ok(api.get_user_info_by_number(&at, number).map_err(|e| {
 			CallError::Custom(ErrorObject::owned(

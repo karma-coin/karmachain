@@ -29,7 +29,7 @@ fn new_user_happy_flow() {
 			// signature,
 			account_id.clone(),
 			username.clone(),
-			phone_number_hash.clone(),
+			phone_number_hash,
 		));
 
 		let user_info = Runtime::get_user_info_by_account(account_id).expect("Missing user info");
@@ -64,7 +64,7 @@ fn new_user_happy_flow() {
 		);
 
 		let user_info =
-			Runtime::get_user_info_by_number(phone_number_hash.clone()).expect("Missing user info");
+			Runtime::get_user_info_by_number(phone_number_hash).expect("Missing user info");
 		assert_eq!(user_info.user_name, username);
 		assert_eq!(user_info.phone_number_hash, phone_number_hash);
 		assert_eq!(user_info.nonce, 0);
@@ -180,7 +180,7 @@ fn new_user_migrate_account_flow() {
 			// signature_1,
 			bob_account_id.clone(),
 			name.clone(),
-			phone_number_hash.clone(),
+			phone_number_hash,
 		));
 
 		assert_ok!(Identity::new_user(
@@ -189,7 +189,7 @@ fn new_user_migrate_account_flow() {
 			// signature_2,
 			charlie_account_id.clone(),
 			name.clone(),
-			phone_number_hash.clone(),
+			phone_number_hash,
 		));
 
 		assert!(Runtime::get_user_info_by_account(bob_account_id.clone()).is_none());
