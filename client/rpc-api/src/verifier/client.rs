@@ -51,8 +51,8 @@ where
 	AccountId:
 		Codec + Clone + Send + Sync + 'static + From<sp_core::sr25519::Public> + Into<AccountId32>,
 	Username: Codec + Clone + Send + Sync + 'static,
-	PhoneNumber: Codec + Clone + Send + Sync + 'static,
-	String: From<PhoneNumber>,
+	PhoneNumber: Codec + Clone + Send + Sync + 'static + TryInto<String>,
+	<PhoneNumber as TryInto<String>>::Error: std::fmt::Display,
 	Vec<u8>: From<PhoneNumber>,
 	PhoneNumberHash: Codec + Clone + Send + Sync + 'static + From<[u8; 64]>,
 	C: ProvideRuntimeApi<Block> + HeaderBackend<Block> + Send + Sync + 'static,

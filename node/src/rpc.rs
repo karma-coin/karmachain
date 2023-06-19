@@ -10,7 +10,7 @@ use std::sync::Arc;
 use jsonrpsee::RpcModule;
 use karmachain_node_runtime::{
 	opaque::{Block, UncheckedExtrinsic},
-	AccountId, Balance, Hash, Index, PhoneNumberHash, RuntimeEvent, Signature, Username,
+	AccountId, Balance, Hash, Index, PhoneNumberHash, RuntimeEvent, Signature, Username, PhoneNumber
 };
 use sc_client_api::{BlockBackend, StorageProvider};
 use sc_transaction_pool_api::TransactionPool;
@@ -91,7 +91,7 @@ where
 		let bypass_token = bypass_token.expect("Missing bypass token");
 		let auth_dst = auth_dst.expect("Missing auth endpoint url");
 
-		module.merge(VerifierApiServer::<AccountId, Username, PhoneNumberHash>::into_rpc(
+		module.merge(VerifierApiServer::<AccountId, Username, PhoneNumber, PhoneNumberHash>::into_rpc(
 			Verifier::new(client, keystore, bypass_token, auth_dst),
 		))?;
 	}
