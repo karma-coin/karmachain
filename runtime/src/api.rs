@@ -392,99 +392,26 @@ impl_runtime_apis! {
 	}
 
 	impl runtime_api::identity::IdentityApi<Block, AccountId, Username, PhoneNumberHash> for Runtime {
-		fn get_user_info_by_account(
-			account_id: AccountId,
+		fn get_user_info(
+			account_identity: AccountIdentity<AccountId, Username, PhoneNumberHash>,
 		) -> Option<UserInfo<AccountId>> {
-			Identity::identity_by_id(&account_id).map(|identity_info| {
+			Identity::get_identity_info(&account_identity).map(|identity_info| {
 				let nonce = System::account_nonce(&identity_info.account_id);
 				let balance = Balances::free_balance(&identity_info.account_id);
-				let trait_scores: Vec<_> = Appreciation::trait_scores_of(&identity_info.account_id)
+				let trait_scores = Appreciation::trait_scores_of(&identity_info.account_id)
 					.into_iter()
 					.map(|(community_id, trait_id, karma_score)| {
 						TraitScore {
 							trait_id, karma_score, community_id
 						}
 					})
-					.collect();
-				let community_membership: Vec<_> = Appreciation::community_membership_of(&identity_info.account_id)
+					.collect::<Vec<_>>();
+				let community_membership = Appreciation::community_membership_of(&identity_info.account_id)
 					.into_iter()
 					.map(|(community_id, karma_score, is_admin)| CommunityMembership {
 						community_id, karma_score, is_admin
 					})
-					.collect();
-
-				let karma_score = trait_scores.iter().map(|score| score.karma_score).sum::<u32>() + community_membership.len() as u32;
-
-				UserInfo {
-					account_id: identity_info.account_id,
-					nonce: nonce.into(),
-					user_name: identity_info.username.try_into().unwrap_or_default(),
-					phone_number_hash: identity_info.phone_number_hash,
-					balance: balance as u64,
-					trait_scores,
-					karma_score,
-					community_membership,
-				}
-			})
-		}
-
-		fn get_user_info_by_name(
-			name: Username,
-		) -> Option<UserInfo<AccountId>> {
-			Identity::identity_by_name(&name).map(|identity_info| {
-				let nonce = System::account_nonce(&identity_info.account_id);
-				let balance = Balances::free_balance(&identity_info.account_id);
-				let trait_scores: Vec<_> = Appreciation::trait_scores_of(&identity_info.account_id)
-					.into_iter()
-					.map(|(community_id, trait_id, karma_score)| {
-						TraitScore {
-							trait_id, karma_score, community_id
-						}
-					})
-					.collect();
-				let community_membership: Vec<_> = Appreciation::community_membership_of(&identity_info.account_id)
-					.into_iter()
-					.map(|(community_id, karma_score, is_admin)| CommunityMembership {
-						community_id, karma_score, is_admin
-					})
-					.collect();
-
-				let karma_score = trait_scores.iter().map(|score| score.karma_score).sum::<u32>() + community_membership.len() as u32;
-
-
-				UserInfo {
-					account_id: identity_info.account_id,
-					nonce: nonce.into(),
-					user_name: identity_info.username.try_into().unwrap_or_default(),
-					phone_number_hash: identity_info.phone_number_hash,
-					balance: balance as u64,
-					trait_scores,
-					karma_score,
-					community_membership,
-				}
-			})
-		}
-
-		fn get_user_info_by_number(
-			number: PhoneNumberHash,
-		) -> Option<UserInfo<AccountId>> {
-			Identity::identity_by_number(&number).map(|identity_info| {
-				let nonce = System::account_nonce(&identity_info.account_id);
-				let balance = Balances::free_balance(&identity_info.account_id);
-				let trait_scores: Vec<_> = Appreciation::trait_scores_of(&identity_info.account_id)
-					.into_iter()
-					.map(|(community_id, trait_id, karma_score)| {
-						TraitScore {
-							trait_id, karma_score, community_id
-						}
-					})
-					.collect();
-				let community_membership: Vec<_> = Appreciation::community_membership_of(&identity_info.account_id)
-					.into_iter()
-					.map(|(community_id, karma_score, is_admin)| CommunityMembership {
-						community_id, karma_score, is_admin
-					})
-					.collect();
+					.collect::<Vec<_>>();
 
 				let karma_score = trait_scores.iter().map(|score| score.karma_score).sum::<u32>() + community_membership.len() as u32;
 
@@ -506,7 +433,7 @@ impl_runtime_apis! {
 		) -> Vec<UserInfo<AccountId>> {
 			pallet_appreciation::CommunityMembership::<Runtime>::iter()
 				.filter(|(_, id, _)| *id == community_id)
-				.flat_map(|(account_id, _, _)| Self::get_user_info_by_account(account_id))
+				.flat_map(|(account_id, _, _)| Self::get_user_info(AccountIdentity::AccountId(account_id)))
 				.collect()
 		}
 
@@ -574,14 +501,8 @@ impl_runtime_apis! {
 				.ok()?;
 
 			// Get info about transaction sender and receiver
-			let from = signer.clone().and_then(Self::get_user_info_by_account);
-			let to = extrinsic.function.get_recipient().and_then(|account_identity| {
-				match account_identity {
-					AccountIdentity::AccountId(account_id) => Self::get_user_info_by_account(account_id),
-					AccountIdentity::Username(username) => Self::get_user_info_by_name(username),
-					AccountIdentity::PhoneNumberHash(phone_number_hash) => Self::get_user_info_by_number(phone_number_hash),
-				}
-			});
+			let from = signer.clone().and_then(|account_id| Self::get_user_info(AccountIdentity::AccountId(account_id)));
+			let to = extrinsic.function.get_recipient().and_then(Self::get_user_info);
 
 			Some(SignedTransactionWithStatus {
 				signed_transaction: SignedTransaction {

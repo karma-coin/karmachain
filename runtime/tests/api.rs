@@ -6,17 +6,17 @@ mod utils;
 /// `get_identity_by_account`, `get_identity_by_name`, `get_identity_by_number`
 mod identity {
 	use crate::utils::{get_account_id_from_seed, new_test_ext, TestUtils};
-	use karmachain_node_runtime::{NameLimit, Runtime, PhoneNumberHash, PhoneNumber};
+	use karmachain_node_runtime::{NameLimit, PhoneNumber, PhoneNumberHash, Runtime};
 	use runtime_api::identity::runtime_decl_for_IdentityApi::IdentityApiV1;
-	use sp_common::BoundedString;
-	use sp_core::{sr25519, hashing::blake2_512};
+	use sp_common::{identity::AccountIdentity, BoundedString};
+	use sp_core::{hashing::blake2_512, sr25519};
 
 	#[test]
 	fn get_identity_by_account_user_not_exists() {
 		new_test_ext().execute_with(|| {
 			let bob = "Bob";
 			let bob_account_id = get_account_id_from_seed::<sr25519::Public>(bob);
-			assert!(Runtime::get_user_info_by_account(bob_account_id).is_none())
+			assert!(Runtime::get_user_info(AccountIdentity::AccountId(bob_account_id)).is_none())
 		});
 	}
 
@@ -25,7 +25,7 @@ mod identity {
 		new_test_ext().execute_with(|| {
 			let bob = "Bob";
 			let bob_username = bob.try_into().unwrap();
-			assert!(Runtime::get_user_info_by_name(bob_username).is_none())
+			assert!(Runtime::get_user_info(AccountIdentity::Username(bob_username)).is_none())
 		});
 	}
 
@@ -34,8 +34,10 @@ mod identity {
 		new_test_ext().execute_with(|| {
 			let bob = "Bob";
 			let bob_phone_number: PhoneNumber = bob.try_into().unwrap();
-			let bob_phone_number_hash = PhoneNumberHash::from(blake2_512(Vec::from(bob_phone_number).as_slice()));
-			assert!(Runtime::get_user_info_by_number(bob_phone_number_hash).is_none())
+			let bob_phone_number_hash =
+				PhoneNumberHash::from(blake2_512(Vec::from(bob_phone_number).as_slice()));
+			assert!(Runtime::get_user_info(AccountIdentity::PhoneNumberHash(bob_phone_number_hash))
+				.is_none())
 		});
 	}
 
@@ -47,9 +49,10 @@ mod identity {
 				"Bob".try_into().expect("Invalid name length");
 			let bob_phone_number: PhoneNumber =
 				"11111111111".try_into().expect("Invalid phone number length");
-			let bob_phone_number_hash = PhoneNumberHash::from(blake2_512(Vec::from(bob_phone_number).as_slice()));
+			let bob_phone_number_hash =
+				PhoneNumberHash::from(blake2_512(Vec::from(bob_phone_number).as_slice()));
 
-			let info = Runtime::get_user_info_by_account(bob_account_id.clone())
+			let info = Runtime::get_user_info(AccountIdentity::AccountId(bob_account_id.clone()))
 				.expect("Fail to get info");
 
 			assert_eq!(info.account_id, bob_account_id);
@@ -66,11 +69,11 @@ mod identity {
 				"Bob".try_into().expect("Invalid name length");
 			let bob_phone_number: PhoneNumber =
 				"11111111111".try_into().expect("Invalid phone number length");
-			let bob_phone_number_hash = PhoneNumberHash::from(blake2_512(Vec::from(bob_phone_number).as_slice()));
+			let bob_phone_number_hash =
+				PhoneNumberHash::from(blake2_512(Vec::from(bob_phone_number).as_slice()));
 
-
-			let info =
-				Runtime::get_user_info_by_name(bob_username.clone()).expect("Fail to get info");
+			let info = Runtime::get_user_info(AccountIdentity::Username(bob_username.clone()))
+				.expect("Fail to get info");
 
 			assert_eq!(info.account_id, bob_account_id);
 			assert_eq!(info.user_name, bob_username);
@@ -86,11 +89,12 @@ mod identity {
 				"Bob".try_into().expect("Invalid name length");
 			let bob_phone_number: PhoneNumber =
 				"11111111111".try_into().expect("Invalid phone number length");
-			let bob_phone_number_hash = PhoneNumberHash::from(blake2_512(Vec::from(bob_phone_number).as_slice()));
+			let bob_phone_number_hash =
+				PhoneNumberHash::from(blake2_512(Vec::from(bob_phone_number).as_slice()));
 
-
-			let info = Runtime::get_user_info_by_number(bob_phone_number_hash)
-				.expect("Fail to get info");
+			let info =
+				Runtime::get_user_info(AccountIdentity::PhoneNumberHash(bob_phone_number_hash))
+					.expect("Fail to get info");
 
 			assert_eq!(info.account_id, bob_account_id);
 			assert_eq!(info.user_name, bob_username);

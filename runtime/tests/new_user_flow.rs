@@ -3,7 +3,8 @@ mod utils;
 use frame_support::{assert_noop, assert_ok};
 use karmachain_node_runtime::*;
 use runtime_api::identity::runtime_decl_for_IdentityApi::IdentityApiV1;
-use sp_core::{sr25519, hashing::blake2_512};
+use sp_common::identity::AccountIdentity;
+use sp_core::{hashing::blake2_512, sr25519};
 use utils::*;
 
 #[test]
@@ -17,11 +18,12 @@ fn new_user_happy_flow() {
 		let account_id = get_account_id_from_seed::<sr25519::Public>("Bob");
 		let username: Username = "Bob".try_into().unwrap();
 		let phone_number: PhoneNumber = "+0123456789".try_into().unwrap();
-		let phone_number_hash = PhoneNumberHash::from(blake2_512(Vec::from(phone_number).as_slice()));
-
+		let phone_number_hash =
+			PhoneNumberHash::from(blake2_512(Vec::from(phone_number).as_slice()));
 
 		// let (public_key, signature) =
-		// 	get_verification_evidence(account_id.clone(), username.clone(), phone_number_hash.clone());
+		// 	get_verification_evidence(account_id.clone(), username.clone(),
+		// phone_number_hash.clone());
 
 		assert_ok!(Identity::new_user(
 			RuntimeOrigin::signed(account_id.clone()),
@@ -32,7 +34,8 @@ fn new_user_happy_flow() {
 			phone_number_hash,
 		));
 
-		let user_info = Runtime::get_user_info_by_account(account_id).expect("Missing user info");
+		let user_info = Runtime::get_user_info(AccountIdentity::AccountId(account_id))
+			.expect("Missing user info");
 		assert_eq!(user_info.user_name, username);
 		assert_eq!(user_info.phone_number_hash, phone_number_hash);
 		assert_eq!(user_info.nonce, 0);
@@ -47,8 +50,8 @@ fn new_user_happy_flow() {
 			Some(1)
 		);
 
-		let user_info =
-			Runtime::get_user_info_by_name(username.clone()).expect("Missing user info");
+		let user_info = Runtime::get_user_info(AccountIdentity::Username(username.clone()))
+			.expect("Missing user info");
 		assert_eq!(user_info.user_name, username);
 		assert_eq!(user_info.phone_number_hash, phone_number_hash);
 		assert_eq!(user_info.nonce, 0);
@@ -63,8 +66,8 @@ fn new_user_happy_flow() {
 			Some(1)
 		);
 
-		let user_info =
-			Runtime::get_user_info_by_number(phone_number_hash).expect("Missing user info");
+		let user_info = Runtime::get_user_info(AccountIdentity::PhoneNumberHash(phone_number_hash))
+			.expect("Missing user info");
 		assert_eq!(user_info.user_name, username);
 		assert_eq!(user_info.phone_number_hash, phone_number_hash);
 		assert_eq!(user_info.nonce, 0);
@@ -120,14 +123,16 @@ fn new_user_existing_user_name() {
 		let phone_number_2: PhoneNumber =
 			"9876543210".try_into().expect("Invalid phone number length");
 
-		let phone_number_1_hash = PhoneNumberHash::from(blake2_512(Vec::from(phone_number_1).as_slice()));
-		let phone_number_2_hash = PhoneNumberHash::from(blake2_512(Vec::from(phone_number_2).as_slice()));
-
+		let phone_number_1_hash =
+			PhoneNumberHash::from(blake2_512(Vec::from(phone_number_1).as_slice()));
+		let phone_number_2_hash =
+			PhoneNumberHash::from(blake2_512(Vec::from(phone_number_2).as_slice()));
 
 		// let (public_key_1, signature_1) =
-		// 	get_verification_evidence(account_id_1.clone(), name.clone(), phone_number_1_hash.clone());
-		// let (public_key_2, signature_2) =
-		// 	get_verification_evidence(account_id_2.clone(), name.clone(), phone_number_2_hash.clone());
+		// 	get_verification_evidence(account_id_1.clone(), name.clone(),
+		// phone_number_1_hash.clone()); let (public_key_2, signature_2) =
+		// 	get_verification_evidence(account_id_2.clone(), name.clone(),
+		// phone_number_2_hash.clone());
 
 		assert_ok!(Identity::new_user(
 			RuntimeOrigin::signed(account_id_1.clone()),
@@ -166,13 +171,14 @@ fn new_user_migrate_account_flow() {
 		let name: Username = "user1234567890".try_into().expect("Invalid name length");
 		let phone_number: PhoneNumber =
 			"0123456789".try_into().expect("Invalid phone number length");
-		let phone_number_hash = PhoneNumberHash::from(blake2_512(Vec::from(phone_number).as_slice()));
-
+		let phone_number_hash =
+			PhoneNumberHash::from(blake2_512(Vec::from(phone_number).as_slice()));
 
 		// let (public_key_1, signature_1) =
-		// 	get_verification_evidence(bob_account_id.clone(), name.clone(), phone_number_hash.clone());
-		// let (public_key_2, signature_2) =
-		// 	get_verification_evidence(charlie_account_id.clone(), name.clone(), phone_number_hash.clone());
+		// 	get_verification_evidence(bob_account_id.clone(), name.clone(),
+		// phone_number_hash.clone()); let (public_key_2, signature_2) =
+		// 	get_verification_evidence(charlie_account_id.clone(), name.clone(),
+		// phone_number_hash.clone());
 
 		assert_ok!(Identity::new_user(
 			RuntimeOrigin::signed(bob_account_id.clone()),
@@ -192,9 +198,12 @@ fn new_user_migrate_account_flow() {
 			phone_number_hash,
 		));
 
-		assert!(Runtime::get_user_info_by_account(bob_account_id.clone()).is_none());
-		let user_info = Runtime::get_user_info_by_account(charlie_account_id.clone())
-			.expect("Missing user info");
+		assert!(
+			Runtime::get_user_info(AccountIdentity::AccountId(bob_account_id.clone())).is_none()
+		);
+		let user_info =
+			Runtime::get_user_info(AccountIdentity::AccountId(charlie_account_id.clone()))
+				.expect("Missing user info");
 		assert_eq!(user_info.user_name, name);
 		assert_eq!(user_info.phone_number_hash, phone_number_hash);
 		assert_eq!(user_info.nonce, 0);

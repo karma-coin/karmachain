@@ -10,7 +10,8 @@ use std::sync::Arc;
 use jsonrpsee::RpcModule;
 use karmachain_node_runtime::{
 	opaque::{Block, UncheckedExtrinsic},
-	AccountId, Balance, Hash, Index, PhoneNumberHash, RuntimeEvent, Signature, Username, PhoneNumber
+	AccountId, Balance, Hash, Index, PhoneNumber, PhoneNumberHash, RuntimeEvent, Signature,
+	Username,
 };
 use sc_client_api::{BlockBackend, StorageProvider};
 use sc_transaction_pool_api::TransactionPool;
@@ -81,7 +82,11 @@ where
 
 	module.merge(System::new(client.clone(), pool, deny_unsafe).into_rpc())?;
 	module.merge(TransactionPayment::new(client.clone()).into_rpc())?;
-	module.merge(Identity::new(client.clone()).into_rpc())?;
+	module.merge(
+		IdentityApiServer::<Hash, AccountId, Username, PhoneNumber, PhoneNumberHash>::into_rpc(
+			Identity::new(client.clone()),
+		),
+	)?;
 	module.merge(TransactionsIndexer::new(client.clone()).into_rpc())?;
 	module.merge(EventsProvider::new(client.clone()).into_rpc())?;
 	module.merge(BlocksProvider::new(client.clone()).into_rpc())?;
@@ -91,9 +96,11 @@ where
 		let bypass_token = bypass_token.expect("Missing bypass token");
 		let auth_dst = auth_dst.expect("Missing auth endpoint url");
 
-		module.merge(VerifierApiServer::<AccountId, Username, PhoneNumber, PhoneNumberHash>::into_rpc(
-			Verifier::new(client, keystore, bypass_token, auth_dst),
-		))?;
+		module.merge(
+			VerifierApiServer::<AccountId, Username, PhoneNumber, PhoneNumberHash>::into_rpc(
+				Verifier::new(client, keystore, bypass_token, auth_dst),
+			),
+		)?;
 	}
 
 	Ok(module)

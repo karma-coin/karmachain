@@ -10,7 +10,7 @@
 			"name": "Identity",
 			"item": [
 				{
-					"name": "Get user info by name",
+					"name": "Get user info by username",
 					"request": {
 						"method": "POST",
 						"header": [
@@ -22,7 +22,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"identity_getUserInfoByName\",\n    \"params\": {\n        \"name\": \"Alice\"\n    }\n}"
+							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"identity_getUserInfoByUsername\",\n    \"params\": {\n        \"username\": \"alice\"\n    }\n}"
 						},
 						"url": {
 							"raw": "http://localhost:9933/?",
@@ -45,7 +45,7 @@
 					"response": []
 				},
 				{
-					"name": "Get user info by account",
+					"name": "Get user info by account id",
 					"request": {
 						"method": "POST",
 						"header": [
@@ -57,7 +57,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"identity_getUserInfoByAccount\",\n    \"params\": {\n        \"account_id\": \"5Cfi7gqVNda2vKTFRN48jP95b6zXDoh2md2xLCamnggyLnma\"\n    }\n}"
+							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"identity_getUserInfoByAccountId\",\n    \"params\": {\n        \"account_id\": \"5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY\"\n    }\n}"
 						},
 						"url": {
 							"raw": "http://localhost:9933/?",
@@ -80,7 +80,7 @@
 					"response": []
 				},
 				{
-					"name": "Get user info by number",
+					"name": "Get user info by phone number",
 					"request": {
 						"method": "POST",
 						"header": [
@@ -92,7 +92,42 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"identity_getUserInfoByNumber\",\n    \"params\": {\n        \"number\": \"+Alice\"\n    }\n}"
+							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"identity_getUserInfoByPhoneNumber\",\n    \"params\": {\n        \"phone_number\": \"\"\n    }\n}"
+						},
+						"url": {
+							"raw": "http://localhost:9933/?",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9933",
+							"path": [
+								""
+							],
+							"query": [
+								{
+									"key": "",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get user info by phone number hash",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"identity_getUserInfoByPhoneNumberHash\",\n    \"params\": {\n        \"phone_number_hash\": \"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\"\n    }\n}"
 						},
 						"url": {
 							"raw": "http://localhost:9933/?",
@@ -162,7 +197,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"community_getContacts\",\n    \"params\": {\n        \"prefix\": \"Al\",\n        \"community_id\": null\n    }\n}"
+							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"community_getContacts\",\n    \"params\": {\n        \"prefix\": \"al\",\n        \"community_id\": null\n    }\n}"
 						},
 						"url": {
 							"raw": "http://localhost:9933/?",
@@ -236,7 +271,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"get_tx\",\n    \"params\": {\n        \"block_number\": 1,\n        \"tx_index\": 1\n    }\n}",
+							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"transactions_getTx\",\n    \"params\": {\n        \"block_number\": 1,\n        \"tx_index\": 1\n    }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -269,7 +304,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"get_txWithEvents\",\n    \"params\": {\n        \"block_number\": 1,\n        \"tx_index\": 1\n    }\n}",
+							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"transactions_getTxWithEvents\",\n    \"params\": {\n        \"block_number\": 1,\n        \"tx_index\": 1\n    }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -302,7 +337,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"get_transaction\",\n    \"params\": {\n        \"tx_hash\": \"0x33d191b41d83a930da61a0a8894e97caee2862ed25911e8fd41bc50e4602c53b\"\n    }\n}",
+							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"transactions_getTransaction\",\n    \"params\": {\n        \"tx_hash\": \"0x33d191b41d83a930da61a0a8894e97caee2862ed25911e8fd41bc50e4602c53b\"\n    }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -335,7 +370,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"get_transactionFromHashes\",\n    \"params\": {\n        \"tx_hashes\": [\n            \"0x33d191b41d83a930da61a0a8894e97caee2862ed25911e8fd41bc50e4602c53b\",\n            \"0x33d191b41d83a930da61a0a8894e97caee2862ed25911e8fd41bc50e4602c53b\"\n        ]\n    }\n}",
+							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"transactions_getTransactionFromHashes\",\n    \"params\": {\n        \"tx_hashes\": [\n            \"0x33d191b41d83a930da61a0a8894e97caee2862ed25911e8fd41bc50e4602c53b\",\n            \"0x33d191b41d83a930da61a0a8894e97caee2862ed25911e8fd41bc50e4602c53b\"\n        ]\n    }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -368,7 +403,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"get_transactions\",\n    \"params\": {\n        \"account_id\": \"5GNJqTPyNqANBkUVMN1LPPrxXnFouWXoe2wNSmmEoLctxiZY\"\n    }\n}",
+							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"transactions_getTransactions\",\n    \"params\": {\n        \"account_id\": \"5GNJqTPyNqANBkUVMN1LPPrxXnFouWXoe2wNSmmEoLctxiZY\"\n    }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -406,7 +441,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"get_blocks\",\n    \"params\": {\n        \"from_block_height\": 0, \n        \"to_block_height\": 2\n    }\n}",
+							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"chain_getBlocks\",\n    \"params\": {\n        \"from_block_height\": 0, \n        \"to_block_height\": 2\n    }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -439,7 +474,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"get_blockInfo\",\n    \"params\": {\n        \"block_height\": 5\n    }\n}",
+							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"chain_getBlockInfo\",\n    \"params\": {\n        \"block_height\": 5\n    }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -472,7 +507,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"get_blockchainData\"\n}",
+							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"chain_getBlockchainData\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -505,7 +540,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"get_genesisData\"\n}",
+							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"chain_getGenesisData\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -576,7 +611,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"author_insertKey\",\n    \"params\": {\n        \"key_type\": \"Veri\",\n        \"suri\": \"//Alice\",\n        \"public\": \"30783547727776614546357A58623236467A397263517044575335374374455248704E6568584350634E6F48474B75745159\"\n    }\n}",
+							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"author_insertKey\",\n    \"params\": {\n        \"key_type\": \"Veri\",\n        \"suri\": \"//Alice\",\n        \"public\": \"0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d\"\n    }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -644,7 +679,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"get_blockchainEvents\",\n    \"params\": {\n        \"from_block_height\": 0, \n        \"to_block_height\": 2\n    }\n}",
+					"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"events_getBlockchainEvents\",\n    \"params\": {\n        \"from_block_height\": 0, \n        \"to_block_height\": 2\n    }\n}",
 					"options": {
 						"raw": {
 							"language": "json"

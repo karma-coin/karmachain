@@ -7,9 +7,9 @@ use sp_common::{
 	types::{CharTraitId, CommunityId},
 	BoundedString,
 };
-use sp_core::{sr25519, Pair, Public, hashing::blake2_512};
-use sp_runtime::traits::{IdentifyAccount, Verify};
+use sp_core::{hashing::blake2_512, sr25519, Pair, Public};
 use sp_rpc::types::VerificationEvidence;
+use sp_runtime::traits::{IdentifyAccount, Verify};
 
 /// Generate a crypto pair from seed.
 pub fn get_from_seed<TPublic: Public>(seed: &str) -> <TPublic::Pair as Pair>::Public {
@@ -93,7 +93,8 @@ impl TestUtils for sp_io::TestExternalities {
 			let phone_number: PhoneNumber =
 				BoundedString::try_from(phone_number).expect("Invalid phone number length");
 
-			let phone_number_hash = PhoneNumberHash::from(blake2_512(Vec::from(phone_number).as_slice()));
+			let phone_number_hash =
+				PhoneNumberHash::from(blake2_512(Vec::from(phone_number).as_slice()));
 
 			// let (public_key, signature) = get_verification_evidence(
 			// 	account_id.clone(),
