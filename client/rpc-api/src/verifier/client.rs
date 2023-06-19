@@ -13,6 +13,7 @@ use sp_api::ProvideRuntimeApi;
 use sp_blockchain::HeaderBackend;
 use sp_core::{
 	crypto::{AccountId32, CryptoTypePublicPair},
+	hashing::blake2_512,
 	ByteArray,
 };
 use sp_keystore::SyncCryptoStore;
@@ -43,14 +44,17 @@ impl<C, P> Verifier<C, P> {
 }
 
 #[async_trait]
-impl<C, Block, AccountId, Username, PhoneNumberHash>
-	VerifierApiServer<AccountId, Username, PhoneNumberHash> for Verifier<C, Block>
+impl<C, Block, AccountId, Username, PhoneNumber, PhoneNumberHash>
+	VerifierApiServer<AccountId, Username, PhoneNumber, PhoneNumberHash> for Verifier<C, Block>
 where
 	Block: BlockT + Send + Sync + 'static,
 	AccountId:
 		Codec + Clone + Send + Sync + 'static + From<sp_core::sr25519::Public> + Into<AccountId32>,
 	Username: Codec + Clone + Send + Sync + 'static,
-	PhoneNumberHash: Codec + Clone + Send + Sync + 'static,
+	PhoneNumber: Codec + Clone + Send + Sync + 'static,
+	String: From<PhoneNumber>,
+	Vec<u8>: From<PhoneNumber>,
+	PhoneNumberHash: Codec + Clone + Send + Sync + 'static + From<[u8; 64]>,
 	C: ProvideRuntimeApi<Block> + HeaderBackend<Block> + Send + Sync + 'static,
 	C::Api: VerifierApi<Block, AccountId, Username, PhoneNumberHash>,
 {
@@ -58,11 +62,14 @@ where
 		&self,
 		account_id: AccountId,
 		username: Username,
-		phone_number_hash: PhoneNumberHash,
+		phone_number: PhoneNumber,
 		bypass_token: Option<ByPassToken>,
 	) -> RpcResult<VerificationResponse<AccountId, Username, PhoneNumberHash>> {
 		let api = self.client.runtime_api();
 		let at = BlockId::hash(self.client.info().best_hash);
+
+		let phone_number_hash =
+			PhoneNumberHash::from(blake2_512(Vec::from(phone_number.clone()).as_slice()));
 
 		// Verify input parameters for `new_user` tx
 		match api
@@ -91,7 +98,7 @@ where
 			None => AuthServiceClient::connect(self.auth_dst.clone())
 				.await
 				.map_err(|e| map_err(Error::AuthServiceOffline, e))?
-				.authenticate(gen_auth_request(account_id.clone(), phone_number_hash.clone())?)
+				.authenticate(gen_auth_request(account_id.clone(), phone_number.clone())?)
 				.await
 				.map(|v| v.into_inner().result.into())
 				.unwrap_or(VerificationResult::Unverified),
@@ -140,11 +147,22 @@ where
 	}
 }
 
-fn gen_auth_request<AccountId, PhoneNumberHash>(
-	_account_id: AccountId,
-	_phone_number_hash: PhoneNumberHash,
-) -> Result<AuthRequest, CallError> {
-	// Auth service do not support PhoneNumberHash
-	// for now to use verifier API - use bypass token
-	todo!()
+fn gen_auth_request<AccountId, PhoneNumber>(
+	account_id: AccountId,
+	phone_number: PhoneNumber,
+) -> Result<AuthRequest, CallError>
+where
+	AccountId: Into<AccountId32>,
+	PhoneNumber: TryInto<String>,
+	<PhoneNumber as TryInto<String>>::Error: std::fmt::Display,
+{
+	let account_id: AccountId32 = account_id.into();
+	let phone_number = phone_number.try_into().map_err(|e| map_err(Error::InvalidString, e))?;
+
+	Ok(AuthRequest {
+		account_id: Some(base::karma_coin::karma_coin_core_types::AccountId {
+			data: account_id.to_raw_vec(),
+		}),
+		phone_number,
+	})
 }
