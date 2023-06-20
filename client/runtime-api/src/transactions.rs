@@ -16,14 +16,19 @@ sp_api::decl_runtime_apis! {
 		fn get_transaction_info(opaque_extrinsic: OpaqueExtrinsic) -> Option<SignedTransactionWithStatus<AccountId, Signature>>;
 	}
 
-	pub trait TransactionIndexer<AccountId>
+	pub trait TransactionIndexer<AccountId, PhoneNumberHash>
 	where
 		AccountId: Codec,
+		PhoneNumberHash: Codec,
 	{
 		/// This method takes an AccountId as input and returns a vector of tuples, where each tuple
 		/// contains two elements: the block number and the transaction index. These tuples represent
 		/// all the transactions associated with the specified account_id.
 		fn get_transactions_by_account(account_id: AccountId) -> Vec<(<Block::Header as Header>::Number, u32)>;
+		/// This method takes an PhoneNumberHash as input and returns a vector of tuples, where each tuple
+		/// contains two elements: the block number and the transaction index. These tuples represent
+		/// all the transactions associated with the specified phone number hash.
+		fn get_transactions_by_phone_number_hash(phone_number_hash: PhoneNumberHash) -> Vec<(<Block::Header as Header>::Number, u32)>;
 		/// This method takes a tx_hash as input and returns an Option type that contains a tuple of the
 		/// block number and transaction index associated with the specified hash. If no transaction is
 		/// found, None is returned.

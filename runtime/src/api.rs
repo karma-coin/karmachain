@@ -517,9 +517,13 @@ impl_runtime_apis! {
 		}
 	}
 
-	impl runtime_api::transactions::TransactionIndexer<Block, AccountId> for Runtime {
+	impl runtime_api::transactions::TransactionIndexer<Block, AccountId, PhoneNumberHash> for Runtime {
 		fn get_transactions_by_account(account_id: AccountId) -> Vec<(BlockNumber, u32)> {
 			TransactionIndexer::accounts_tx(account_id).unwrap_or_default()
+		}
+
+		fn get_transactions_by_phone_number_hash(phone_number_hash: PhoneNumberHash) -> Vec<(BlockNumber, u32)> {
+			TransactionIndexer::phone_number_hash_tx(phone_number_hash).unwrap_or_default()
 		}
 
 		fn get_transaction(tx_hash: Hash) -> Option<(BlockNumber, u32)> {

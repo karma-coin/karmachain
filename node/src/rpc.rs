@@ -63,7 +63,7 @@ where
 		AccountId,
 		Signature,
 	>,
-	C::Api: runtime_api::transactions::TransactionIndexer<Block, AccountId>,
+	C::Api: runtime_api::transactions::TransactionIndexer<Block, AccountId, PhoneNumberHash>,
 	C::Api: runtime_api::verifier::VerifierApi<Block, AccountId, Username, PhoneNumberHash>,
 	P: TransactionPool + 'static,
 {
