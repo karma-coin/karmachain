@@ -11,10 +11,7 @@ impl WeightToFee for ConstWeightFee {
 	type Balance = Balance;
 
 	fn weight_to_fee(_weight: &Weight) -> Self::Balance {
-		// In order to get fee equal to 100 KCENTS use value of 50 KCENTS,
-		// because actual fee calculation include weight fee two times
-		// first time as `base_fee` and second time  as `adjusted_weight_fee`.
-		KCENTS * 50
+		0
 	}
 }
 
@@ -24,7 +21,7 @@ impl WeightToFee for ConstLengthFee {
 	type Balance = Balance;
 
 	fn weight_to_fee(_weight: &Weight) -> Self::Balance {
-		KCENTS * 0
+		KCENTS
 	}
 }
 
