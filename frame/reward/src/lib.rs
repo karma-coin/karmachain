@@ -77,7 +77,7 @@ pub mod pallet {
 		pub referral_reward_phase1_amount: T::Balance,
 		pub referral_reward_phase2_amount: T::Balance,
 
-		pub tx_fee_subsidy_max_per_user: u32,
+		pub tx_fee_subsidy_max_per_user: u8,
 		pub tx_fee_subsidies_alloc: T::Balance,
 		pub tx_fee_subsidy_max_amount: T::Balance,
 
@@ -180,7 +180,7 @@ pub mod pallet {
 	pub type ReferralRewardPhase2Amount<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
 
 	#[pallet::storage]
-	pub type TxFeeSubsidyMaxPerUser<T: Config> = StorageValue<_, u32, ValueQuery>;
+	pub type TxFeeSubsidyMaxPerUser<T: Config> = StorageValue<_, u8, ValueQuery>;
 	#[pallet::storage]
 	pub type TxFeeSubsidyMaxAmount<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
 
@@ -346,6 +346,11 @@ impl<T: Config> Pallet<T> {
 
 		// Fee is too big
 		if amount > TxFeeSubsidyMaxAmount::<T>::get() {
+			return false
+		}
+
+		// No more tx fee subsidies allowed
+		if AccountRewardInfo::<T>::get(who).transaction_subsidized >= TxFeeSubsidyMaxPerUser::<T>::get() {
 			return false
 		}
 
