@@ -423,6 +423,39 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "Get transactions by phone number hash",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": 1,\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"transactions_getTransactionsByPhoneNumberHash\",\n    \"params\": {\n        \"phone_number_hash\": \"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:9933/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9933",
+							"path": [
+								""
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},

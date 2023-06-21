@@ -2,7 +2,10 @@
 
 use frame_support::dispatch::DispatchResult;
 pub use pallet::*;
-use sp_common::types::{CharTraitId, CommunityId};
+use sp_common::{
+	traits::IdentityProvider,
+	types::{CharTraitId, CommunityId},
+};
 use sp_runtime::traits::{BlockNumberProvider, Hash};
 
 #[frame_support::pallet]
@@ -36,6 +39,11 @@ pub mod pallet {
 	#[pallet::getter(fn accounts_tx)]
 	pub type AccountTransactions<T: Config> =
 		StorageMap<_, Blake2_128Concat, T::AccountId, Vec<(T::BlockNumber, u32)>>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn phone_number_hash_tx)]
+	pub type PhoneNumberHashTransactions<T: Config> =
+		StorageMap<_, Blake2_128Concat, T::PhoneNumberHash, Vec<(T::BlockNumber, u32)>>;
 
 	#[pallet::storage]
 	pub type TransactionsCount<T: Config> = StorageValue<_, u64, ValueQuery>;
@@ -73,7 +81,7 @@ pub mod pallet {
 }
 
 impl<T: Config> Pallet<T> {
-	fn index_transaction(account_id: T::AccountId) -> DispatchResult {
+	fn index_transaction_by_account_id(account_id: T::AccountId) -> DispatchResult {
 		let block_number = <frame_system::Pallet<T>>::current_block_number();
 		let extrinsic_index =
 			<frame_system::Pallet<T>>::extrinsic_index().ok_or(Error::<T>::BadContext)?;
@@ -82,6 +90,24 @@ impl<T: Config> Pallet<T> {
 
 		TxHashes::<T>::insert(hash, (block_number, extrinsic_index));
 		AccountTransactions::<T>::append(account_id, (block_number, extrinsic_index));
+
+		Ok(())
+	}
+
+	fn index_transaction_by_phone_number_hash(
+		phone_number_hash: T::PhoneNumberHash,
+	) -> DispatchResult {
+		let block_number = <frame_system::Pallet<T>>::current_block_number();
+		let extrinsic_index =
+			<frame_system::Pallet<T>>::extrinsic_index().ok_or(Error::<T>::BadContext)?;
+		let extrinsic_data = <frame_system::Pallet<T>>::extrinsic_data(extrinsic_index);
+		let hash = T::Hashing::hash(&extrinsic_data);
+
+		TxHashes::<T>::insert(hash, (block_number, extrinsic_index));
+		PhoneNumberHashTransactions::<T>::append(
+			phone_number_hash,
+			(block_number, extrinsic_index),
+		);
 
 		Ok(())
 	}
@@ -94,9 +120,10 @@ impl<T: Config> sp_common::hooks::Hooks<T::AccountId, T::Balance, T::Username, T
 		_verifier: T::AccountId,
 		who: T::AccountId,
 		_name: T::Username,
-		_phone_number_hash: T::PhoneNumberHash,
+		phone_number_hash: T::PhoneNumberHash,
 	) -> DispatchResult {
-		Self::index_transaction(who)
+		Self::index_transaction_by_account_id(who)?;
+		Self::index_transaction_by_phone_number_hash(phone_number_hash)
 	}
 
 	fn on_update_user(
@@ -104,14 +131,19 @@ impl<T: Config> sp_common::hooks::Hooks<T::AccountId, T::Balance, T::Username, T
 		new_account_id: Option<T::AccountId>,
 		_username: T::Username,
 		_new_username: Option<T::Username>,
-		_phone_number_hash: T::PhoneNumberHash,
-		_new_phone_number_hash: Option<T::PhoneNumberHash>,
+		phone_number_hash: T::PhoneNumberHash,
+		new_phone_number_hash: Option<T::PhoneNumberHash>,
 	) -> DispatchResult {
 		UpdateUserTransactionsCount::<T>::mutate(|value| *value += 1);
 
-		Self::index_transaction(old_account_id)?;
+		Self::index_transaction_by_account_id(old_account_id)?;
 		if let Some(new_account_id) = new_account_id {
-			Self::index_transaction(new_account_id)?;
+			Self::index_transaction_by_account_id(new_account_id)?;
+		}
+
+		Self::index_transaction_by_phone_number_hash(phone_number_hash)?;
+		if let Some(new_phone_number_hash) = new_phone_number_hash {
+			Self::index_transaction_by_phone_number_hash(new_phone_number_hash)?;
 		}
 
 		Ok(())
@@ -124,8 +156,18 @@ impl<T: Config> sp_common::hooks::Hooks<T::AccountId, T::Balance, T::Username, T
 		_community_id: CommunityId,
 		char_trait_id: CharTraitId,
 	) -> DispatchResult {
-		Self::index_transaction(payer)?;
-		Self::index_transaction(payee)?;
+		let payer_phone_number_hash = T::IdentityProvider::identity_by_id(&payer)
+			.ok_or(Error::<T>::NotFound)?
+			.phone_number_hash;
+		let payee_phone_number_hash = T::IdentityProvider::identity_by_id(&payer)
+			.ok_or(Error::<T>::NotFound)?
+			.phone_number_hash;
+
+		Self::index_transaction_by_account_id(payer)?;
+		Self::index_transaction_by_account_id(payee)?;
+
+		Self::index_transaction_by_phone_number_hash(payer_phone_number_hash)?;
+		Self::index_transaction_by_phone_number_hash(payee_phone_number_hash)?;
 
 		let no_char_trait_id = pallet_appreciation::Pallet::<T>::no_char_trait_id()?;
 
@@ -139,8 +181,18 @@ impl<T: Config> sp_common::hooks::Hooks<T::AccountId, T::Balance, T::Username, T
 	}
 
 	fn on_set_admin(who: T::AccountId, new_admin: T::AccountId) -> DispatchResult {
-		Self::index_transaction(who)?;
-		Self::index_transaction(new_admin)
+		let who_phone_number_hash = T::IdentityProvider::identity_by_id(&who)
+			.ok_or(Error::<T>::NotFound)?
+			.phone_number_hash;
+		let new_admin_phone_number_hash = T::IdentityProvider::identity_by_id(&new_admin)
+			.ok_or(Error::<T>::NotFound)?
+			.phone_number_hash;
+
+		Self::index_transaction_by_account_id(who)?;
+		Self::index_transaction_by_account_id(new_admin)?;
+
+		Self::index_transaction_by_phone_number_hash(who_phone_number_hash)?;
+		Self::index_transaction_by_phone_number_hash(new_admin_phone_number_hash)
 	}
 
 	fn on_delete_user(

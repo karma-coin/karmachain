@@ -63,7 +63,8 @@ mod signup_rewards {
 
 		test_executor.with_user("Bob", "1111").execute_with(|| {
 			let account_id = get_account_id_from_seed::<sr25519::Public>("Bob");
-			let info = Runtime::get_user_info(AccountIdentity::AccountId(account_id)).expect("Fail to get info");
+			let info = Runtime::get_user_info(AccountIdentity::AccountId(account_id))
+				.expect("Fail to get info");
 
 			// Default signup reward to  10_000_000 KCents
 			assert_eq!(info.balance, 10_000_000)
