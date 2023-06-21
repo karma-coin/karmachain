@@ -17,7 +17,7 @@ use sp_common::{
 	BoundedString,
 };
 use sp_rpc::VerificationEvidence;
-use sp_runtime::traits::{IdentifyAccount, Verify};
+use sp_runtime::traits::{IdentifyAccount, Verify, Zero};
 use sp_std::{prelude::*, vec};
 
 #[frame_support::pallet]
@@ -273,6 +273,22 @@ pub mod pallet {
 				phone_number_hash: identity.phone_number_hash,
 				new_phone_number_hash: phone_number_hash,
 			});
+
+			Ok(())
+		}
+
+		#[pallet::call_index(2)]
+		#[pallet::weight(10_000 + T::DbWeight::get().reads_writes(3, 1).ref_time())]
+		pub fn delete_user(origin: OriginFor<T>) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			let identity_info = IdentityOf::<T>::take(&who).ok_or(Error::<T>::NotFound)?;
+			UsernameFor::<T>::remove(&identity_info.username);
+			PhoneNumberFor::<T>::remove(&identity_info.phone_number_hash);
+
+			T::Currency::make_free_balance_be(&who, T::Balance::zero());
+
+			T::Hooks::on_delete_user(who, identity_info.username, identity_info.phone_number_hash)?;
 
 			Ok(())
 		}

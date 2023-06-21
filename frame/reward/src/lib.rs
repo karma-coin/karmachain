@@ -350,7 +350,9 @@ impl<T: Config> Pallet<T> {
 		}
 
 		// No more tx fee subsidies allowed
-		if AccountRewardInfo::<T>::get(who).transaction_subsidized >= TxFeeSubsidyMaxPerUser::<T>::get() {
+		if AccountRewardInfo::<T>::get(who).transaction_subsidized >=
+			TxFeeSubsidyMaxPerUser::<T>::get()
+		{
 			return false
 		}
 

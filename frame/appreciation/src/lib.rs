@@ -597,6 +597,26 @@ impl<T: Config> Hooks<T::AccountId, T::Balance, T::Username, T::PhoneNumberHash>
 
 		Ok(())
 	}
+
+	fn on_delete_user(
+		account_id: T::AccountId,
+		_username: T::Username,
+		_phone_number_hash: T::PhoneNumberHash,
+	) -> DispatchResult {
+		let communities_membership: Vec<_> =
+			CommunityMembership::<T>::drain_prefix(&account_id).collect();
+
+		let no_community_id = NoCommunityId::<T>::get()?;
+		communities_membership
+			.iter()
+			.map(|(community_id, _)| community_id)
+			.chain(Some(&no_community_id))
+			.for_each(|community_id| {
+				let _result =
+					TraitScores::<T>::clear_prefix((&account_id, community_id), u32::MAX, None);
+			});
+		Ok(())
+	}
 }
 
 impl<T: Config> ScoreProvider<T::AccountId> for Pallet<T> {
