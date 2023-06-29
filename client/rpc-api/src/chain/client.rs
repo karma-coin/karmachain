@@ -54,7 +54,7 @@ where
 
 		let block = self
 			.client
-			.block(block_hash)
+			.block(block_hash.clone())
 			.map_err(|e| map_err(e, "Failed to get blocks"))?
 			.ok_or(CallError::Custom(ErrorObject::owned(
 				Error::BlockNotFound.into(),
@@ -63,7 +63,7 @@ where
 			)))?;
 
 		let block_info = api
-			.get_block_info(&BlockId::Number(block_height.into()), block)
+			.get_block_info(block_hash, block)
 			.map_err(|e| map_err(e, "Failed to get block info"))?;
 
 		Ok(block_info)
@@ -71,10 +71,10 @@ where
 
 	fn get_blockchain_data(&self) -> RpcResult<BlockchainStats> {
 		let api = self.client.runtime_api();
-		let at = BlockId::hash(self.client.info().best_hash);
+		let at = self.client.info().best_hash;
 
 		let blockchain_data = api
-			.get_blockchain_data(&at)
+			.get_blockchain_data(at)
 			.map_err(|e| map_err(e, "Failed to get blockchain data"))?;
 
 		Ok(blockchain_data)
@@ -82,11 +82,10 @@ where
 
 	fn get_genesis_data(&self) -> RpcResult<GenesisData<AccountId>> {
 		let api = self.client.runtime_api();
-		let at = BlockId::hash(self.client.info().best_hash);
+		let at = self.client.info().best_hash;
 
-		let genesis_data = api
-			.get_genesis_data(&at)
-			.map_err(|e| map_err(e, "Failed to get genesis data"))?;
+		let genesis_data =
+			api.get_genesis_data(at).map_err(|e| map_err(e, "Failed to get genesis data"))?;
 
 		Ok(genesis_data)
 	}

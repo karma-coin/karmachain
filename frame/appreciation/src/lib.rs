@@ -10,6 +10,7 @@ mod types;
 
 pub use crate::types::*;
 pub use pallet::*;
+use scale_info::prelude::string::String;
 use sp_common::{
 	traits::ScoreProvider,
 	types::{CharTraitId, CommunityId, Score},

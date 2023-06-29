@@ -56,7 +56,7 @@ where
 		tx_index: u32,
 	) -> RpcResult<SignedTransactionWithStatus<AccountId, Signature>> {
 		let api = self.client.runtime_api();
-		let at = BlockId::hash(self.client.info().best_hash);
+		let at = self.client.info().best_hash;
 
 		// Convert block number to block hash
 		let block_hash = self
@@ -94,7 +94,7 @@ where
 		})?;
 
 		let tx = api
-			.get_transaction_info(&at, opaque_extrinsic)
+			.get_transaction_info(at, opaque_extrinsic)
 			.map_err(|e| map_err(e, "Failed to get transaction details"))?;
 
 		Ok(tx.unwrap())
@@ -107,6 +107,19 @@ where
 	) -> RpcResult<(SignedTransactionWithStatus<AccountId, Signature>, Vec<Event>)> {
 		let api = self.client.runtime_api();
 
+		// Convert block number to block hash
+		let block_hash = self
+			.client
+			.block_hash(block_number)
+			.map_err(|e| map_err(e, "Failed to get block hash"))?
+			.ok_or_else(|| {
+				CallError::Custom(ErrorObject::owned(
+					Error::BlockNotFound.into(),
+					"Block with this number not found",
+					Option::<()>::None,
+				))
+			})?;
+
 		let transaction = <TransactionsIndexer<C, Block> as TransactionsIndexerApiServer<
 			Block,
 			AccountId,
@@ -116,7 +129,7 @@ where
 		.map_err(|e| map_err(e, "Failed to get transaction details"))?;
 
 		let tx_events = api
-			.get_transaction_events(&BlockId::number(block_number), tx_index)
+			.get_transaction_events(block_hash, tx_index)
 			.map_err(|e| map_err(e, "Failed to get transaction events"))?;
 
 		Ok((transaction, tx_events))
@@ -127,11 +140,11 @@ where
 		tx_hash: Block::Hash,
 	) -> RpcResult<GetTransactionResponse<AccountId, Signature, Event>> {
 		let api = self.client.runtime_api();
-		let at = BlockId::hash(self.client.info().best_hash);
+		let at = self.client.info().best_hash;
 
 		// Get block number and transaction index by transaction hash
 		let (block_number, tx_index) = api
-			.get_transaction(&at, tx_hash)
+			.get_transaction(at, tx_hash)
 			.map_err(|e| map_err(e, "Failed to get transaction indexes"))?
 			.ok_or(CallError::Custom(ErrorObject::owned(
 				Error::TxNotFound.into(),
@@ -155,10 +168,10 @@ where
 		account_id: AccountId,
 	) -> RpcResult<GetTransactionsResponse<AccountId, Signature, Event>> {
 		let api = self.client.runtime_api();
-		let at = BlockId::hash(self.client.info().best_hash);
+		let at = self.client.info().best_hash;
 
 		let (transactions, tx_events) = api
-			.get_transactions_by_account(&at, account_id)
+			.get_transactions_by_account(at, account_id)
 			.map_err(|e| map_err(e, "Failed to get transactions indexes"))?
 			.into_iter()
 			.map(|(block_number, tx_index)| self.get_tx_with_events(block_number, tx_index))
