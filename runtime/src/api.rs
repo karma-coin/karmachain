@@ -2,16 +2,14 @@ use crate::{validators_rewards::era_payout, *};
 use codec::{Decode, Encode};
 use frame_system::Phase;
 use pallet_identity::types::VerificationResult as IdentityVerificationResult;
+use pallet_transaction_payment_rpc_runtime_api::{FeeDetails, RuntimeDispatchInfo};
 use sp_common::{types::CommunityId, BoundedString};
 use sp_rpc::{
-	Block as RpcBlock, BlockchainStats, CharTrait, CommunityMembership, Contact, GenesisData,
-	PhoneVerifier, SignedTransaction, SignedTransactionWithStatus, TraitScore, TransactionStatus,
-	UserInfo, VerificationResult,
+	BlockchainStats, CharTrait, CommunityMembership, Contact, GenesisData, PhoneVerifier,
+	SignedTransaction, SignedTransactionWithStatus, TraitScore, TransactionStatus, UserInfo,
+	VerificationResult,
 };
-use sp_runtime::{
-	generic::SignedBlock,
-	traits::{Hash as HashT, StaticLookup},
-};
+use sp_runtime::{generic::SignedBlock, traits::StaticLookup};
 
 // To learn more about runtime versioning, see:
 // https://docs.substrate.io/main-docs/build/upgrade#runtime-versioning
@@ -187,73 +185,42 @@ impl_runtime_apis! {
 		}
 	}
 
-	impl pallet_transaction_payment_rpc_runtime_api::TransactionPaymentApi<Block, Balance> for Runtime {
-		fn query_info(
-			uxt: <Block as BlockT>::Extrinsic,
-			len: u32,
-		) -> pallet_transaction_payment_rpc_runtime_api::RuntimeDispatchInfo<Balance> {
+	impl pallet_transaction_payment_rpc_runtime_api::TransactionPaymentApi<
+		Block,
+		Balance,
+	> for Runtime {
+		fn query_info(uxt: <Block as BlockT>::Extrinsic, len: u32) -> RuntimeDispatchInfo<Balance> {
 			TransactionPayment::query_info(uxt, len)
 		}
-		fn query_fee_details(
-			uxt: <Block as BlockT>::Extrinsic,
-			len: u32,
-		) -> pallet_transaction_payment::FeeDetails<Balance> {
+		fn query_fee_details(uxt: <Block as BlockT>::Extrinsic, len: u32) -> FeeDetails<Balance> {
 			TransactionPayment::query_fee_details(uxt, len)
+		}
+		fn query_weight_to_fee(weight: Weight) -> Balance {
+			TransactionPayment::weight_to_fee(weight)
+		}
+		fn query_length_to_fee(length: u32) -> Balance {
+			TransactionPayment::length_to_fee(length)
 		}
 	}
 
 	impl pallet_transaction_payment_rpc_runtime_api::TransactionPaymentCallApi<Block, Balance, RuntimeCall>
 		for Runtime
 	{
-		fn query_call_info(
-			call: RuntimeCall,
-			len: u32,
-		) -> pallet_transaction_payment::RuntimeDispatchInfo<Balance> {
+		fn query_call_info(call: RuntimeCall, len: u32) -> RuntimeDispatchInfo<Balance> {
 			TransactionPayment::query_call_info(call, len)
 		}
-		fn query_call_fee_details(
-			call: RuntimeCall,
-			len: u32,
-		) -> pallet_transaction_payment::FeeDetails<Balance> {
+		fn query_call_fee_details(call: RuntimeCall, len: u32) -> FeeDetails<Balance> {
 			TransactionPayment::query_call_fee_details(call, len)
+		}
+		fn query_weight_to_fee(weight: Weight) -> Balance {
+			TransactionPayment::weight_to_fee(weight)
+		}
+		fn query_length_to_fee(length: u32) -> Balance {
+			TransactionPayment::length_to_fee(length)
 		}
 	}
 
 	impl runtime_api::chain::BlockInfoProvider<Block, SignedBlock<Block>, AccountId, Hash> for Runtime {
-		fn get_block_info(block: SignedBlock<Block>) -> RpcBlock<AccountId, Hash> {
-
-			let time = Timestamp::now();
-			let author = Authorship::author();
-			let height = block.block.header.number;
-			let transaction_hashes = block.block.extrinsics
-				.iter()
-				.map(<Runtime as frame_system::Config>::Hashing::hash_of)
-				.collect();
-			let fees = System::read_events_no_consensus()
-				.filter_map(|v| match v.event {
-					RuntimeEvent::TransactionPayment(pallet_transaction_payment::Event::TransactionFeePaid { actual_fee, .. }) => {
-						Some(actual_fee)
-					},
-					_ => None,
-				})
-				.sum::<u128>();
-			let signature = block.justifications.encode();
-
-			let digest = block.block.header.digest.encode();
-
-			RpcBlock {
-				time,
-				author,
-				height,
-				transaction_hashes,
-				fees,
-				signature,
-				// reward: todo!(),
-				// minted: todo!(),
-				digest,
-			}
-		}
-
 		fn get_blockchain_data() -> BlockchainStats {
 			let tip_height = System::block_number().into();
 			let transaction_count = pallet_transaction_indexer::TransactionsCount::<Runtime>::get();
@@ -556,7 +523,7 @@ impl_runtime_apis! {
 	impl runtime_api::transactions::TransactionInfoProvider<Block, opaque::UncheckedExtrinsic, AccountId, Signature> for Runtime
 	{
 		fn get_transaction_info(opaque_extrinsic: opaque::UncheckedExtrinsic) -> Option<SignedTransactionWithStatus<AccountId, Signature>> {
-			use runtime_api::identity::runtime_decl_for_IdentityApi::IdentityApi;
+			use runtime_api::identity::runtime_decl_for_identity_api::IdentityApiV1;
 
 			// Convert `OpaqueExtrinsic` into bytes and then decode `UncheckedExtrinsic` from that bytes
 			let transaction_body = opaque_extrinsic.encode();

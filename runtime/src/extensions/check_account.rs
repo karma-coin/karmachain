@@ -91,9 +91,9 @@ where
 
 		// In case this is `new_user` transaction
 		if let Some((account_id, username, phone_number)) = call.map_new_user() {
-			let account_id_tag: AccountIdentityTag = AccountIdentity::AccountId(account_id.clone());
-			let number_tag: AccountIdentityTag = AccountIdentity::PhoneNumber(phone_number.clone());
-			let name_tag: AccountIdentityTag = AccountIdentity::Name(username.clone());
+			let account_id_tag: AccountIdentityTag = AccountIdentity::AccountId(account_id);
+			let number_tag: AccountIdentityTag = AccountIdentity::PhoneNumber(phone_number);
+			let name_tag: AccountIdentityTag = AccountIdentity::Name(username);
 
 			// This transaction provides tag, that may unlock some `appreciation` transactions
 			let provides = vec![

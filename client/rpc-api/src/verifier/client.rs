@@ -12,17 +12,18 @@ use runtime_api::verifier::VerifierApi;
 use sp_api::ProvideRuntimeApi;
 use sp_blockchain::HeaderBackend;
 use sp_core::{crypto::AccountId32, ByteArray};
-use sp_keystore::Keystore;
+use sp_keystore::SyncCryptoStore;
 use sp_rpc::{ByPassToken, VerificationEvidence, VerificationResponse, VerificationResult};
 use sp_runtime::{generic::BlockId, traits::Block as BlockT, KeyTypeId};
 use std::sync::Arc;
+use sp_core::crypto::CryptoTypePublicPair;
 
 const KEY_TYPE: KeyTypeId = KeyTypeId(*b"Veri");
 
 pub struct Verifier<C, P> {
 	/// Shared reference to the client.
 	client: Arc<C>,
-	crypto_store: Arc<dyn Keystore>,
+	crypto_store: Arc<dyn SyncCryptoStore>,
 	bypass_token: ByPassToken,
 	auth_dst: String,
 	_marker: std::marker::PhantomData<P>,
@@ -31,7 +32,7 @@ pub struct Verifier<C, P> {
 impl<C, P> Verifier<C, P> {
 	pub fn new(
 		client: Arc<C>,
-		crypto_store: Arc<dyn Keystore>,
+		crypto_store: Arc<dyn SyncCryptoStore>,
 		bypass_token: ByPassToken,
 		auth_dst: String,
 	) -> Self {
@@ -106,9 +107,11 @@ where
 		};
 
 		if let VerificationResult::Verified = verification_result {
-			let public_key = Keystore::sr25519_public_keys(self.crypto_store.as_ref(), KEY_TYPE)
-				.pop()
-				.ok_or(map_err(Error::KeyNotFound, "No verifier keys"))?;
+			let public_key =
+				SyncCryptoStore::sr25519_public_keys(self.crypto_store.as_ref(), KEY_TYPE)
+					.pop()
+					.ok_or(map_err(Error::KeyNotFound, "No verifier keys"))?;
+			let key = CryptoTypePublicPair(sp_core::sr25519::CRYPTO_ID, public_key.to_raw_vec());
 
 			let verifier_account_id: AccountId = public_key.into();
 			let data = VerificationEvidence {
@@ -120,10 +123,10 @@ where
 			.encode();
 
 			let bytes =
-				Keystore::sr25519_sign(self.crypto_store.as_ref(), KEY_TYPE, &public_key, &data)
+				SyncCryptoStore::sign_with(self.crypto_store.as_ref(), KEY_TYPE, &key, &data)
 					.map_err(|e| map_err(Error::SignatureFailed, e))?
 					.ok_or(map_err(Error::SignatureFailed, "Internal error"))?;
-			let signature = sp_core::sr25519::Signature::try_from(bytes.0.as_slice())
+			let signature = sp_core::sr25519::Signature::try_from(bytes.as_slice())
 				.map_err(|_| map_err(Error::SignatureFailed, "Fail to wrap signature"))?;
 
 			result.verifier_account_id = Some(verifier_account_id);

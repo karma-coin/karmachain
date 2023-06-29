@@ -11,7 +11,6 @@ use runtime_api::events::EventProvider;
 use sc_client_api::BlockBackend;
 use sp_api::{BlockT, ProvideRuntimeApi};
 use sp_blockchain::HeaderBackend;
-use sp_runtime::generic::BlockId;
 use std::sync::Arc;
 
 pub struct EventsProvider<C, P> {
@@ -61,7 +60,7 @@ where
 			.collect::<Result<Result<Vec<_>, _>, _>>()??
 			.into_iter()
 			.map(|block_hash| {
-				api.get_block_events(block_hash.into())
+				api.get_block_events(block_hash)
 					.map_err(|e| map_err(e, "Fail to get block events"))
 			})
 			.collect::<Result<Vec<_>, _>>()?

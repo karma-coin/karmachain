@@ -57,7 +57,6 @@ pub mod pallet {
 	}
 
 	#[pallet::pallet]
-	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
 
 	#[pallet::genesis_config]
@@ -100,10 +99,10 @@ pub mod pallet {
 				signup_reward_phase2_amount: 1_000_000_u128.try_into().ok().unwrap(),
 				signup_reward_phase3_amount: 1_000_u128.try_into().ok().unwrap(),
 
-				referral_reward_phase1_alloc: 1_000_00000_000_000_u128.try_into().ok().unwrap(),
-				referral_reward_phase2_alloc: 2_000_00000_000_000_u128.try_into().ok().unwrap(),
+				referral_reward_phase1_alloc: 100_000_000_000_000_u128.try_into().ok().unwrap(),
+				referral_reward_phase2_alloc: 200_000_000_000_000_u128.try_into().ok().unwrap(),
 
-				referral_reward_phase1_amount: 1_000_0000_u128.try_into().ok().unwrap(),
+				referral_reward_phase1_amount: 10_000_000_u128.try_into().ok().unwrap(),
 				referral_reward_phase2_amount: 1_000_000_u128.try_into().ok().unwrap(),
 
 				tx_fee_subsidy_max_per_user: 10,
@@ -274,12 +273,12 @@ pub mod pallet {
 impl<T: Config> Pallet<T> {
 	pub(crate) fn issue_signup_reward(who: &T::AccountId, amount: T::Balance) -> DispatchResult {
 		// Check that user do not get the reward earlier
-		let mut account_reward_info = AccountRewardInfo::<T>::get(&who);
+		let mut account_reward_info = AccountRewardInfo::<T>::get(who);
 		ensure!(!account_reward_info.signup_reward, Error::<T>::AlreadyRewarded);
 
 		// Mark that user get the reward
 		account_reward_info.signup_reward = true;
-		AccountRewardInfo::<T>::set(&who, account_reward_info);
+		AccountRewardInfo::<T>::set(who, account_reward_info);
 
 		// Increase total allocated amount of the reward and deposit the reward to user
 		SignupRewardTotalAllocated::<T>::mutate(|value| *value += amount);
@@ -287,7 +286,7 @@ impl<T: Config> Pallet<T> {
 
 		Self::deposit_event(Event::<T>::RewardIssued {
 			who: who.clone(),
-			amount: amount.clone(),
+			amount,
 			reward_type: RewardType::Signup,
 		});
 
@@ -296,12 +295,12 @@ impl<T: Config> Pallet<T> {
 
 	pub(crate) fn issue_referral_reward(who: &T::AccountId, amount: T::Balance) -> DispatchResult {
 		// Check that user do not get the reward earlier
-		let mut account_reward_info = AccountRewardInfo::<T>::get(&who);
+		let mut account_reward_info = AccountRewardInfo::<T>::get(who);
 		ensure!(!account_reward_info.referral_reward, Error::<T>::AlreadyRewarded);
 
 		// Mark that user get the reward
 		account_reward_info.referral_reward = true;
-		AccountRewardInfo::<T>::set(&who, account_reward_info);
+		AccountRewardInfo::<T>::set(who, account_reward_info);
 
 		// Increase total allocated amount of the reward and deposit the reward to user
 		ReferralRewardTotalAllocated::<T>::mutate(|value| *value += amount);
@@ -309,7 +308,7 @@ impl<T: Config> Pallet<T> {
 
 		Self::deposit_event(Event::<T>::RewardIssued {
 			who: who.clone(),
-			amount: amount.clone(),
+			amount,
 			reward_type: RewardType::Referral,
 		});
 
@@ -318,12 +317,12 @@ impl<T: Config> Pallet<T> {
 
 	pub(crate) fn issue_karma_reward(who: &T::AccountId, amount: T::Balance) -> DispatchResult {
 		// Check that user do not get the reward earlier
-		let mut account_reward_info = AccountRewardInfo::<T>::get(&who);
+		let mut account_reward_info = AccountRewardInfo::<T>::get(who);
 		ensure!(!account_reward_info.karma_reward, Error::<T>::AlreadyRewarded);
 
 		// Mark that user get the reward
 		account_reward_info.karma_reward = true;
-		AccountRewardInfo::<T>::set(&who, account_reward_info);
+		AccountRewardInfo::<T>::set(who, account_reward_info);
 
 		// Increase total allocated amount of the reward and deposit the reward to user
 		KarmaRewardTotalAllocated::<T>::mutate(|value| *value += amount);
@@ -331,7 +330,7 @@ impl<T: Config> Pallet<T> {
 
 		Self::deposit_event(Event::<T>::RewardIssued {
 			who: who.clone(),
-			amount: amount.clone(),
+			amount,
 			reward_type: RewardType::Karma,
 		});
 
@@ -354,7 +353,7 @@ impl<T: Config> Pallet<T> {
 
 		Self::deposit_event(Event::<T>::RewardIssued {
 			who: who.clone(),
-			amount: amount.clone(),
+			amount,
 			reward_type: RewardType::Subsidy,
 		});
 
@@ -463,7 +462,8 @@ impl<T: Config> Pallet<T> {
 			.collect::<Vec<_>>();
 
 		// Winners can't be more than participates
-		let winner_accounts = if participate_accounts.len() <= winners_number as usize {
+
+		if participate_accounts.len() <= winners_number as usize {
 			participate_accounts
 		} else {
 			(0..winners_number)
@@ -472,9 +472,7 @@ impl<T: Config> Pallet<T> {
 					participate_accounts.remove(index as usize)
 				})
 				.collect::<Vec<_>>()
-		};
-
-		winner_accounts
+		}
 	}
 
 	fn sign_and_send_submit_karma_rewards(winners: Vec<T::AccountId>) -> Result<(), &'static str> {

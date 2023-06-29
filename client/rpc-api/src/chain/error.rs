@@ -4,15 +4,12 @@ use jsonrpsee::types::error::{CallError, ErrorObject};
 pub enum Error {
 	/// The call to runtime failed.
 	RuntimeError,
-	/// Failed to get block details
-	BlockNotFound,
 }
 
 impl From<Error> for i32 {
 	fn from(e: Error) -> i32 {
 		match e {
 			Error::RuntimeError => 1,
-			Error::BlockNotFound => 2,
 		}
 	}
 }

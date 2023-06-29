@@ -1,18 +1,12 @@
-use crate::chain::{
-	error::{map_err, Error},
-	BlocksProviderApiServer,
-};
+use crate::chain::{error::map_err, BlocksProviderApiServer};
 use codec::Codec;
-use jsonrpsee::{
-	core::RpcResult,
-	types::{error::CallError, ErrorObject},
-};
+use jsonrpsee::core::RpcResult;
 use runtime_api::chain::BlockInfoProvider;
 use sc_client_api::BlockBackend;
 use sp_api::{BlockT, ProvideRuntimeApi};
 use sp_blockchain::HeaderBackend;
-use sp_rpc::{Block as RpcBlock, BlockchainStats, GenesisData};
-use sp_runtime::generic::{BlockId, SignedBlock};
+use sp_rpc::{BlockchainStats, GenesisData};
+use sp_runtime::generic::SignedBlock;
 use std::sync::Arc;
 
 pub struct BlocksProvider<C, P> {
@@ -39,36 +33,6 @@ where
 		+ 'static,
 	C::Api: BlockInfoProvider<Block, SignedBlock<Block>, AccountId, Block::Hash>,
 {
-	fn get_block_info(&self, block_height: u32) -> RpcResult<RpcBlock<AccountId, Block::Hash>> {
-		let api = self.client.runtime_api();
-
-		let block_hash = self
-			.client
-			.block_hash(block_height.into())
-			.map_err(|e| map_err(e, "Failed to get block hashes"))?
-			.ok_or(CallError::Custom(ErrorObject::owned(
-				Error::BlockNotFound.into(),
-				"Block hash not found",
-				Option::<()>::None,
-			)))?;
-
-		let block = self
-			.client
-			.block(block_hash.clone())
-			.map_err(|e| map_err(e, "Failed to get blocks"))?
-			.ok_or(CallError::Custom(ErrorObject::owned(
-				Error::BlockNotFound.into(),
-				"Block by hash not found",
-				Option::<()>::None,
-			)))?;
-
-		let block_info = api
-			.get_block_info(block_hash, block)
-			.map_err(|e| map_err(e, "Failed to get block info"))?;
-
-		Ok(block_info)
-	}
-
 	fn get_blockchain_data(&self) -> RpcResult<BlockchainStats> {
 		let api = self.client.runtime_api();
 		let at = self.client.info().best_hash;
