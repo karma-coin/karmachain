@@ -45,7 +45,7 @@ mod signup_rewards {
 	use crate::utils::*;
 	use frame_support::traits::GenesisBuild;
 	use karmachain_node_runtime::Runtime;
-	use runtime_api::identity::runtime_decl_for_IdentityApi::IdentityApiV1;
+	use runtime_api::identity::runtime_decl_for_identity_api::IdentityApiV1;
 	use sp_common::identity::AccountIdentity;
 	use sp_core::sr25519;
 

@@ -7,7 +7,7 @@ mod utils;
 mod identity {
 	use crate::utils::{get_account_id_from_seed, new_test_ext, TestUtils};
 	use karmachain_node_runtime::{NameLimit, PhoneNumber, PhoneNumberHash, Runtime};
-	use runtime_api::identity::runtime_decl_for_IdentityApi::IdentityApiV1;
+	use runtime_api::identity::runtime_decl_for_identity_api::IdentityApiV1;
 	use sp_common::{identity::AccountIdentity, BoundedString};
 	use sp_core::{hashing::blake2_512, sr25519};
 
@@ -109,7 +109,7 @@ mod community {
 	use crate::utils::{new_test_ext, TestUtils};
 	use karmachain_node_runtime::Runtime;
 	use pallet_appreciation::CommunityRole;
-	use runtime_api::identity::runtime_decl_for_IdentityApi::IdentityApiV1;
+	use runtime_api::identity::runtime_decl_for_identity_api::IdentityApiV1;
 
 	#[test]
 	fn get_all_users_community_not_exists() {
@@ -191,7 +191,7 @@ mod transactions {
 	use crate::utils::{get_account_id_from_seed, new_test_ext, TestUtils};
 	use karmachain_node_runtime::{Hash, Runtime, System};
 	use pallet_appreciation::CommunityRole;
-	use runtime_api::transactions::runtime_decl_for_TransactionIndexer::TransactionIndexerV1;
+	use runtime_api::transactions::runtime_decl_for_transaction_indexer::TransactionIndexerV1;
 	use sp_core::sr25519;
 	use sp_runtime::traits::{BlakeTwo256, Hash as HashT};
 
