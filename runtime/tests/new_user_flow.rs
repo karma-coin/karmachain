@@ -63,8 +63,8 @@ fn new_user_happy_flow() {
 			Some(1)
 		);
 
-		let user_info = Runtime::get_user_info_by_number(phone_number.clone())
-			.expect("Missing user info");
+		let user_info =
+			Runtime::get_user_info_by_number(phone_number.clone()).expect("Missing user info");
 		assert_eq!(user_info.user_name, username);
 		assert_eq!(user_info.mobile_number, phone_number);
 		assert_eq!(user_info.nonce, 0);
