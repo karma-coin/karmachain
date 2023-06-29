@@ -76,7 +76,7 @@ pub mod pallet {
 		pub referral_reward_phase1_amount: T::Balance,
 		pub referral_reward_phase2_amount: T::Balance,
 
-		pub tx_fee_subsidy_max_per_user: u32,
+		pub tx_fee_subsidy_max_per_user: u8,
 		pub tx_fee_subsidies_alloc: T::Balance,
 		pub tx_fee_subsidy_max_amount: T::Balance,
 
@@ -98,8 +98,7 @@ pub mod pallet {
 				signup_reward_phase1_amount: 10_000_000_u128.try_into().ok().unwrap(),
 				signup_reward_phase2_amount: 1_000_000_u128.try_into().ok().unwrap(),
 				signup_reward_phase3_amount: 1_000_u128.try_into().ok().unwrap(),
-
-				referral_reward_phase1_alloc: 100_000_000_000_000_u128.try_into().ok().unwrap(),
+				referral_reward_phase1_alloc: 10_000_000_000_000_u128.try_into().ok().unwrap(),
 				referral_reward_phase2_alloc: 200_000_000_000_000_u128.try_into().ok().unwrap(),
 
 				referral_reward_phase1_amount: 10_000_000_u128.try_into().ok().unwrap(),
@@ -179,7 +178,7 @@ pub mod pallet {
 	pub type ReferralRewardPhase2Amount<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
 
 	#[pallet::storage]
-	pub type TxFeeSubsidyMaxPerUser<T: Config> = StorageValue<_, u32, ValueQuery>;
+	pub type TxFeeSubsidyMaxPerUser<T: Config> = StorageValue<_, u8, ValueQuery>;
 	#[pallet::storage]
 	pub type TxFeeSubsidyMaxAmount<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
 
@@ -348,6 +347,13 @@ impl<T: Config> Pallet<T> {
 			return false
 		}
 
+		// No more tx fee subsidies allowed
+		if AccountRewardInfo::<T>::get(who).transaction_subsidized >=
+			TxFeeSubsidyMaxPerUser::<T>::get()
+		{
+			return false
+		}
+
 		AccountRewardInfo::<T>::mutate(who, |info| info.transaction_subsidized += 1);
 		TxFeeSubsidiesTotalAllocated::<T>::mutate(|value| *value += amount);
 
@@ -462,7 +468,6 @@ impl<T: Config> Pallet<T> {
 			.collect::<Vec<_>>();
 
 		// Winners can't be more than participates
-
 		if participate_accounts.len() <= winners_number as usize {
 			participate_accounts
 		} else {
@@ -496,12 +501,14 @@ impl<T: Config> Pallet<T> {
 	}
 }
 
-impl<T: Config> KarmaHooks<T::AccountId, T::Balance, T::Username, T::PhoneNumber> for Pallet<T> {
+impl<T: Config> KarmaHooks<T::AccountId, T::Balance, T::Username, T::PhoneNumberHash>
+	for Pallet<T>
+{
 	fn on_new_user(
 		_verifier: T::AccountId,
 		who: T::AccountId,
 		_name: T::Username,
-		_phone_number: T::PhoneNumber,
+		_phone_number_hash: T::PhoneNumberHash,
 	) -> DispatchResult {
 		let total_allocated = SignupRewardTotalAllocated::<T>::get();
 
@@ -538,8 +545,8 @@ impl<T: Config> KarmaHooks<T::AccountId, T::Balance, T::Username, T::PhoneNumber
 		new_account_id: Option<T::AccountId>,
 		_username: T::Username,
 		_new_username: Option<T::Username>,
-		_phone_number: T::PhoneNumber,
-		_new_phone_number: Option<T::PhoneNumber>,
+		_phone_number_hash: T::PhoneNumberHash,
+		_new_phone_number_hash: Option<T::PhoneNumberHash>,
 	) -> DispatchResult {
 		if let Some(new_account_id) = new_account_id {
 			Self::move_reward_info(&old_account_id, &new_account_id)

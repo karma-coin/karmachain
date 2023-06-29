@@ -15,7 +15,7 @@ pub struct AccountRewardsData {
 
 #[derive(Debug, Clone, Eq, PartialEq, Decode, Encode, MaxEncodedLen, TypeInfo)]
 pub enum RewardType {
-	Signup = 0,
+	Signup = 0_isize,
 	Referral,
 	Karma,
 	Subsidy,

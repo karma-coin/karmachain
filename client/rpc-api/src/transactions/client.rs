@@ -30,11 +30,13 @@ impl<C, P> TransactionsIndexer<C, P> {
 	}
 }
 
-impl<C, Block, AccountId, Signature, Event>
-	TransactionsIndexerApiServer<Block, AccountId, Signature, Event> for TransactionsIndexer<C, Block>
+impl<C, Block, AccountId, Signature, Event, PhoneNumberHash>
+	TransactionsIndexerApiServer<Block, AccountId, Signature, Event, PhoneNumberHash>
+	for TransactionsIndexer<C, Block>
 where
 	Block: BlockT,
 	AccountId: Codec,
+	PhoneNumberHash: Codec,
 	Signature: Codec,
 	Event: Codec,
 	C: BlockBackend<Block>
@@ -44,7 +46,7 @@ where
 		+ Sync
 		+ 'static,
 	C::Api: TransactionInfoProvider<Block, Block::Extrinsic, AccountId, Signature>,
-	C::Api: TransactionIndexer<Block, AccountId>,
+	C::Api: TransactionIndexer<Block, AccountId, PhoneNumberHash>,
 	C::Api: EventProvider<Block, Event>,
 {
 	fn get_tx(
@@ -122,6 +124,7 @@ where
 			AccountId,
 			Signature,
 			Event,
+			PhoneNumberHash,
 		>>::get_tx(self, block_number, tx_index)
 		.map_err(|e| map_err(e, "Failed to get transaction details"))?;
 
@@ -155,12 +158,13 @@ where
 				AccountId,
 				Signature,
 				Event,
+				PhoneNumberHash,
 			>>::get_tx_with_events(self, block_number, tx_index)?;
 
 		Ok(GetTransactionResponse { transaction, tx_events })
 	}
 
-	fn get_transactions(
+	fn get_transactions_by_account_id(
 		&self,
 		account_id: AccountId,
 	) -> RpcResult<GetTransactionsResponse<AccountId, Signature, Event>> {
@@ -169,6 +173,28 @@ where
 
 		let (transactions, tx_events) = api
 			.get_transactions_by_account(at, account_id)
+			.map_err(|e| map_err(e, "Failed to get transactions indexes"))?
+			.into_iter()
+			.map(|(block_number, tx_index)| self.get_tx_with_events(block_number, tx_index))
+			.collect::<Result<Vec<_>, _>>()?
+			.into_iter()
+			.unzip::<_, _, _, Vec<_>>();
+
+		Ok(GetTransactionsResponse {
+			transactions,
+			tx_events: tx_events.into_iter().flatten().collect(),
+		})
+	}
+
+	fn get_transactions_by_phone_number_hash(
+		&self,
+		phone_number_hash: PhoneNumberHash,
+	) -> RpcResult<GetTransactionsResponse<AccountId, Signature, Event>> {
+		let api = self.client.runtime_api();
+		let at = self.client.info().best_hash;
+
+		let (transactions, tx_events) = api
+			.get_transactions_by_phone_number_hash(at, phone_number_hash)
 			.map_err(|e| map_err(e, "Failed to get transactions indexes"))?
 			.into_iter()
 			.map(|(block_number, tx_index)| self.get_tx_with_events(block_number, tx_index))

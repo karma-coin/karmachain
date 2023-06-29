@@ -13,7 +13,7 @@ use sp_std::vec;
 pub type AccountIdentityTag = AccountIdentity<
 	<Runtime as frame_system::Config>::AccountId,
 	<Runtime as pallet_identity::Config>::Username,
-	<Runtime as pallet_identity::Config>::PhoneNumber,
+	<Runtime as pallet_identity::Config>::PhoneNumberHash,
 >;
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, TypeInfo)]
@@ -50,7 +50,7 @@ impl<T> SignedExtension for CheckAccount<T>
 where
 	T: Send + Sync,
 	T: pallet_appreciation::Config,
-	T::IdentityProvider: IdentityProvider<AccountId, Username, PhoneNumber>,
+	T::IdentityProvider: IdentityProvider<AccountId, Username, PhoneNumberHash>,
 	T: pallet_timestamp::Config<Moment = u64>,
 {
 	const IDENTIFIER: &'static str = "CheckAccount";
@@ -90,16 +90,16 @@ where
 		}
 
 		// In case this is `new_user` transaction
-		if let Some((account_id, username, phone_number)) = call.map_new_user() {
+		if let Some((account_id, username, phone_number_hash)) = call.map_new_user() {
 			let account_id_tag: AccountIdentityTag = AccountIdentity::AccountId(account_id);
-			let number_tag: AccountIdentityTag = AccountIdentity::PhoneNumber(phone_number);
-			let name_tag: AccountIdentityTag = AccountIdentity::Name(username);
-
+			let phone_number_hash_tag: AccountIdentityTag =
+				AccountIdentity::PhoneNumberHash(phone_number_hash);
+			let username_tag: AccountIdentityTag = AccountIdentity::Username(username);
 			// This transaction provides tag, that may unlock some `appreciation` transactions
 			let provides = vec![
 				Encode::encode(&account_id_tag),
-				Encode::encode(&number_tag),
-				Encode::encode(&name_tag),
+				Encode::encode(&phone_number_hash_tag),
+				Encode::encode(&username_tag),
 			];
 
 			return Ok(ValidTransaction { provides, ..Default::default() })

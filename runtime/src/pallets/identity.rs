@@ -9,18 +9,15 @@ parameter_types! {
 
 pub type Username = BoundedString<NameLimit>;
 pub type PhoneNumber = BoundedString<PhoneNumberLimit>;
+pub type PhoneNumberHash = sp_core::H512;
 
 impl pallet_identity::Config for Runtime {
 	/// The overarching event type.
 	type RuntimeEvent = RuntimeEvent;
-	/// Max length of username
-	type UsernameLimit = NameLimit;
 	/// Username type
 	type Username = Username;
-	/// Max length of phone number
-	type PhoneNumberLimit = PhoneNumberLimit;
 	/// Phone number type
-	type PhoneNumber = PhoneNumber;
+	type PhoneNumberHash = PhoneNumberHash;
 	/// Max number of phone verifiers accounts
 	type MaxPhoneVerifiers = MaxPhoneVerifiers;
 	///

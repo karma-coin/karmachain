@@ -33,11 +33,11 @@ pub struct GetBlockchainEventsResponse<TransactionEvent> {
 
 #[derive(Encode, Decode)]
 #[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
-pub struct VerificationResponse<AccountId, Username, PhoneNumber> {
+pub struct VerificationResponse<AccountId, Username, PhoneNumberHash> {
 	pub verifier_account_id: Option<AccountId>,
 	pub verification_result: VerificationResult,
 	pub account_id: Option<AccountId>,
-	pub phone_number: Option<PhoneNumber>,
+	pub phone_number_hash: Option<PhoneNumberHash>,
 	pub username: Option<Username>,
 	pub signature: Option<sp_core::sr25519::Signature>,
 }

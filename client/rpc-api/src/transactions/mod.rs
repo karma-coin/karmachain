@@ -9,7 +9,7 @@ use sp_rpc::{
 use sp_runtime::traits::{Block as BlockT, NumberFor};
 
 #[rpc(client, server)]
-pub trait TransactionsIndexerApi<Block: BlockT, AccountId, Signature, Event> {
+pub trait TransactionsIndexerApi<Block: BlockT, AccountId, Signature, Event, PhoneNumberHash> {
 	/// RPC method provides transaction details by block number and transaction index
 	#[method(name = "transactions_getTx", blocking)]
 	fn get_tx(
@@ -58,8 +58,15 @@ pub trait TransactionsIndexerApi<Block: BlockT, AccountId, Signature, Event> {
 
 	/// RPC method provides transactions, that belong to specific account
 	#[method(name = "transactions_getTransactions", blocking)]
-	fn get_transactions(
+	fn get_transactions_by_account_id(
 		&self,
 		account_id: AccountId,
+	) -> RpcResult<GetTransactionsResponse<AccountId, Signature, Event>>;
+
+	/// RPC method provides transactions, that belong to specific phone number hash
+	#[method(name = "transactions_getTransactionsByPhoneNumberHash", blocking)]
+	fn get_transactions_by_phone_number_hash(
+		&self,
+		phone_number_hash: PhoneNumberHash,
 	) -> RpcResult<GetTransactionsResponse<AccountId, Signature, Event>>;
 }
