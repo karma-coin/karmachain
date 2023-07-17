@@ -21,14 +21,16 @@ fn new_user_happy_flow() {
 		let phone_number_hash =
 			PhoneNumberHash::from(blake2_512(Vec::from(phone_number).as_slice()));
 
-		// let (public_key, signature) =
-		// 	get_verification_evidence(account_id.clone(), username.clone(),
-		// phone_number_hash.clone());
+		let (public_key, signature) = get_verification_evidence(
+			account_id.clone(),
+			username.clone(),
+			phone_number_hash.clone(),
+		);
 
 		assert_ok!(Identity::new_user(
 			RuntimeOrigin::signed(account_id.clone()),
-			// public_key,
-			// signature,
+			public_key,
+			signature,
 			account_id.clone(),
 			username.clone(),
 			phone_number_hash,
@@ -128,16 +130,21 @@ fn new_user_existing_user_name() {
 		let phone_number_2_hash =
 			PhoneNumberHash::from(blake2_512(Vec::from(phone_number_2).as_slice()));
 
-		// let (public_key_1, signature_1) =
-		// 	get_verification_evidence(account_id_1.clone(), name.clone(),
-		// phone_number_1_hash.clone()); let (public_key_2, signature_2) =
-		// 	get_verification_evidence(account_id_2.clone(), name.clone(),
-		// phone_number_2_hash.clone());
+		let (public_key_1, signature_1) = get_verification_evidence(
+			account_id_1.clone(),
+			name.clone(),
+			phone_number_1_hash.clone(),
+		);
+		let (public_key_2, signature_2) = get_verification_evidence(
+			account_id_2.clone(),
+			name.clone(),
+			phone_number_2_hash.clone(),
+		);
 
 		assert_ok!(Identity::new_user(
 			RuntimeOrigin::signed(account_id_1.clone()),
-			// public_key_1,
-			// signature_1,
+			public_key_1,
+			signature_1,
 			account_id_1,
 			name.clone(),
 			phone_number_1_hash,
@@ -146,8 +153,8 @@ fn new_user_existing_user_name() {
 		assert_noop!(
 			Identity::new_user(
 				RuntimeOrigin::signed(account_id_2.clone()),
-				// public_key_2,
-				// signature_2,
+				public_key_2,
+				signature_2,
 				account_id_2,
 				name,
 				phone_number_2_hash,
@@ -174,16 +181,21 @@ fn new_user_migrate_account_flow() {
 		let phone_number_hash =
 			PhoneNumberHash::from(blake2_512(Vec::from(phone_number).as_slice()));
 
-		// let (public_key_1, signature_1) =
-		// 	get_verification_evidence(bob_account_id.clone(), name.clone(),
-		// phone_number_hash.clone()); let (public_key_2, signature_2) =
-		// 	get_verification_evidence(charlie_account_id.clone(), name.clone(),
-		// phone_number_hash.clone());
+		let (public_key_1, signature_1) = get_verification_evidence(
+			bob_account_id.clone(),
+			name.clone(),
+			phone_number_hash.clone(),
+		);
+		let (public_key_2, signature_2) = get_verification_evidence(
+			charlie_account_id.clone(),
+			name.clone(),
+			phone_number_hash.clone(),
+		);
 
 		assert_ok!(Identity::new_user(
 			RuntimeOrigin::signed(bob_account_id.clone()),
-			// public_key_1,
-			// signature_1,
+			public_key_1,
+			signature_1,
 			bob_account_id.clone(),
 			name.clone(),
 			phone_number_hash,
@@ -191,8 +203,8 @@ fn new_user_migrate_account_flow() {
 
 		assert_ok!(Identity::new_user(
 			RuntimeOrigin::signed(charlie_account_id.clone()),
-			// public_key_2,
-			// signature_2,
+			public_key_2,
+			signature_2,
 			charlie_account_id.clone(),
 			name.clone(),
 			phone_number_hash,
