@@ -173,8 +173,8 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().reads_writes(3, 1).ref_time())]
 		pub fn new_user(
 			origin: OriginFor<T>,
-			// verifier_public_key: T::PublicKey,
-			// verifier_signature: T::Signature,
+			verifier_public_key: T::PublicKey,
+			verifier_signature: T::Signature,
 			account_id: T::AccountId,
 			username: T::Username,
 			phone_number_hash: T::PhoneNumberHash,
@@ -182,22 +182,22 @@ pub mod pallet {
 			let who = ensure_signed(origin)?;
 			ensure!(who == account_id, Error::<T>::AccountIdMismatch);
 
-			// let verifier_account_id = verifier_public_key.clone().into();
+			let verifier_account_id = verifier_public_key.clone().into();
 			// Check verification
-			// ensure!(
-			// 	PhoneVerifiers::<T>::get().contains(&verifier_account_id),
-			// 	Error::<T>::NotVerifier
-			// );
-			// ensure!(
-			// 	Self::verify_signature(
-			// 		verifier_public_key,
-			// 		verifier_signature,
-			// 		account_id.clone(),
-			// 		username.clone(),
-			// 		phone_number_hash.clone()
-			// 	),
-			// 	Error::<T>::InvalidSignature
-			// );
+			ensure!(
+				PhoneVerifiers::<T>::get().contains(&verifier_account_id),
+				Error::<T>::NotVerifier
+			);
+			ensure!(
+				Self::verify_signature(
+					verifier_public_key,
+					verifier_signature,
+					account_id.clone(),
+					username.clone(),
+					phone_number_hash.clone()
+				),
+				Error::<T>::InvalidSignature
+			);
 
 			let verifier_account_id =
 				PhoneVerifiers::<T>::get().pop().ok_or(Error::<T>::NotVerifier)?;
