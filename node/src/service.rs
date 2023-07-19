@@ -5,11 +5,9 @@ use karmachain_node_runtime::{self, opaque::Block, RuntimeApi};
 use sc_client_api::BlockBackend;
 pub use sc_executor::NativeElseWasmExecutor;
 use sc_finality_grandpa::SharedVoterState;
-use sc_keystore::LocalKeystore;
 use sc_service::{error::Error as ServiceError, Configuration, TaskManager, WarpSyncParams};
 use sc_telemetry::{Telemetry, TelemetryWorker};
 use std::{sync::Arc, time::Duration};
-
 // Our native executor instance.
 pub struct ExecutorDispatch;
 
@@ -40,6 +38,7 @@ type FullGrandpaBlockImport =
 #[allow(clippy::type_complexity)]
 pub fn new_partial(
 	config: &Configuration,
+	verifier_config: VerifierConfig,
 ) -> Result<
 	sc_service::PartialComponents<
 		FullClient,
@@ -48,6 +47,10 @@ pub fn new_partial(
 		sc_consensus::DefaultImportQueue<Block, FullClient>,
 		sc_transaction_pool::FullPool<Block, FullClient>,
 		(
+			impl Fn(
+				sc_rpc::DenyUnsafe,
+				sc_rpc::SubscriptionTaskExecutor,
+			) -> Result<jsonrpsee::RpcModule<()>, ServiceError>,
 			sc_consensus_babe::BabeBlockImport<Block, FullClient, FullGrandpaBlockImport>,
 			sc_finality_grandpa::LinkHalf<Block, FullClient, FullSelectChain>,
 			sc_consensus_babe::BabeLink<Block>,
@@ -56,10 +59,6 @@ pub fn new_partial(
 	>,
 	ServiceError,
 > {
-	if config.keystore_remote.is_some() {
-		return Err(ServiceError::Other("Remote Keystores are not supported.".into()))
-	}
-
 	let telemetry = config
 		.telemetry_endpoints
 		.clone()
@@ -115,7 +114,7 @@ pub fn new_partial(
 		sc_consensus_babe::block_import(babe_config, grandpa_block_import, client.clone())?;
 
 	let slot_duration = babe_link.config().slot_duration();
-	let import_queue = sc_consensus_babe::import_queue(
+	let (import_queue, babe_worker_handle) = sc_consensus_babe::import_queue(
 		babe_link.clone(),
 		block_import.clone(),
 		Some(Box::new(justification_import)),
@@ -137,6 +136,33 @@ pub fn new_partial(
 		telemetry.as_ref().map(|x| x.handle()),
 	)?;
 
+	let rpc_extensions_builder = {
+		let client = client.clone();
+		let pool = transaction_pool.clone();
+		let select_chain = select_chain.clone();
+		let keystore = keystore_container.keystore();
+
+		Box::new(move |deny_unsafe, _| {
+			let deps = crate::rpc::FullDeps {
+				client: client.clone(),
+				pool: pool.clone(),
+				select_chain: select_chain.clone(),
+				deny_unsafe,
+				babe: crate::rpc::BabeDeps {
+					babe_worker_handle: babe_worker_handle.clone(),
+					keystore: keystore.clone(),
+				},
+			};
+			crate::rpc::create_full(
+				deps,
+				verifier_config.verifier,
+				verifier_config.bypass_token.clone(),
+				verifier_config.auth_dst.clone(),
+			)
+			.map_err(Into::into)
+		})
+	};
+
 	Ok(sc_service::PartialComponents {
 		client,
 		backend,
@@ -145,15 +171,8 @@ pub fn new_partial(
 		keystore_container,
 		select_chain,
 		transaction_pool,
-		other: (block_import, grandpa_link, babe_link, telemetry),
+		other: (rpc_extensions_builder, block_import, grandpa_link, babe_link, telemetry),
 	})
-}
-
-fn remote_keystore(_url: &str) -> Result<Arc<LocalKeystore>, &'static str> {
-	// FIXME: here would the concrete keystore be built,
-	//        must return a concrete type (NOT `LocalKeystore`) that
-	//        implements `CryptoStore` and `SyncCryptoStore`
-	Err("Remote Keystore not supported.")
 }
 
 /// Builds a new service for a full client.
@@ -166,21 +185,12 @@ pub fn new_full(
 		backend,
 		mut task_manager,
 		import_queue,
-		mut keystore_container,
+		keystore_container,
 		select_chain,
 		transaction_pool,
-		other: (block_import, grandpa_link, babe_link, mut telemetry),
-	} = new_partial(&config)?;
+		other: (rpc_extensions_builder, block_import, grandpa_link, babe_link, mut telemetry),
+	} = new_partial(&config, verifier_config)?;
 
-	if let Some(url) = &config.keystore_remote {
-		match remote_keystore(url) {
-			Ok(k) => keystore_container.set_remote_keystore(k),
-			Err(e) =>
-				return Err(ServiceError::Other(format!(
-					"Error hooking up remote keystore for {url}: {e}"
-				))),
-		};
-	}
 	let grandpa_protocol_name = sc_finality_grandpa::protocol_standard_name(
 		&client.block_hash(0).ok().flatten().expect("Genesis block exists; qed"),
 		&config.chain_spec,
@@ -223,35 +233,13 @@ pub fn new_full(
 	let enable_grandpa = !config.disable_grandpa;
 	let prometheus_registry = config.prometheus_registry().cloned();
 
-	let rpc_extensions_builder = {
-		let client = client.clone();
-		let pool = transaction_pool.clone();
-		let keystore = keystore_container.sync_keystore();
-
-		Box::new(move |deny_unsafe, _| {
-			let deps = crate::rpc::FullDeps {
-				client: client.clone(),
-				pool: pool.clone(),
-				deny_unsafe,
-				keystore: keystore.clone(),
-			};
-			crate::rpc::create_full(
-				deps,
-				verifier_config.verifier,
-				verifier_config.bypass_token.clone(),
-				verifier_config.auth_dst.clone(),
-			)
-			.map_err(Into::into)
-		})
-	};
-
 	let _rpc_handlers = sc_service::spawn_tasks(sc_service::SpawnTasksParams {
 		network: network.clone(),
 		client: client.clone(),
-		keystore: keystore_container.sync_keystore(),
+		keystore: keystore_container.keystore(),
 		task_manager: &mut task_manager,
 		transaction_pool: transaction_pool.clone(),
-		rpc_builder: rpc_extensions_builder,
+		rpc_builder: Box::new(rpc_extensions_builder),
 		backend,
 		system_rpc_tx,
 		tx_handler_controller,
@@ -271,7 +259,7 @@ pub fn new_full(
 
 		let slot_duration = babe_link.config().slot_duration();
 		let babe_config = sc_consensus_babe::BabeParams {
-			keystore: keystore_container.sync_keystore(),
+			keystore: keystore_container.keystore(),
 			client,
 			select_chain,
 			block_import,
@@ -308,7 +296,7 @@ pub fn new_full(
 		// if the node isn't actively participating in consensus then it doesn't
 		// need a keystore, regardless of which protocol we use below.
 		let keystore =
-			if role.is_authority() { Some(keystore_container.sync_keystore()) } else { None };
+			if role.is_authority() { Some(keystore_container.keystore()) } else { None };
 
 		let grandpa_config = sc_finality_grandpa::Config {
 			// FIXME #1578 make this available through chainspec

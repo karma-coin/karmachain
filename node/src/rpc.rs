@@ -6,7 +6,6 @@
 #![warn(missing_docs)]
 
 use std::sync::Arc;
-
 use jsonrpsee::RpcModule;
 use karmachain_node_runtime::{
 	opaque::{Block, UncheckedExtrinsic},
@@ -18,29 +17,39 @@ use sc_transaction_pool_api::TransactionPool;
 use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder;
 use sp_blockchain::{Error as BlockChainError, HeaderBackend, HeaderMetadata};
-use sp_keystore::SyncCryptoStore;
-
+use sp_keystore::KeystorePtr;
+use sp_consensus::SelectChain;
+use sp_consensus_babe::BabeApi;
 pub use sc_rpc_api::DenyUnsafe;
 use sp_rpc::ByPassToken;
 use sp_runtime::generic::SignedBlock;
-
 use crate::service::FullBackend;
 
+/// Extra dependencies for BABE.
+pub struct BabeDeps {
+	/// A handle to the BABE worker for issuing requests.
+	pub babe_worker_handle: sc_consensus_babe::BabeWorkerHandle<Block>,
+	/// The keystore that manages the keys of the node.
+	pub keystore: KeystorePtr,
+}
+
 /// Full client dependencies.
-pub struct FullDeps<C, P> {
+pub struct FullDeps<C, P, SC> {
 	/// The client instance to use.
 	pub client: Arc<C>,
 	/// Transaction pool instance.
 	pub pool: Arc<P>,
+	/// The [`SelectChain`] Strategy
+	pub select_chain: SC,
 	/// Whether to deny unsafe calls
 	pub deny_unsafe: DenyUnsafe,
-	/// The keystore instance to use
-	pub keystore: Arc<dyn SyncCryptoStore>,
+	/// BABE specific dependencies.
+	pub babe: BabeDeps,
 }
 
 /// Instantiate all full RPC extensions.
-pub fn create_full<C, P>(
-	deps: FullDeps<C, P>,
+pub fn create_full<C, P, SC>(
+	deps: FullDeps<C, P, SC>,
 	verifier: bool,
 	bypass_token: Option<ByPassToken>,
 	auth_dst: Option<String>,
@@ -65,7 +74,9 @@ where
 	>,
 	C::Api: runtime_api::transactions::TransactionIndexer<Block, AccountId, PhoneNumberHash>,
 	C::Api: runtime_api::verifier::VerifierApi<Block, AccountId, Username, PhoneNumberHash>,
+	C::Api: BabeApi<Block>,
 	P: TransactionPool + 'static,
+	SC: SelectChain<Block> + 'static,
 {
 	use pallet_transaction_payment_rpc::{TransactionPayment, TransactionPaymentApiServer};
 	use rpc_api::{
@@ -76,12 +87,20 @@ where
 		verifier::{client::Verifier, VerifierApiServer},
 	};
 	use substrate_frame_rpc_system::{System, SystemApiServer};
+	use sc_consensus_babe_rpc::{Babe, BabeApiServer};
 
 	let mut module = RpcModule::new(());
-	let FullDeps { client, pool, deny_unsafe, keystore } = deps;
+	let FullDeps { client, pool, select_chain, deny_unsafe, babe } = deps;
+	let BabeDeps { babe_worker_handle, keystore } = babe;
+
 
 	module.merge(System::new(client.clone(), pool, deny_unsafe).into_rpc())?;
 	module.merge(TransactionPayment::new(client.clone()).into_rpc())?;
+	module.merge(
+		Babe::new(client.clone(), babe_worker_handle.clone(), keystore.clone(), select_chain, deny_unsafe)
+			.into_rpc(),
+	)?;
+
 	module.merge(
 		IdentityApiServer::<Hash, AccountId, Username, PhoneNumber, PhoneNumberHash>::into_rpc(
 			Identity::new(client.clone()),
