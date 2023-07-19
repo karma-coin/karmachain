@@ -5,7 +5,7 @@
 
 #![warn(missing_docs)]
 
-use std::sync::Arc;
+use crate::service::FullBackend;
 use jsonrpsee::RpcModule;
 use karmachain_node_runtime::{
 	opaque::{Block, UncheckedExtrinsic},
@@ -13,17 +13,17 @@ use karmachain_node_runtime::{
 	Username,
 };
 use sc_client_api::{BlockBackend, StorageProvider};
+pub use sc_rpc_api::DenyUnsafe;
 use sc_transaction_pool_api::TransactionPool;
 use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder;
 use sp_blockchain::{Error as BlockChainError, HeaderBackend, HeaderMetadata};
-use sp_keystore::KeystorePtr;
 use sp_consensus::SelectChain;
 use sp_consensus_babe::BabeApi;
-pub use sc_rpc_api::DenyUnsafe;
+use sp_keystore::KeystorePtr;
 use sp_rpc::ByPassToken;
 use sp_runtime::generic::SignedBlock;
-use crate::service::FullBackend;
+use std::sync::Arc;
 
 /// Extra dependencies for BABE.
 pub struct BabeDeps {
@@ -86,19 +86,24 @@ where
 		transactions::{client::TransactionsIndexer, TransactionsIndexerApiServer},
 		verifier::{client::Verifier, VerifierApiServer},
 	};
-	use substrate_frame_rpc_system::{System, SystemApiServer};
 	use sc_consensus_babe_rpc::{Babe, BabeApiServer};
+	use substrate_frame_rpc_system::{System, SystemApiServer};
 
 	let mut module = RpcModule::new(());
 	let FullDeps { client, pool, select_chain, deny_unsafe, babe } = deps;
 	let BabeDeps { babe_worker_handle, keystore } = babe;
 
-
 	module.merge(System::new(client.clone(), pool, deny_unsafe).into_rpc())?;
 	module.merge(TransactionPayment::new(client.clone()).into_rpc())?;
 	module.merge(
-		Babe::new(client.clone(), babe_worker_handle.clone(), keystore.clone(), select_chain, deny_unsafe)
-			.into_rpc(),
+		Babe::new(
+			client.clone(),
+			babe_worker_handle.clone(),
+			keystore.clone(),
+			select_chain,
+			deny_unsafe,
+		)
+		.into_rpc(),
 	)?;
 
 	module.merge(

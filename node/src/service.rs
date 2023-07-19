@@ -4,11 +4,11 @@ use crate::cli::VerifierConfig;
 use karmachain_node_runtime::{self, opaque::Block, RuntimeApi};
 use sc_client_api::BlockBackend;
 pub use sc_executor::NativeElseWasmExecutor;
+use sc_executor::{HeapAllocStrategy, WasmExecutor, DEFAULT_HEAP_ALLOC_STRATEGY};
 use sc_finality_grandpa::SharedVoterState;
 use sc_service::{error::Error as ServiceError, Configuration, TaskManager, WarpSyncParams};
 use sc_telemetry::{Telemetry, TelemetryWorker};
 use std::{sync::Arc, time::Duration};
-use sc_executor::{WasmExecutor, DEFAULT_HEAP_ALLOC_STRATEGY, HeapAllocStrategy};
 // Our native executor instance.
 pub struct ExecutorDispatch;
 
@@ -225,7 +225,6 @@ pub fn new_full(
 		Vec::default(),
 	));
 
-
 	let (network, system_rpc_tx, tx_handler_controller, network_starter, sync_service) =
 		sc_service::build_network(sc_service::BuildNetworkParams {
 			config: &config,
@@ -316,8 +315,7 @@ pub fn new_full(
 	if enable_grandpa {
 		// if the node isn't actively participating in consensus then it doesn't
 		// need a keystore, regardless of which protocol we use below.
-		let keystore =
-			if role.is_authority() { Some(keystore_container.keystore()) } else { None };
+		let keystore = if role.is_authority() { Some(keystore_container.keystore()) } else { None };
 
 		let grandpa_config = sc_finality_grandpa::Config {
 			// FIXME #1578 make this available through chainspec

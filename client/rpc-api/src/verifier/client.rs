@@ -11,11 +11,7 @@ use jsonrpsee::{
 use runtime_api::verifier::VerifierApi;
 use sp_api::ProvideRuntimeApi;
 use sp_blockchain::HeaderBackend;
-use sp_core::{
-	crypto::{AccountId32},
-	hashing::blake2_512,
-	ByteArray,
-};
+use sp_core::{crypto::AccountId32, hashing::blake2_512, ByteArray};
 use sp_keystore::Keystore;
 use sp_rpc::{ByPassToken, VerificationEvidence, VerificationResponse, VerificationResult};
 use sp_runtime::{traits::Block as BlockT, KeyTypeId};
@@ -114,10 +110,9 @@ where
 		};
 
 		if let VerificationResult::Verified = verification_result {
-			let public_key =
-				Keystore::sr25519_public_keys(self.crypto_store.as_ref(), KEY_TYPE)
-					.pop()
-					.ok_or(map_err(Error::KeyNotFound, "No verifier keys"))?;
+			let public_key = Keystore::sr25519_public_keys(self.crypto_store.as_ref(), KEY_TYPE)
+				.pop()
+				.ok_or(map_err(Error::KeyNotFound, "No verifier keys"))?;
 
 			let verifier_public_key: AccountId = public_key.into();
 			let data = VerificationEvidence {
