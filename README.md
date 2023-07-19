@@ -55,7 +55,7 @@ Use the following command to run local node in dev mode with Alice's session key
  cargo run -- --chain=chain-spec/chainSpec.json --alice --validator
 ```
 
-#### Running a verifier node 
+#### Running with the verifier role 
 
 Use the following command to launch a node that supports sign-up verification.
 
@@ -80,7 +80,7 @@ curl --location 'http://localhost:9933/' \
 }'
 ```
 
-#### Enabling the offchain worker
+#### Enabling the offchain worker feature
 
 Use the following command to launch node with an enabled offchain worker that distributes karma rewards.
 
@@ -107,11 +107,14 @@ curl --location 'http://localhost:9933/' \
 
 ### Running a node for tests
 
-Running a node for tests purpose requires both verifier and offchain features enabled:
+Running a node for tests and integration purposes requires both verifier and offchain features enabled.
+Use the following command.
 
 ```sh
 cargo run --release -- --dev --verifier --bypass-token="dummy" --auth-dst="https://localhost:8080" --offchain-worker always
 ```
+
+Remember to insert the two keys to the chain once it is running.
 
 ### Building
 
