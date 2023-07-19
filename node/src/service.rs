@@ -177,7 +177,7 @@ pub fn new_partial(
 
 /// Builds a new service for a full client.
 pub fn new_full(
-	mut config: Configuration,
+	config: Configuration,
 	verifier_config: VerifierConfig,
 ) -> Result<TaskManager, ServiceError> {
 	let sc_service::PartialComponents {
@@ -190,25 +190,38 @@ pub fn new_full(
 		transaction_pool,
 		other: (rpc_extensions_builder, block_import, grandpa_link, babe_link, mut telemetry),
 	} = new_partial(&config, verifier_config)?;
+	let mut net_config = sc_network::config::FullNetworkConfiguration::new(&config.network);
 
 	let grandpa_protocol_name = sc_finality_grandpa::protocol_standard_name(
 		&client.block_hash(0).ok().flatten().expect("Genesis block exists; qed"),
 		&config.chain_spec,
 	);
 
-	config
-		.network
-		.extra_sets
-		.push(sc_finality_grandpa::grandpa_peers_set_config(grandpa_protocol_name.clone()));
+	net_config.add_notification_protocol(sc_finality_grandpa::grandpa_peers_set_config(
+		grandpa_protocol_name.clone(),
+	));
+
+	let statement_handler_proto = sc_network_statement::StatementHandlerPrototype::new(
+		client
+			.block_hash(0u32.into())
+			.ok()
+			.flatten()
+			.expect("Genesis block exists; qed"),
+		config.chain_spec.fork_id(),
+	);
+	net_config.add_notification_protocol(statement_handler_proto.set_config());
+
 	let warp_sync = Arc::new(sc_finality_grandpa::warp_proof::NetworkProvider::new(
 		backend.clone(),
 		grandpa_link.shared_authority_set().clone(),
 		Vec::default(),
 	));
 
+
 	let (network, system_rpc_tx, tx_handler_controller, network_starter, sync_service) =
 		sc_service::build_network(sc_service::BuildNetworkParams {
 			config: &config,
+			net_config,
 			client: client.clone(),
 			transaction_pool: transaction_pool.clone(),
 			spawn_handle: task_manager.spawn_handle(),
