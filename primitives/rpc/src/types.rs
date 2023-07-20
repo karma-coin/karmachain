@@ -46,11 +46,15 @@ pub struct SignedTransaction<AccountId, Signature> {
 
 #[derive(Encode, Decode)]
 #[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
-pub struct SignedTransactionWithStatus<AccountId, Signature> {
+pub struct SignedTransactionWithStatus<AccountId, Signature, TransactionEvent> {
 	pub signed_transaction: SignedTransaction<AccountId, Signature>,
 	pub status: TransactionStatus,
 	pub from: Option<UserInfo<AccountId>>,
 	pub to: Option<UserInfo<AccountId>>,
+	pub timestamp: u64,
+	pub events: Vec<TransactionEvent>,
+	pub block_number: u32,
+	pub transaction_index: u32,
 }
 
 #[derive(Encode, Decode, Default)]
