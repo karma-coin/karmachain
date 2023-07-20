@@ -1,6 +1,6 @@
 use crate::{validators_rewards::era_payout, *};
 use codec::{Decode, Encode};
-use frame_system::Phase;
+use frame_system::{Phase, EventRecord};
 use pallet_identity::types::VerificationResult as IdentityVerificationResult;
 use sp_common::{types::CommunityId, BoundedString};
 use sp_rpc::{
@@ -376,18 +376,19 @@ impl_runtime_apis! {
 		}
 	}
 
-	impl runtime_api::events::EventProvider<Block, RuntimeEvent> for Runtime {
-		fn get_block_events() -> Vec<RuntimeEvent> {
+	impl runtime_api::events::EventProvider<Block, EventRecord<RuntimeEvent, Hash>> for Runtime {
+		fn get_block_events() -> Vec<EventRecord<RuntimeEvent, Hash>> {
 			// Just ask pallet System for events
-			System::read_events_no_consensus().map(|v| v.event).collect()
+			System::read_events_no_consensus().map(|v| *v).collect()
 		}
 
-		fn get_transaction_events(tx_index: u32) -> Vec<RuntimeEvent> {
+		fn get_transaction_events(tx_index: u32) -> Vec<EventRecord<RuntimeEvent, Hash>> {
 			// Just ask pallet System for events and then filter by extrinsic index
 			 // in order to get only that transaction events
 			System::read_events_no_consensus()
 				.filter(|v| matches!(v.phase, Phase::ApplyExtrinsic(index) if index == tx_index))
-				.map(|v| v.event).collect()
+				.map(|v| *v)
+				.collect()
 		}
 	}
 
@@ -480,10 +481,11 @@ impl_runtime_apis! {
 		}
 	}
 
-	impl runtime_api::transactions::TransactionInfoProvider<Block, opaque::UncheckedExtrinsic, AccountId, Signature> for Runtime
+	impl runtime_api::transactions::TransactionInfoProvider<Block, opaque::UncheckedExtrinsic, AccountId, Signature, EventRecord<RuntimeEvent, Hash>> for Runtime
 	{
-		fn get_transaction_info(opaque_extrinsic: opaque::UncheckedExtrinsic) -> Option<SignedTransactionWithStatus<AccountId, Signature>> {
+		fn get_transaction_info(opaque_extrinsic: opaque::UncheckedExtrinsic, tx_index: u32) -> Option<SignedTransactionWithStatus<AccountId, Signature, EventRecord<RuntimeEvent, Hash>>> {
 			use runtime_api::identity::runtime_decl_for_IdentityApi::IdentityApi;
+			use runtime_api::events::runtime_decl_for_EventProvider::EventProviderV1;
 
 			// Convert `OpaqueExtrinsic` into bytes and then decode `UncheckedExtrinsic` from that bytes
 			let transaction_body = opaque_extrinsic.encode();
@@ -504,6 +506,9 @@ impl_runtime_apis! {
 			let from = signer.clone().and_then(|account_id| Self::get_user_info(AccountIdentity::AccountId(account_id)));
 			let to = extrinsic.function.get_recipient().and_then(Self::get_user_info);
 
+			let timestamp = Timestamp::now();
+			let events = Self::get_transaction_events(tx_index);
+
 			Some(SignedTransactionWithStatus {
 				signed_transaction: SignedTransaction {
 					signer,
@@ -513,6 +518,10 @@ impl_runtime_apis! {
 				status: TransactionStatus::OnChain,
 				from,
 				to,
+				timestamp,
+				events,
+				block_number: System::block_number(),
+				transaction_index: tx_index,
 			})
 		}
 	}

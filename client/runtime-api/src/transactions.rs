@@ -6,14 +6,15 @@ use sp_runtime::traits::Header;
 sp_api::decl_runtime_apis! {
 	/// Substrate is build in the way that the runtime and the node are separate from each other.
 	/// This trait needs to fetch information about transaction in node RPC client
-	pub trait TransactionInfoProvider<OpaqueExtrinsic, AccountId, Signature>
+	pub trait TransactionInfoProvider<OpaqueExtrinsic, AccountId, Signature, TransactionEvent>
 	where
 		OpaqueExtrinsic: Codec,
 		AccountId: Codec,
 		Signature: Codec,
+		TransactionEvent: Codec,
 	{
 		/// Provide additional information about extrinsic
-		fn get_transaction_info(opaque_extrinsic: OpaqueExtrinsic) -> Option<SignedTransactionWithStatus<AccountId, Signature>>;
+		fn get_transaction_info(opaque_extrinsic: OpaqueExtrinsic, tx_index: u32) -> Option<SignedTransactionWithStatus<AccountId, Signature, TransactionEvent>>;
 	}
 
 	pub trait TransactionIndexer<AccountId, PhoneNumberHash>

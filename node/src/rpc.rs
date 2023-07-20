@@ -19,7 +19,7 @@ use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder;
 use sp_blockchain::{Error as BlockChainError, HeaderBackend, HeaderMetadata};
 use sp_keystore::SyncCryptoStore;
-
+use frame_system::EventRecord;
 pub use sc_rpc_api::DenyUnsafe;
 use sp_rpc::ByPassToken;
 use sp_runtime::generic::SignedBlock;
@@ -55,13 +55,14 @@ where
 	C::Api: pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>,
 	C::Api: BlockBuilder<Block>,
 	C::Api: runtime_api::chain::BlockInfoProvider<Block, SignedBlock<Block>, AccountId, Hash>,
-	C::Api: runtime_api::events::EventProvider<Block, RuntimeEvent>,
+	C::Api: runtime_api::events::EventProvider<Block, EventRecord<RuntimeEvent, Hash>>,
 	C::Api: runtime_api::identity::IdentityApi<Block, AccountId, Username, PhoneNumberHash>,
 	C::Api: runtime_api::transactions::TransactionInfoProvider<
 		Block,
 		UncheckedExtrinsic,
 		AccountId,
 		Signature,
+		EventRecord<RuntimeEvent, Hash>,
 	>,
 	C::Api: runtime_api::transactions::TransactionIndexer<Block, AccountId, PhoneNumberHash>,
 	C::Api: runtime_api::verifier::VerifierApi<Block, AccountId, Username, PhoneNumberHash>,
