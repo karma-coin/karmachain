@@ -1,6 +1,6 @@
 use crate::{validators_rewards::era_payout, *};
 use codec::{Decode, Encode};
-use frame_system::{Phase, EventRecord};
+use frame_system::{EventRecord, Phase};
 use pallet_identity::types::VerificationResult as IdentityVerificationResult;
 use sp_common::{types::CommunityId, BoundedString};
 use sp_rpc::{

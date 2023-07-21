@@ -119,14 +119,13 @@ where
 				Option::<()>::None,
 			)))?;
 
-		let transaction =
-			<TransactionsIndexer<C, Block> as TransactionsIndexerApiServer<
-				Block,
-				AccountId,
-				Signature,
-				Event,
-				PhoneNumberHash,
-			>>::get_tx(self, block_number, tx_index)?;
+		let transaction = <TransactionsIndexer<C, Block> as TransactionsIndexerApiServer<
+			Block,
+			AccountId,
+			Signature,
+			Event,
+			PhoneNumberHash,
+		>>::get_tx(self, block_number, tx_index)?;
 
 		Ok(transaction)
 	}

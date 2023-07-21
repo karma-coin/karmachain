@@ -2,9 +2,7 @@ pub mod client;
 mod error;
 
 use jsonrpsee::{core::RpcResult, proc_macros::rpc};
-use sp_rpc::{
-	SignedTransactionWithStatus,
-};
+use sp_rpc::SignedTransactionWithStatus;
 use sp_runtime::traits::{Block as BlockT, NumberFor};
 
 #[rpc(client, server)]

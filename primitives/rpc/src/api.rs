@@ -1,4 +1,4 @@
-use crate::{VerificationResult};
+use crate::VerificationResult;
 use codec::{Decode, Encode};
 use scale_info::prelude::vec::Vec;
 #[cfg(feature = "std")]
