@@ -113,6 +113,7 @@ construct_runtime!(
 		Staking: pallet_staking,
 		// Election pallet. Only works with staking, but placed here to maintain indices.
 		ElectionProviderMultiPhase: pallet_election_provider_multi_phase,
+		Offences: pallet_offences,
 		Historical: pallet_session::historical,
 		Session: pallet_session,
 		Grandpa: pallet_grandpa,

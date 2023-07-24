@@ -5,4 +5,6 @@ impl pallet_sudo::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	/// A sudo-able call.
 	type RuntimeCall = RuntimeCall;
+	/// Weight information for extrinsics in this pallet.
+	type WeightInfo = pallet_sudo::weights::SubstrateWeight<Runtime>;
 }

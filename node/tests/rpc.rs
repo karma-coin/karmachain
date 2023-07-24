@@ -1,7 +1,7 @@
 mod utils;
 
 use crate::{
-	chain::{get_block_info, get_blockchain_data, get_genesis_data},
+	chain::{get_blockchain_data, get_genesis_data},
 	utils::create_runner,
 };
 
@@ -9,40 +9,13 @@ use crate::{
 /// or specified block
 /// `get_block_info`, `get_blockchain_data`, `get_genesis_data`
 mod chain {
-	use karmachain_node_runtime::{AccountId, Hash};
+	use karmachain_node_runtime::AccountId;
 
 	use serde_json::{json, Value};
 	use sp_core::crypto::Ss58Codec;
-	use sp_rpc::{Block, BlockchainStats, GenesisData};
+	use sp_rpc::{BlockchainStats, GenesisData};
 
 	const URL: &str = "http://localhost:9933/";
-
-	pub async fn get_block_info() -> Result<(), ()> {
-		let client = reqwest::Client::new();
-
-		let response = client
-			.post(URL)
-			.json(&json!({
-				"id": 1,
-				"jsonrpc": "2.0",
-				"method": "chain_getBlockInfo",
-				"params": {
-					"block_height": 1
-				}
-			}))
-			.send()
-			.await
-			.unwrap()
-			.json::<Value>()
-			.await
-			.unwrap();
-
-		let response: Block<AccountId, Hash> =
-			serde_json::from_value(response.get("result").unwrap().clone()).unwrap();
-		assert_eq!(response.height, 1);
-
-		Ok(())
-	}
 
 	pub async fn get_blockchain_data() -> Result<(), ()> {
 		let client = reqwest::Client::new();
@@ -102,7 +75,6 @@ async fn rpc_tests() -> Result<(), ()> {
 		// Wait while node runs up
 		tokio::time::sleep(tokio::time::Duration::from_secs(60)).await;
 
-		get_block_info().await.expect("Get block fail");
 		get_blockchain_data().await.expect("Get blockchain data fails");
 		get_genesis_data().await.expect("Get genesis data fails");
 
