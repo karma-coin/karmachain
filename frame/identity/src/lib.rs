@@ -362,6 +362,11 @@ impl<T: Config> Pallet<T> {
 			return VerificationResult::Migration
 		}
 
+		// User update his phone number
+		if UsernameFor::<T>::get(username).as_ref() == Some(&account_id) {
+			return VerificationResult::Valid
+		}
+
 		// Such `AccountId` registered by other account
 		if IdentityOf::<T>::contains_key(account_id) {
 			return VerificationResult::AccountIdExists
