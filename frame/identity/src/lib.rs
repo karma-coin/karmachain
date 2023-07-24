@@ -65,7 +65,6 @@ pub mod pallet {
 	}
 
 	#[pallet::pallet]
-	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
 
 	#[pallet::genesis_config]
@@ -221,6 +220,8 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().reads_writes(3, 1).ref_time())]
 		pub fn update_user(
 			origin: OriginFor<T>,
+			verifier_public_key: Option<T::PublicKey>,
+			verifier_signature: Option<T::Signature>,
 			username: Option<T::Username>,
 			phone_number_hash: Option<T::PhoneNumberHash>,
 		) -> DispatchResult {
@@ -245,6 +246,26 @@ pub mod pallet {
 			}
 
 			if let Some(phone_number_hash) = phone_number_hash.clone() {
+				let verifier_public_key = verifier_public_key.ok_or(Error::<T>::InvalidArguments)?;
+				let verifier_signature = verifier_signature.ok_or(Error::<T>::InvalidArguments)?;
+
+				let verifier_account_id = verifier_public_key.clone().into();
+				// Check verification
+				ensure!(
+					PhoneVerifiers::<T>::get().contains(&verifier_account_id),
+					Error::<T>::NotVerifier
+				);
+				ensure!(
+					Self::verify_signature(
+						verifier_public_key,
+						verifier_signature,
+						who.clone(),
+						identity.username.clone(),
+						phone_number_hash.clone()
+					),
+					Error::<T>::InvalidSignature
+				);
+
 				ensure!(
 					identity.phone_number_hash != phone_number_hash,
 					Error::<T>::InvalidArguments
@@ -338,6 +359,11 @@ impl<T: Config> Pallet<T> {
 		// balance, trait score, etc to this new account
 		if PhoneNumberFor::<T>::contains_key(phone_number_hash) {
 			return VerificationResult::Migration
+		}
+
+		// User update his phone number
+		if UsernameFor::<T>::get(username).as_ref() == Some(&account_id) {
+			return VerificationResult::Valid
 		}
 
 		// Such `AccountId` registered by other account

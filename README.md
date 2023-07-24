@@ -66,7 +66,7 @@ cargo run --release -- --dev --verifier --bypass-token="dummy" --auth-dst="https
 Next, use the following command to add verifier keys to the node.
 
 ```sh
-curl --location 'http://localhost:9933/' \
+curl --location 'http://localhost:9944/' \
 --header 'Content-Type: application/json' \
 --data '{
     "id": 1,
@@ -91,7 +91,7 @@ cargo run --release -- --dev --offchain-worker always
 Next, run the following command to insert the offchain worker keys to the chain.
 
 ```sha
-curl --location 'http://localhost:9933/' \
+curl --location 'http://localhost:9944/' \
 --header 'Content-Type: application/json' \
 --data '{
     "id": 1,
@@ -111,7 +111,7 @@ Running a node for tests and integration purposes requires both verifier and off
 Use the following command.
 
 ```sh
-cargo run --release -- --dev --verifier --bypass-token="dummy" --auth-dst="https://localhost:8080" --offchain-worker always
+cargo run --release -- --dev --verifier --bypass-token="dummy" --auth-dst="https://localhost:8080" --offchain-worker always --rpc-methods unsafe
 ```
 
 Remember to insert the two keys to the chain once it is running.

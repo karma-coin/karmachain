@@ -1,18 +1,12 @@
-use crate::chain::{
-	error::{map_err, Error},
-	BlocksProviderApiServer,
-};
+use crate::chain::{error::map_err, BlocksProviderApiServer};
 use codec::Codec;
-use jsonrpsee::{
-	core::RpcResult,
-	types::{error::CallError, ErrorObject},
-};
+use jsonrpsee::core::RpcResult;
 use runtime_api::chain::BlockInfoProvider;
 use sc_client_api::BlockBackend;
 use sp_api::{BlockT, ProvideRuntimeApi};
 use sp_blockchain::HeaderBackend;
-use sp_rpc::{Block as RpcBlock, BlockchainStats, GenesisData};
-use sp_runtime::generic::{BlockId, SignedBlock};
+use sp_rpc::{BlockchainStats, GenesisData};
+use sp_runtime::generic::SignedBlock;
 use std::sync::Arc;
 
 pub struct BlocksProvider<C, P> {
@@ -39,42 +33,12 @@ where
 		+ 'static,
 	C::Api: BlockInfoProvider<Block, SignedBlock<Block>, AccountId, Block::Hash>,
 {
-	fn get_block_info(&self, block_height: u32) -> RpcResult<RpcBlock<AccountId, Block::Hash>> {
-		let api = self.client.runtime_api();
-
-		let block_hash = self
-			.client
-			.block_hash(block_height.into())
-			.map_err(|e| map_err(e, "Failed to get block hashes"))?
-			.ok_or(CallError::Custom(ErrorObject::owned(
-				Error::BlockNotFound.into(),
-				"Block hash not found",
-				Option::<()>::None,
-			)))?;
-
-		let block = self
-			.client
-			.block(block_hash)
-			.map_err(|e| map_err(e, "Failed to get blocks"))?
-			.ok_or(CallError::Custom(ErrorObject::owned(
-				Error::BlockNotFound.into(),
-				"Block by hash not found",
-				Option::<()>::None,
-			)))?;
-
-		let block_info = api
-			.get_block_info(&BlockId::Number(block_height.into()), block)
-			.map_err(|e| map_err(e, "Failed to get block info"))?;
-
-		Ok(block_info)
-	}
-
 	fn get_blockchain_data(&self) -> RpcResult<BlockchainStats> {
 		let api = self.client.runtime_api();
-		let at = BlockId::hash(self.client.info().best_hash);
+		let at = self.client.info().best_hash;
 
 		let blockchain_data = api
-			.get_blockchain_data(&at)
+			.get_blockchain_data(at)
 			.map_err(|e| map_err(e, "Failed to get blockchain data"))?;
 
 		Ok(blockchain_data)
@@ -82,11 +46,10 @@ where
 
 	fn get_genesis_data(&self) -> RpcResult<GenesisData<AccountId>> {
 		let api = self.client.runtime_api();
-		let at = BlockId::hash(self.client.info().best_hash);
+		let at = self.client.info().best_hash;
 
-		let genesis_data = api
-			.get_genesis_data(&at)
-			.map_err(|e| map_err(e, "Failed to get genesis data"))?;
+		let genesis_data =
+			api.get_genesis_data(at).map_err(|e| map_err(e, "Failed to get genesis data"))?;
 
 		Ok(genesis_data)
 	}
