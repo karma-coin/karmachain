@@ -129,3 +129,45 @@ mod signup_rewards {
 		});
 	}
 }
+
+/// Test calls that can call only sudo
+mod sudo {
+	use crate::utils::*;
+	use frame_support::{assert_noop, assert_ok};
+	use karmachain_node_runtime::*;
+	use sp_core::sr25519;
+
+	#[test]
+	fn add_char_trait() {
+		let mut test_executor = new_test_ext();
+
+		test_executor.execute_with(|| {
+			let sudo = get_account_id_from_seed::<sr25519::Public>("Alice");
+			let bob = get_account_id_from_seed::<sr25519::Public>("Bob");
+
+			// A privileged function should work when `sudo` is passed the root `key` as `origin`.
+			let call = Box::new(RuntimeCall::Appreciation(
+				pallet_appreciation::Call::<Runtime>::add_char_trait {
+					id: 1,
+					name: "name".try_into().unwrap(),
+					emoji: "emoji".try_into().unwrap(),
+				},
+			));
+			assert_ok!(Sudo::sudo(RuntimeOrigin::signed(sudo), call));
+
+			// A privileged function should not work when `sudo` is passed a non-root `key` as
+			// `origin`.
+			let call = Box::new(RuntimeCall::Appreciation(
+				pallet_appreciation::Call::<Runtime>::add_char_trait {
+					id: 1,
+					name: "name".try_into().unwrap(),
+					emoji: "emoji".try_into().unwrap(),
+				},
+			));
+			assert_noop!(
+				Sudo::sudo(RuntimeOrigin::signed(bob), call),
+				pallet_sudo::Error::<Runtime>::RequireSudo
+			);
+		});
+	}
+}

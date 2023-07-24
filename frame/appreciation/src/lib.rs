@@ -301,6 +301,11 @@ pub mod pallet {
 		CommunityClosed,
 		///
 		NotEnoughPermission,
+		/// Try to add character trait with existed property
+		/// (same `id` or `name` or `emoji`)
+		CharTraitAlreadyExists,
+		/// No more char traits can be added
+		CharTraitLimitExceeded,
 	}
 
 	#[pallet::call]
@@ -389,6 +394,35 @@ pub mod pallet {
 				username: new_admin_identity.username,
 				phone_number_hash: new_admin_identity.phone_number_hash,
 			});
+
+			Ok(())
+		}
+
+		#[pallet::call_index(2)]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
+		pub fn add_char_trait(
+			origin: OriginFor<T>,
+			id: CharTraitId,
+			name: BoundedString<T::CharNameLimit>,
+			emoji: BoundedString<T::EmojiLimit>,
+		) -> DispatchResult {
+			// Only sudo can call
+			ensure_root(origin)?;
+
+			ensure!(
+				id != NoCharTraitId::<T>::get()?,
+				Error::<T>::CharTraitAlreadyExists
+			);
+
+			let mut traits = CharTraits::<T>::get();
+			ensure!(
+				!traits.iter().any(|t| t.id == id || t.name == name || t.emoji == emoji),
+				Error::<T>::CharTraitAlreadyExists
+			);
+
+			let char_trait = CharTrait { id, name, emoji };
+			traits.try_push(char_trait).map_err(|_| Error::<T>::CharTraitLimitExceeded)?;
+			CharTraits::<T>::put(traits);
 
 			Ok(())
 		}
