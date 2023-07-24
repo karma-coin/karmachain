@@ -112,6 +112,8 @@ construct_runtime!(
 		// for im-online and staking.
 		Authorship: pallet_authorship,
 		Staking: pallet_staking,
+		
+		Offences: pallet_offences,
 		Historical: pallet_session::historical,
 		Session: pallet_session,
 		Grandpa: pallet_grandpa,

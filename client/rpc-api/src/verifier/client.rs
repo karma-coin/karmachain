@@ -11,14 +11,10 @@ use jsonrpsee::{
 use runtime_api::verifier::VerifierApi;
 use sp_api::ProvideRuntimeApi;
 use sp_blockchain::HeaderBackend;
-use sp_core::{
-	crypto::{AccountId32, CryptoTypePublicPair},
-	hashing::blake2_512,
-	ByteArray,
-};
-use sp_keystore::SyncCryptoStore;
+use sp_core::{crypto::AccountId32, hashing::blake2_512, ByteArray};
+use sp_keystore::Keystore;
 use sp_rpc::{ByPassToken, VerificationEvidence, VerificationResponse, VerificationResult};
-use sp_runtime::{generic::BlockId, traits::Block as BlockT, KeyTypeId};
+use sp_runtime::{traits::Block as BlockT, KeyTypeId};
 use std::sync::Arc;
 
 const KEY_TYPE: KeyTypeId = KeyTypeId(*b"Veri");
@@ -26,7 +22,7 @@ const KEY_TYPE: KeyTypeId = KeyTypeId(*b"Veri");
 pub struct Verifier<C, P> {
 	/// Shared reference to the client.
 	client: Arc<C>,
-	crypto_store: Arc<dyn SyncCryptoStore>,
+	crypto_store: Arc<dyn Keystore>,
 	bypass_token: ByPassToken,
 	auth_dst: String,
 	_marker: std::marker::PhantomData<P>,
@@ -35,7 +31,7 @@ pub struct Verifier<C, P> {
 impl<C, P> Verifier<C, P> {
 	pub fn new(
 		client: Arc<C>,
-		crypto_store: Arc<dyn SyncCryptoStore>,
+		crypto_store: Arc<dyn Keystore>,
 		bypass_token: ByPassToken,
 		auth_dst: String,
 	) -> Self {
@@ -66,14 +62,14 @@ where
 		bypass_token: Option<ByPassToken>,
 	) -> RpcResult<VerificationResponse<AccountId, Username, PhoneNumberHash>> {
 		let api = self.client.runtime_api();
-		let at = BlockId::hash(self.client.info().best_hash);
+		let at = self.client.info().best_hash;
 
 		let phone_number_hash =
 			PhoneNumberHash::from(blake2_512(Vec::from(phone_number.clone()).as_slice()));
 
 		// Verify input parameters for `new_user` tx
 		match api
-			.verify(&at, &account_id, &username, &phone_number_hash)
+			.verify(at, &account_id, &username, &phone_number_hash)
 			.map_err(|e| map_err(Error::RuntimeError, e))?
 		{
 			VerificationResult::Verified => {},
@@ -114,11 +110,9 @@ where
 		};
 
 		if let VerificationResult::Verified = verification_result {
-			let public_key =
-				SyncCryptoStore::sr25519_public_keys(self.crypto_store.as_ref(), KEY_TYPE)
-					.pop()
-					.ok_or(map_err(Error::KeyNotFound, "No verifier keys"))?;
-			let key = CryptoTypePublicPair(sp_core::sr25519::CRYPTO_ID, public_key.to_raw_vec());
+			let public_key = Keystore::sr25519_public_keys(self.crypto_store.as_ref(), KEY_TYPE)
+				.pop()
+				.ok_or(map_err(Error::KeyNotFound, "No verifier keys"))?;
 
 			let verifier_public_key: AccountId = public_key.into();
 			let data = VerificationEvidence {
@@ -130,10 +124,10 @@ where
 			.encode();
 
 			let bytes =
-				SyncCryptoStore::sign_with(self.crypto_store.as_ref(), KEY_TYPE, &key, &data)
+				Keystore::sr25519_sign(self.crypto_store.as_ref(), KEY_TYPE, &public_key, &data)
 					.map_err(|e| map_err(Error::SignatureFailed, e))?
 					.ok_or(map_err(Error::SignatureFailed, "Internal error"))?;
-			let signature = sp_core::sr25519::Signature::try_from(bytes.as_slice())
+			let signature = sp_core::sr25519::Signature::try_from(bytes.0.as_slice())
 				.map_err(|_| map_err(Error::SignatureFailed, "Fail to wrap signature"))?;
 
 			result.verifier_account_id = Some(verifier_public_key);

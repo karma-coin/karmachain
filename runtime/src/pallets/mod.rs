@@ -8,6 +8,7 @@ pub mod grandpa;
 pub mod historical;
 pub mod identity;
 pub mod nomination_pools;
+pub mod offence;
 pub mod reward;
 pub mod session;
 pub mod staking;

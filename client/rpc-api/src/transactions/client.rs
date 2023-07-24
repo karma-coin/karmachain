@@ -14,9 +14,8 @@ use runtime_api::{
 use sc_client_api::BlockBackend;
 use sp_api::ProvideRuntimeApi;
 use sp_blockchain::HeaderBackend;
-use sp_rpc::SignedTransactionWithStatus;
+use sp_rpc::{SignedTransactionWithStatus};
 use sp_runtime::{
-	generic::BlockId,
 	traits::{Block as BlockT, NumberFor},
 };
 use std::sync::Arc;
@@ -58,6 +57,7 @@ where
 		tx_index: u32,
 	) -> RpcResult<SignedTransactionWithStatus<AccountId, Signature, Event>> {
 		let api = self.client.runtime_api();
+		let at = self.client.info().best_hash;
 
 		// Convert block number to block hash
 		let block_hash = self
@@ -71,7 +71,6 @@ where
 					Option::<()>::None,
 				))
 			})?;
-		let at = BlockId::hash(block_hash);
 
 		// Get block transactions by block hash
 		let txs = self
@@ -96,7 +95,7 @@ where
 		})?;
 
 		let tx = api
-			.get_transaction_info(&at, opaque_extrinsic, tx_index)
+			.get_transaction_info(at, opaque_extrinsic, tx_index)
 			.map_err(|e| map_err(e, "Failed to get transaction details"))?;
 
 		Ok(tx.unwrap())
@@ -107,11 +106,11 @@ where
 		tx_hash: Block::Hash,
 	) -> RpcResult<SignedTransactionWithStatus<AccountId, Signature, Event>> {
 		let api = self.client.runtime_api();
-		let at = BlockId::hash(self.client.info().best_hash);
+		let at = self.client.info().best_hash;
 
 		// Get block number and transaction index by transaction hash
 		let (block_number, tx_index) = api
-			.get_transaction(&at, tx_hash)
+			.get_transaction(at, tx_hash)
 			.map_err(|e| map_err(e, "Failed to get transaction indexes"))?
 			.ok_or(CallError::Custom(ErrorObject::owned(
 				Error::TxNotFound.into(),
@@ -135,10 +134,10 @@ where
 		account_id: AccountId,
 	) -> RpcResult<Vec<SignedTransactionWithStatus<AccountId, Signature, Event>>> {
 		let api = self.client.runtime_api();
-		let at = BlockId::hash(self.client.info().best_hash);
+		let at = self.client.info().best_hash;
 
 		let transactions = api
-			.get_transactions_by_account(&at, account_id)
+			.get_transactions_by_account(at, account_id)
 			.map_err(|e| map_err(e, "Failed to get transactions indexes"))?
 			.into_iter()
 			.map(|(block_number, tx_index)| self.get_tx(block_number, tx_index))
@@ -152,10 +151,10 @@ where
 		phone_number_hash: PhoneNumberHash,
 	) -> RpcResult<Vec<SignedTransactionWithStatus<AccountId, Signature, Event>>> {
 		let api = self.client.runtime_api();
-		let at = BlockId::hash(self.client.info().best_hash);
+		let at = self.client.info().best_hash;
 
 		let transactions = api
-			.get_transactions_by_phone_number_hash(&at, phone_number_hash)
+			.get_transactions_by_phone_number_hash(at, phone_number_hash)
 			.map_err(|e| map_err(e, "Failed to get transactions indexes"))?
 			.into_iter()
 			.map(|(block_number, tx_index)| self.get_tx(block_number, tx_index))

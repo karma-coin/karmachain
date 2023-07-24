@@ -1,12 +1,15 @@
 use codec::{Decode, Encode};
-use scale_info::prelude::{string::String, vec::Vec};
+use scale_info::{
+	prelude::{string::String, vec::Vec},
+	TypeInfo,
+};
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 
 pub type ByPassToken = String;
 pub type PhoneNumberHash = sp_core::H512;
 
-#[derive(Encode, Decode)]
+#[derive(Encode, Decode, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
 pub struct UserInfo<AccountId> {
 	pub account_id: AccountId,
@@ -20,7 +23,7 @@ pub struct UserInfo<AccountId> {
 	pub community_membership: Vec<CommunityMembership>,
 }
 
-#[derive(Encode, Decode)]
+#[derive(Encode, Decode, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
 pub struct TraitScore {
 	pub trait_id: u32,
@@ -28,7 +31,7 @@ pub struct TraitScore {
 	pub community_id: u32,
 }
 
-#[derive(Encode, Decode)]
+#[derive(Encode, Decode, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
 pub struct CommunityMembership {
 	pub community_id: u32,
@@ -36,7 +39,7 @@ pub struct CommunityMembership {
 	pub is_admin: bool,
 }
 
-#[derive(Encode, Decode)]
+#[derive(Encode, Decode, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
 pub struct SignedTransaction<AccountId, Signature> {
 	pub signer: Option<AccountId>,
@@ -44,7 +47,7 @@ pub struct SignedTransaction<AccountId, Signature> {
 	pub signature: Option<Signature>,
 }
 
-#[derive(Encode, Decode)]
+#[derive(Encode, Decode, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
 pub struct SignedTransactionWithStatus<AccountId, Signature, TransactionEvent> {
 	pub signed_transaction: SignedTransaction<AccountId, Signature>,
@@ -57,7 +60,7 @@ pub struct SignedTransactionWithStatus<AccountId, Signature, TransactionEvent> {
 	pub transaction_index: u32,
 }
 
-#[derive(Encode, Decode, Default)]
+#[derive(Encode, Decode, TypeInfo, Default)]
 #[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
 pub enum TransactionStatus {
 	#[default]
@@ -68,21 +71,7 @@ pub enum TransactionStatus {
 	OnChain,
 }
 
-#[derive(Encode, Decode, Default)]
-#[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
-pub struct Block<AccountId, Hash> {
-	pub time: u64,
-	pub author: Option<AccountId>,
-	pub height: u32,
-	pub transaction_hashes: Vec<Hash>,
-	pub fees: u128,
-	pub signature: Vec<u8>,
-	// pub reward: u128,
-	// pub minted: u128,
-	pub digest: Vec<u8>,
-}
-
-#[derive(Encode, Decode)]
+#[derive(Encode, Decode, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
 pub struct BlockchainStats {
 	/// Last block production time
@@ -121,7 +110,7 @@ pub struct BlockchainStats {
 	// double exchange_rate = 19;
 }
 
-#[derive(Encode, Decode)]
+#[derive(Encode, Decode, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
 pub struct GenesisData<AccountId> {
 	pub net_id: u32,
@@ -158,7 +147,7 @@ pub struct GenesisData<AccountId> {
 	pub verifiers: Vec<PhoneVerifier<AccountId>>,
 }
 
-#[derive(Encode, Decode)]
+#[derive(Encode, Decode, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
 pub struct CharTrait {
 	pub id: u32,
@@ -166,14 +155,14 @@ pub struct CharTrait {
 	pub emoji: String,
 }
 
-#[derive(Encode, Decode)]
+#[derive(Encode, Decode, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
 pub struct PhoneVerifier<AccountId> {
 	pub account_id: AccountId,
 	pub name: String,
 }
 
-#[derive(Encode, Decode)]
+#[derive(Encode, Decode, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
 pub struct Contact<AccountId> {
 	pub user_name: String,
@@ -183,7 +172,7 @@ pub struct Contact<AccountId> {
 	pub trait_scores: Vec<TraitScore>,
 }
 
-#[derive(Encode, Decode)]
+#[derive(Encode, Decode, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
 pub struct LeaderboardEntry<AccountId> {
 	pub user_name: String,
@@ -192,7 +181,7 @@ pub struct LeaderboardEntry<AccountId> {
 	char_traits_ids: u32,
 }
 
-#[derive(Copy, Clone, Encode, Decode)]
+#[derive(Copy, Clone, Encode, Decode, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
 pub enum VerificationResult {
 	Unspecified = 0,
@@ -221,7 +210,7 @@ impl From<i32> for VerificationResult {
 	}
 }
 
-#[derive(Encode, Decode)]
+#[derive(Encode, Decode, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
 pub struct VerificationEvidence<PublicKey, AccountId, Username, PhoneNumberHash> {
 	pub verifier_public_key: PublicKey,
