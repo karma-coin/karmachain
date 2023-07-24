@@ -35,7 +35,7 @@ mod existential_deposit {
 						None, // No `char_trait`, means appreciation work like transfer tx
 						None
 					),
-					pallet_balances::Error::<Runtime>::ExistentialDeposit
+					sp_runtime::TokenError::NotExpendable
 				);
 			});
 	}
