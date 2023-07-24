@@ -170,4 +170,57 @@ mod sudo {
 			);
 		});
 	}
+
+	#[test]
+	fn add_community() {
+		let mut test_executor = new_test_ext();
+
+		test_executor.execute_with(|| {
+			let sudo = get_account_id_from_seed::<sr25519::Public>("Alice");
+			let bob = get_account_id_from_seed::<sr25519::Public>("Bob");
+			let foo = get_account_id_from_seed::<sr25519::Public>("Foo");
+
+			// A privileged function should work when `sudo` is passed the root `key` as `origin`.
+			let call = Box::new(RuntimeCall::Appreciation(
+				pallet_appreciation::Call::<Runtime>::add_community {
+					id: 1,
+					name: "name".try_into().unwrap(),
+					desc: "desc".try_into().unwrap(),
+					emoji: "emoji".try_into().unwrap(),
+					website_url: "website url".try_into().unwrap(),
+					twitter_url: "twitter url".try_into().unwrap(),
+					insta_url: "insta url".try_into().unwrap(),
+					face_url: "face url".try_into().unwrap(),
+					discord_url: "discord url".try_into().unwrap(),
+					char_traits: vec![].try_into().unwrap(),
+					closed: false,
+					admin: foo.clone(),
+				},
+			));
+			assert_ok!(Sudo::sudo(RuntimeOrigin::signed(sudo), call));
+
+			// A privileged function should not work when `sudo` is passed a non-root `key` as
+			// `origin`.
+			let call = Box::new(RuntimeCall::Appreciation(
+				pallet_appreciation::Call::<Runtime>::add_community {
+					id: 1,
+					name: "name".try_into().unwrap(),
+					desc: "desc".try_into().unwrap(),
+					emoji: "emoji".try_into().unwrap(),
+					website_url: "website url".try_into().unwrap(),
+					twitter_url: "twitter url".try_into().unwrap(),
+					insta_url: "insta url".try_into().unwrap(),
+					face_url: "face url".try_into().unwrap(),
+					discord_url: "discord url".try_into().unwrap(),
+					char_traits: vec![].try_into().unwrap(),
+					closed: false,
+					admin: foo.clone(),
+				},
+			));
+			assert_noop!(
+				Sudo::sudo(RuntimeOrigin::signed(bob), call),
+				pallet_sudo::Error::<Runtime>::RequireSudo
+			);
+		});
+	}
 }

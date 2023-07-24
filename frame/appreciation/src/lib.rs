@@ -306,6 +306,11 @@ pub mod pallet {
 		CharTraitAlreadyExists,
 		/// No more char traits can be added
 		CharTraitLimitExceeded,
+		/// Try to add character trait with existed property
+		/// (same `id` or `name` or `emoji`)
+		CommunityAlreadyExists,
+		/// No more communities can be added
+		CommunityLimitExceeded,
 	}
 
 	#[pallet::call]
@@ -423,6 +428,58 @@ pub mod pallet {
 			let char_trait = CharTrait { id, name, emoji };
 			traits.try_push(char_trait).map_err(|_| Error::<T>::CharTraitLimitExceeded)?;
 			CharTraits::<T>::put(traits);
+
+			Ok(())
+		}
+
+		#[pallet::call_index(3)]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
+		pub fn add_community(
+			origin: OriginFor<T>,
+			id: CommunityId,
+			name: BoundedString<T::CommunityNameLimit>,
+			desc: BoundedString<T::CommunityDescLimit>,
+			emoji: BoundedString<T::EmojiLimit>,
+			website_url: BoundedString<T::CommunityUrlLimit>,
+			twitter_url: BoundedString<T::CommunityUrlLimit>,
+			insta_url: BoundedString<T::CommunityUrlLimit>,
+			face_url: BoundedString<T::CommunityUrlLimit>,
+			discord_url: BoundedString<T::CommunityUrlLimit>,
+			char_traits: BoundedVec<CharTraitId, T::MaxCharTrait>,
+			closed: bool,
+			admin: T::AccountId
+		) -> DispatchResult {
+			// Only sudo can call
+			ensure_root(origin)?;
+
+			ensure!(
+				id != NoCommunityId::<T>::get()?,
+				Error::<T>::CommunityAlreadyExists
+			);
+
+			let mut communties = Communities::<T>::get();
+			ensure!(
+				!communties.iter().any(|c| c.id == id || c.name == name),
+				Error::<T>::CommunityAlreadyExists
+			);
+
+			let community = Community {
+				id,
+				name,
+				desc,
+				emoji,
+				website_url,
+				twitter_url,
+				insta_url,
+				face_url,
+				discord_url,
+				char_traits,
+				closed,
+			};
+			communties.try_push(community).map_err(|_| Error::<T>::CommunityLimitExceeded)?;
+			Communities::<T>::put(communties);
+
+			CommunityMembership::<T>::insert(admin, id, CommunityRole::Admin);
 
 			Ok(())
 		}
