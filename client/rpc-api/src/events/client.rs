@@ -1,10 +1,16 @@
-use crate::events::{error::map_err, EventsProviderApiServer};
+use crate::events::{
+	error::{map_err, Error},
+	EventsProviderApiServer,
+};
 use codec::Codec;
-use jsonrpsee::core::RpcResult;
+use jsonrpsee::{
+	core::RpcResult,
+	types::{error::CallError, ErrorObject},
+};
 use runtime_api::events::EventProvider;
+use sc_client_api::BlockBackend;
 use sp_api::{BlockT, ProvideRuntimeApi};
 use sp_blockchain::HeaderBackend;
-use sp_runtime::generic::BlockId;
 use std::sync::Arc;
 
 pub struct EventsProvider<C, P> {
@@ -23,7 +29,12 @@ impl<C, Block, Event> EventsProviderApiServer<Block, Event> for EventsProvider<C
 where
 	Block: BlockT,
 	Event: Codec,
-	C: ProvideRuntimeApi<Block> + HeaderBackend<Block> + Send + Sync + 'static,
+	C: ProvideRuntimeApi<Block>
+		+ BlockBackend<Block>
+		+ HeaderBackend<Block>
+		+ Send
+		+ Sync
+		+ 'static,
 	C::Api: EventProvider<Block, Event>,
 {
 	fn get_blockchain_events(
@@ -35,7 +46,21 @@ where
 
 		let events = (from_block_height..=to_block_height)
 			.map(|block_number| {
-				api.get_block_events(&BlockId::Number(block_number.into()))
+				self.client
+					.block_hash(block_number.into())
+					.map_err(|e| map_err(e, "Failed to get block hashes"))
+					.map(|option| {
+						option.ok_or(CallError::Custom(ErrorObject::owned(
+							Error::BlockNotFound.into(),
+							"Block hash not found",
+							Option::<()>::None,
+						)))
+					})
+			})
+			.collect::<Result<Result<Vec<_>, _>, _>>()??
+			.into_iter()
+			.map(|block_hash| {
+				api.get_block_events(block_hash)
 					.map_err(|e| map_err(e, "Fail to get block events"))
 			})
 			.collect::<Result<Vec<_>, _>>()?

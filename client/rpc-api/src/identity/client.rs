@@ -10,7 +10,7 @@ use sp_blockchain::HeaderBackend;
 use sp_common::{identity::AccountIdentity, types::CommunityId};
 use sp_core::hashing::blake2_512;
 use sp_rpc::{Contact, LeaderboardEntry, UserInfo};
-use sp_runtime::{generic::BlockId, traits::Block as BlockT};
+use sp_runtime::traits::Block as BlockT;
 use sp_std::fmt::Debug;
 use std::sync::Arc;
 
@@ -45,9 +45,9 @@ where
 		at: Option<<Block as BlockT>::Hash>,
 	) -> RpcResult<Option<UserInfo<AccountId>>> {
 		let api = self.client.runtime_api();
-		let at = BlockId::hash(at.unwrap_or_else(|| self.client.info().best_hash));
+		let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
-		Ok(api.get_user_info(&at, AccountIdentity::AccountId(account_id)).map_err(|e| {
+		Ok(api.get_user_info(at, AccountIdentity::AccountId(account_id)).map_err(|e| {
 			CallError::Custom(ErrorObject::owned(
 				0,
 				"Unable to query user info.",
@@ -62,9 +62,9 @@ where
 		at: Option<<Block as BlockT>::Hash>,
 	) -> RpcResult<Option<UserInfo<AccountId>>> {
 		let api = self.client.runtime_api();
-		let at = BlockId::hash(at.unwrap_or_else(|| self.client.info().best_hash));
+		let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
-		Ok(api.get_user_info(&at, AccountIdentity::Username(username)).map_err(|e| {
+		Ok(api.get_user_info(at, AccountIdentity::Username(username)).map_err(|e| {
 			CallError::Custom(ErrorObject::owned(
 				0,
 				"Unable to query user info.",
@@ -79,13 +79,13 @@ where
 		at: Option<<Block as BlockT>::Hash>,
 	) -> RpcResult<Option<UserInfo<AccountId>>> {
 		let api = self.client.runtime_api();
-		let at = BlockId::hash(at.unwrap_or_else(|| self.client.info().best_hash));
+		let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
 		let phone_number_hash =
 			PhoneNumberHash::from(blake2_512(Vec::from(phone_number.clone()).as_slice()));
 
 		Ok(api
-			.get_user_info(&at, AccountIdentity::PhoneNumberHash(phone_number_hash))
+			.get_user_info(at, AccountIdentity::PhoneNumberHash(phone_number_hash))
 			.map_err(|e| {
 				CallError::Custom(ErrorObject::owned(
 					0,
@@ -101,10 +101,10 @@ where
 		at: Option<<Block as BlockT>::Hash>,
 	) -> RpcResult<Option<UserInfo<AccountId>>> {
 		let api = self.client.runtime_api();
-		let at = BlockId::hash(at.unwrap_or_else(|| self.client.info().best_hash));
+		let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
 		Ok(api
-			.get_user_info(&at, AccountIdentity::PhoneNumberHash(phone_number_hash))
+			.get_user_info(at, AccountIdentity::PhoneNumberHash(phone_number_hash))
 			.map_err(|e| {
 				CallError::Custom(ErrorObject::owned(
 					0,
@@ -120,9 +120,9 @@ where
 		at: Option<<Block as BlockT>::Hash>,
 	) -> RpcResult<Vec<UserInfo<AccountId>>> {
 		let api = self.client.runtime_api();
-		let at = BlockId::hash(at.unwrap_or_else(|| self.client.info().best_hash));
+		let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
-		Ok(api.get_all_users(&at, community_id).map_err(|e| {
+		Ok(api.get_all_users(at, community_id).map_err(|e| {
 			CallError::Custom(ErrorObject::owned(
 				0,
 				"Unable to query community members.",
@@ -138,9 +138,9 @@ where
 		at: Option<<Block as BlockT>::Hash>,
 	) -> RpcResult<Vec<Contact<AccountId>>> {
 		let api = self.client.runtime_api();
-		let at = BlockId::hash(at.unwrap_or_else(|| self.client.info().best_hash));
+		let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
-		Ok(api.get_contacts(&at, prefix, community_id).map_err(|e| {
+		Ok(api.get_contacts(at, prefix, community_id).map_err(|e| {
 			CallError::Custom(ErrorObject::owned(
 				0,
 				"Unable to query community members.",

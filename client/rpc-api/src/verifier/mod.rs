@@ -12,7 +12,7 @@ pub trait VerifierApi<AccountId, Username, PhoneNumber, PhoneNumberHash> {
 		&self,
 		account_id: AccountId,
 		username: Username,
-		phone_number_hash: PhoneNumber,
+		phone_number: PhoneNumber,
 		bypass_token: Option<ByPassToken>,
 	) -> RpcResult<VerificationResponse<AccountId, Username, PhoneNumberHash>>;
 }

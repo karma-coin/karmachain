@@ -81,6 +81,8 @@ impl pallet_election_provider_multi_phase::MinerConfig for Runtime {
         as
         frame_election_provider_support::ElectionDataProvider
     >::MaxVotesPerVoter;
+	/// The maximum number of winners that can be elected.
+	type MaxWinners = MaxActiveValidators;
 	/// Something that can compute the weight of a solution.
 	///
 	/// This weight estimate is then used to trim the solution, based on [`MinerConfig::MaxWeight`].

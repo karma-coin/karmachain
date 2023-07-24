@@ -15,11 +15,11 @@ Install [nix](https://nixos.org/) and optionally [direnv](https://github.com/dir
 the development environment. To get all the correct dependencies activate direnv `direnv allow` and
 lorri `lorri shell`.
 
-### Rust Setup
+### Setting up Rust
 
 First, complete the [basic Rust setup instructions](./docs/rust-setup.md).
 
-### Install the Protobuf Compiler
+### Installing the Protobuf Compiler
 
 Debian / Ubunutu:
 
@@ -27,7 +27,7 @@ Debian / Ubunutu:
 sudo apt install protobuf-compiler
 ```
 
-### Run
+### Running
 
 Use Rust's native `cargo` command to build and launch the template node:
 
@@ -35,39 +35,38 @@ Use Rust's native `cargo` command to build and launch the template node:
 cargo run --release -- --dev
 ```
 
-#### Run local node 
+#### Running with a chainspec
 
-Firstly you need to create chain specification file or use existed one:
 
 ```sh
 cargo run -- build-spec --dev > chain-spec/chainSpec.json
 ```
 
-Now you can modify `chainSpec.json` to change blockchain genesis params.
- * balances - here can specify genesis balance for specific account
+This uses one of the provided chain specs. 
+You can modify `chainSpec.json` to change blockchain genesis params.
+ * balances - specify genesis balance for specific account
  * sudo - set sudo account
  * identity - set phone verifiers account
- * appreciation - set character traits, communities etc.
+ * appreciation - set character traits, communities etc
 
-Then to run local node use next command, because of this is dev environment use 
-alice session keys and account as validator:
+Use the following command to run local node in dev mode with Alice's session keys as validator.
 
 ```shell
  cargo run -- --chain=chain-spec/chainSpec.json --alice --validator
 ```
 
-#### Run verifier node 
+#### Running with the verifier role 
 
-Use Rust's native `cargo` command to build and launch the template node:
+Use the following command to launch a node that supports sign-up verification.
 
 ```sh
 cargo run --release -- --dev --verifier --bypass-token="dummy" --auth-dst="https://localhost:8080"
 ```
 
-Inserting verifier keys:
+Next, use the following command to add verifier keys to the node.
 
 ```sh
-curl --location 'http://localhost:9933/' \
+curl --location 'http://localhost:9944/' \
 --header 'Content-Type: application/json' \
 --data '{
     "id": 1,
@@ -81,18 +80,18 @@ curl --location 'http://localhost:9933/' \
 }'
 ```
 
-#### Enable offchain worker
+#### Enabling the offchain worker feature
 
-Use Rust's native `cargo` command to build and launch node with enabled offchain worker to distribute karma rewards:
+Use the following command to launch node with an enabled offchain worker that distributes karma rewards.
 
 ```shell
 cargo run --release -- --dev --offchain-worker always
 ```
 
-Inserting offchain keys:
+Next, run the following command to insert the offchain worker keys to the chain.
 
 ```sh
-curl --location 'http://localhost:9933/' \
+curl --location 'http://localhost:9944/' \
 --header 'Content-Type: application/json' \
 --data '{
     "id": 1,
@@ -106,53 +105,49 @@ curl --location 'http://localhost:9933/' \
 }'
 ```
 
-### Run node for tests
+### Running a node for tests
 
-Running node for tests purpose requires both verifier and offchain features enabled:
+Running a node for tests and integration purposes requires both verifier and offchain features enabled.
+Use the following command.
 
 ```sh
-cargo run --release -- --dev --verifier --bypass-token="dummy" --auth-dst="https://localhost:8080" --offchain-worker always
+cargo run --release -- --dev --verifier --bypass-token="dummy" --auth-dst="https://localhost:8080" --offchain-worker always --rpc-methods unsafe
 ```
 
-### Build
+Remember to insert the two keys to the chain once it is running.
 
-The `cargo run` command will perform an initial build. Use the following command to build the node
-without launching it:
+### Building
+
+Use the following command to build a node without launching it:
 
 ```sh
 cargo build --release
 ```
 
-### Embedded Docs
+### Reading the embedded docs
 
-Once the project has been built, the following command can be used to explore all parameters and
-subcommands:
+Once the node has been built, use the following command can be used to explore all parameters and
+subcommands.
 
 ```sh
 ./target/release/karmachain-node -h
 ```
 
-## Run
-
-The provided `cargo run` command will launch a temporary node and its state will be discarded after
-you terminate the process. After the project has been built, there are other ways to launch the
-node.
-
 ### Single-Node Development Chain
 
-This command will start the single-node development chain with non-persistent state:
+This following command will start the single-node dev chain with non-persistent state.
 
 ```bash
 ./target/release/karmachain-node --dev
 ```
 
-Purge the development chain's state:
+The following command purges the dev chain's state.
 
 ```bash
 ./target/release/karmachain-node purge-chain --dev
 ```
 
-Start the development chain with detailed logging:
+Use the following command to run a dev chain with detailed logging.
 
 ```bash
 RUST_BACKTRACE=1 ./target/release/karmachain-node -ldebug --dev
@@ -189,17 +184,19 @@ db keystore network
 ```
 
 
-### Connect with Polkadot-JS Apps Front-end
+### Connecting with Polkadot-JS Apps and other Front-ends
 
-Once the node template is running locally, you can connect it with **Polkadot-JS Apps** front-end
-to interact with your chain. [Click
-here](https://polkadot.js.org/apps/#/explorer?rpc=ws://localhost:9944) connecting the Apps to your
+Once the node is running locally, you can connect it with **Polkadot-JS Apps** front-end to interact with your chain. 
+This url will run the polkadot-js ui in your browser for your local node:
+
+[https://polkadot.js.org/apps/#/explorer?rpc=ws://localhost:9944](https://polkadot.js.org/apps/#/explorer?rpc=ws://localhost:9944) connecting the Apps to your
 local node template.
 
 ### Multi-Node Local Testnet
 
 If you want to see the multi-node consensus algorithm in action, refer to our
 [Simulate a network tutorial](https://docs.substrate.io/tutorials/get-started/simulate-network/).
+
 
 ## Template Structure
 

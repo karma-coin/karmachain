@@ -96,16 +96,16 @@ impl TestUtils for sp_io::TestExternalities {
 			let phone_number_hash =
 				PhoneNumberHash::from(blake2_512(Vec::from(phone_number).as_slice()));
 
-			// let (public_key, signature) = get_verification_evidence(
-			// 	account_id.clone(),
-			// 	username.clone(),
-			// 	phone_number.clone(),
-			// );
+			let (public_key, signature) = get_verification_evidence(
+				account_id.clone(),
+				username.clone(),
+				phone_number_hash.clone(),
+			);
 
 			assert_ok!(Identity::new_user(
 				RuntimeOrigin::signed(account_id.clone()),
-				// public_key,
-				// signature,
+				public_key,
+				signature,
 				account_id,
 				username,
 				phone_number_hash,
