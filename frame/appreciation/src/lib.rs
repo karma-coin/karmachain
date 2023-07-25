@@ -406,7 +406,8 @@ pub mod pallet {
 		/// Add new char trait directly into storage. Fails if char trait
 		/// with same id or name or emoji exists.
 		///
-		/// Can only be called by Root origin (Sudo).
+		/// Can only be called by Root origin (Sudo). Use Sudo::call to call 
+		/// this transaction
 		#[pallet::call_index(2)]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
 		pub fn add_char_trait(
@@ -439,7 +440,8 @@ pub mod pallet {
 		/// Add new community directly into storage. Fails if community
 		/// with same id or name exists.
 		///
-		/// Can only be called by Root origin (Sudo).
+		/// Can only be called by Root origin (Sudo). Use Sudo::call to call 
+		/// this transaction
 		#[pallet::call_index(3)]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
 		pub fn add_community(
