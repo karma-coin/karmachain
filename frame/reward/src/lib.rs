@@ -211,6 +211,10 @@ pub mod pallet {
 	pub type AccountRewardInfo<T: Config> =
 		StorageMap<_, Blake2_128Concat, T::AccountId, AccountRewardsData, ValueQuery>;
 
+	// Store deleted account to not issue signup reward twice
+	#[pallet::storage]
+	pub type DeletedAccounts<T: Config> = StorageMap<_, Blake2_128Concat, T::PhoneNumberHash, ()>;
+
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
@@ -526,8 +530,13 @@ impl<T: Config> KarmaHooks<T::AccountId, T::Balance, T::Username, T::PhoneNumber
 		_verifier: T::AccountId,
 		who: T::AccountId,
 		_name: T::Username,
-		_phone_number_hash: T::PhoneNumberHash,
+		phone_number_hash: T::PhoneNumberHash,
 	) -> DispatchResult {
+		// Do not issue signup reward twice
+		if DeletedAccounts::<T>::contains_key(phone_number_hash) {
+			return Ok(())
+		}
+
 		let total_allocated = SignupRewardTotalAllocated::<T>::get();
 
 		let reward = if total_allocated < SignupRewardPhase1Alloc::<T>::get() {
@@ -557,6 +566,16 @@ impl<T: Config> KarmaHooks<T::AccountId, T::Balance, T::Username, T::PhoneNumber
 		} else {
 			Ok(())
 		}
+	}
+
+	fn on_delete_user(
+		_account_id: T::AccountId,
+		_username: T::Username,
+		phone_number_hash: T::PhoneNumberHash,
+	) -> DispatchResult {
+		DeletedAccounts::<T>::insert(phone_number_hash, ());
+
+		Ok(())
 	}
 
 	fn on_appreciation(

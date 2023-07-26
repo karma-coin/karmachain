@@ -8,7 +8,7 @@ mod utils;
 mod existential_deposit {
 	use crate::utils::*;
 	use frame_support::assert_err;
-	use karmachain_node_runtime::{Appreciation, Runtime, RuntimeOrigin, EXISTENTIAL_DEPOSIT};
+	use karmachain_node_runtime::{Appreciation, RuntimeOrigin, EXISTENTIAL_DEPOSIT};
 	use sp_common::identity::AccountIdentity;
 	use sp_core::sr25519;
 
