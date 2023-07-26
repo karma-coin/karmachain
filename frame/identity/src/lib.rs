@@ -165,6 +165,12 @@ pub mod pallet {
 			phone_number_hash: T::PhoneNumberHash,
 			new_phone_number_hash: Option<T::PhoneNumberHash>,
 		},
+		/// User delete its account
+		AccountDeleted {
+			account_id: T::AccountId,
+			username: T::Username,
+			phone_number_hash: T::PhoneNumberHash,
+		},
 	}
 
 	#[pallet::call]
@@ -310,7 +316,17 @@ pub mod pallet {
 
 			T::Currency::make_free_balance_be(&who, T::Balance::zero());
 
-			T::Hooks::on_delete_user(who, identity_info.username, identity_info.phone_number_hash)?;
+			T::Hooks::on_delete_user(
+				who.clone(),
+				identity_info.username.clone(),
+				identity_info.phone_number_hash.clone(),
+			)?;
+
+			Self::deposit_event(Event::<T>::AccountDeleted {
+				account_id: who,
+				username: identity_info.username,
+				phone_number_hash: identity_info.phone_number_hash,
+			});
 
 			Ok(())
 		}
