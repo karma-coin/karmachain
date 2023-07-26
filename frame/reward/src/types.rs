@@ -11,6 +11,8 @@ pub struct AccountRewardsData {
 	pub karma_reward: bool,
 	/// Number of transaction that was subsidized for this user
 	pub transaction_subsidized: u8,
+	/// Number of appreciation transaction, need to participate in karma rewards
+	pub appreciation_count: u32,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Decode, Encode, MaxEncodedLen, TypeInfo)]
