@@ -11,7 +11,11 @@ use frame_support::{
 	traits::{Currency, Randomness},
 };
 use frame_system::offchain::{SendSignedTransaction, Signer};
-use sp_common::{hooks::Hooks as KarmaHooks, traits::ScoreProvider};
+use sp_common::{
+	hooks::Hooks as KarmaHooks,
+	traits::ScoreProvider,
+	types::{CharTraitId, CommunityId},
+};
 use sp_runtime::traits::Zero;
 use sp_std::{default::Default, vec::Vec};
 
@@ -84,6 +88,7 @@ pub mod pallet {
 		pub karma_reward_amount: T::Balance,
 		pub karma_reward_alloc: T::Balance,
 		pub karma_reward_users_participates: u32,
+		pub karma_reward_appreciations_requires: u32,
 	}
 
 	#[cfg(feature = "std")]
@@ -112,6 +117,7 @@ pub mod pallet {
 				karma_reward_amount: 10_000_000_u128.try_into().ok().unwrap(),
 				karma_reward_alloc: 300_000_000_000_000_u128.try_into().ok().unwrap(),
 				karma_reward_users_participates: 1000,
+				karma_reward_appreciations_requires: 2,
 			}
 		}
 	}
@@ -144,6 +150,7 @@ pub mod pallet {
 			KarmaRewardAmount::<T>::put(self.karma_reward_amount);
 			MaxKarmaRewardAlloc::<T>::put(self.karma_reward_alloc);
 			KarmaRewardUsersParticipates::<T>::put(self.karma_reward_users_participates);
+			KarmaRewardAppreciationsRequires::<T>::put(self.karma_reward_appreciations_requires);
 		}
 	}
 
@@ -197,6 +204,8 @@ pub mod pallet {
 	pub type KarmaRewardAmount<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
 	#[pallet::storage]
 	pub type KarmaRewardUsersParticipates<T: Config> = StorageValue<_, u32, ValueQuery>;
+	#[pallet::storage]
+	pub type KarmaRewardAppreciationsRequires<T: Config> = StorageValue<_, u32, ValueQuery>;
 
 	#[pallet::storage]
 	pub type AccountRewardInfo<T: Config> =
@@ -457,9 +466,12 @@ impl<T: Config> Pallet<T> {
 
 		let participates_number = KarmaRewardUsersParticipates::<T>::get();
 		let winners_number = T::MaxWinners::get();
+		let appreciations_requires = KarmaRewardAppreciationsRequires::<T>::get();
 
 		let mut accounts = AccountRewardInfo::<T>::iter()
-			.filter(|(_, info)| !info.karma_reward)
+			.filter(|(_, info)| {
+				!info.karma_reward && info.appreciation_count >= appreciations_requires
+			})
 			.map(|(account_id, _)| (T::ScoreProvider::score_of(&account_id), account_id))
 			.collect::<Vec<_>>();
 
@@ -503,6 +515,12 @@ impl<T: Config> Pallet<T> {
 				Err("No local accounts available. Consider adding one via `author_insertKey` RPC."),
 		}
 	}
+
+	pub(crate) fn note_appreciation(account_id: T::AccountId) {
+		AccountRewardInfo::<T>::mutate(&account_id, |reward_info| {
+			reward_info.appreciation_count += 1;
+		});
+	}
 }
 
 impl<T: Config> KarmaHooks<T::AccountId, T::Balance, T::Username, T::PhoneNumberHash>
@@ -535,20 +553,6 @@ impl<T: Config> KarmaHooks<T::AccountId, T::Balance, T::Username, T::PhoneNumber
 		Ok(())
 	}
 
-	fn on_referral(who: T::AccountId, _whom: T::AccountId) -> DispatchResult {
-		let total_allocated = ReferralRewardTotalAllocated::<T>::get();
-
-		let reward = if total_allocated < ReferralRewardPhase1Alloc::<T>::get() {
-			ReferralRewardPhase1Amount::<T>::get()
-		} else {
-			ReferralRewardPhase2Amount::<T>::get()
-		};
-
-		Self::issue_referral_reward(&who, reward)?;
-
-		Ok(())
-	}
-
 	fn on_update_user(
 		old_account_id: T::AccountId,
 		new_account_id: Option<T::AccountId>,
@@ -570,6 +574,33 @@ impl<T: Config> KarmaHooks<T::AccountId, T::Balance, T::Username, T::PhoneNumber
 		phone_number_hash: T::PhoneNumberHash,
 	) -> DispatchResult {
 		DeletedAccounts::<T>::insert(phone_number_hash, ());
+
+		Ok(())
+	}
+
+	fn on_appreciation(
+		payer: T::AccountId,
+		payee: T::AccountId,
+		_amount: T::Balance,
+		_community_id: CommunityId,
+		_char_trait_id: CharTraitId,
+	) -> DispatchResult {
+		Self::note_appreciation(payer);
+		Self::note_appreciation(payee);
+
+		Ok(())
+	}
+
+	fn on_referral(who: T::AccountId, _whom: T::AccountId) -> DispatchResult {
+		let total_allocated = ReferralRewardTotalAllocated::<T>::get();
+
+		let reward = if total_allocated < ReferralRewardPhase1Alloc::<T>::get() {
+			ReferralRewardPhase1Amount::<T>::get()
+		} else {
+			ReferralRewardPhase2Amount::<T>::get()
+		};
+
+		Self::issue_referral_reward(&who, reward)?;
 
 		Ok(())
 	}
