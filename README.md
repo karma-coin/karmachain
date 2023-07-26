@@ -90,7 +90,7 @@ cargo run --release -- --dev --offchain-worker always
 
 Next, run the following command to insert the offchain worker keys to the chain.
 
-```sha
+```sh
 curl --location 'http://localhost:9944/' \
 --header 'Content-Type: application/json' \
 --data '{
