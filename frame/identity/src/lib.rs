@@ -246,7 +246,8 @@ pub mod pallet {
 			}
 
 			if let Some(phone_number_hash) = phone_number_hash.clone() {
-				let verifier_public_key = verifier_public_key.ok_or(Error::<T>::InvalidArguments)?;
+				let verifier_public_key =
+					verifier_public_key.ok_or(Error::<T>::InvalidArguments)?;
 				let verifier_signature = verifier_signature.ok_or(Error::<T>::InvalidArguments)?;
 
 				let verifier_account_id = verifier_public_key.clone().into();

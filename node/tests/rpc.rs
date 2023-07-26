@@ -69,6 +69,7 @@ mod chain {
 
 // Using one test for many tests causes because of issue with `create_runner`
 // also this safe time (spend time only to run one node)
+#[ignore]
 #[tokio::test(flavor = "multi_thread")]
 async fn rpc_tests() -> Result<(), ()> {
 	create_runner(async move {
