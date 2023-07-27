@@ -300,7 +300,7 @@ pub mod pallet {
 		/// and only members can appreciate each other in the community
 		CommunityClosed,
 		///
-		NotEnoughPermission,
+		NotAdmin,
 		/// Try to add character trait with existed property
 		/// (same `id` or `name` or `emoji`)
 		CharTraitAlreadyExists,
@@ -375,7 +375,7 @@ pub mod pallet {
 					CommunityMembership::<T>::get(&who, community_id),
 					Some(CommunityRole::Admin)
 				),
-				Error::<T>::NotEnoughPermission
+				Error::<T>::NotAdmin
 			);
 
 			let community = Communities::<T>::get()
@@ -406,7 +406,7 @@ pub mod pallet {
 		/// Add new char trait directly into storage. Fails if char trait
 		/// with same id or name or emoji exists.
 		///
-		/// Can only be called by Root origin (Sudo). Use Sudo::call to call 
+		/// Can only be called by Root origin (Sudo). Use Sudo::call to call
 		/// this transaction
 		#[pallet::call_index(2)]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
@@ -419,10 +419,7 @@ pub mod pallet {
 			// Only sudo can call
 			ensure_root(origin)?;
 
-			ensure!(
-				id != NoCharTraitId::<T>::get()?,
-				Error::<T>::CharTraitAlreadyExists
-			);
+			ensure!(id != NoCharTraitId::<T>::get()?, Error::<T>::CharTraitAlreadyExists);
 
 			let mut traits = CharTraits::<T>::get();
 			ensure!(
@@ -440,7 +437,7 @@ pub mod pallet {
 		/// Add new community directly into storage. Fails if community
 		/// with same id or name exists.
 		///
-		/// Can only be called by Root origin (Sudo). Use Sudo::call to call 
+		/// Can only be called by Root origin (Sudo). Use Sudo::call to call
 		/// this transaction
 		#[pallet::call_index(3)]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
@@ -457,15 +454,12 @@ pub mod pallet {
 			discord_url: BoundedString<T::CommunityUrlLimit>,
 			char_traits: BoundedVec<CharTraitId, T::MaxCharTrait>,
 			closed: bool,
-			admin: T::AccountId
+			admin: T::AccountId,
 		) -> DispatchResult {
 			// Only sudo can call
 			ensure_root(origin)?;
 
-			ensure!(
-				id != NoCommunityId::<T>::get()?,
-				Error::<T>::CommunityAlreadyExists
-			);
+			ensure!(id != NoCommunityId::<T>::get()?, Error::<T>::CommunityAlreadyExists);
 
 			let mut communties = Communities::<T>::get();
 			ensure!(
@@ -490,6 +484,33 @@ pub mod pallet {
 			Communities::<T>::put(communties);
 
 			CommunityMembership::<T>::insert(admin, id, CommunityRole::Admin);
+
+			Ok(())
+		}
+
+		/// Remove community admin privelige for some account and set it as
+		/// a simple member
+		///
+		/// Can only be called by Root origin (Sudo). Use Sudo::call to call
+		/// this transaction
+		#[pallet::call_index(4)]
+		#[pallet::weight(10_000 + T::DbWeight::get().reads_writes(3, 1).ref_time())]
+		pub fn remove_community_admin(
+			origin: OriginFor<T>,
+			account_id: T::AccountId,
+			community_id: CommunityId,
+		) -> DispatchResult {
+			// Only sudo can call
+			ensure_root(origin)?;
+			ensure!(
+				matches!(
+					CommunityMembership::<T>::get(&account_id, community_id),
+					Some(CommunityRole::Admin)
+				),
+				Error::<T>::NotAdmin
+			);
+
+			CommunityMembership::<T>::insert(&account_id, community_id, CommunityRole::Member);
 
 			Ok(())
 		}
