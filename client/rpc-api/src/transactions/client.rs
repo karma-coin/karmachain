@@ -14,10 +14,8 @@ use runtime_api::{
 use sc_client_api::BlockBackend;
 use sp_api::ProvideRuntimeApi;
 use sp_blockchain::HeaderBackend;
-use sp_rpc::{SignedTransactionWithStatus};
-use sp_runtime::{
-	traits::{Block as BlockT, NumberFor},
-};
+use sp_rpc::SignedTransactionWithStatus;
+use sp_runtime::traits::{Block as BlockT, NumberFor};
 use std::sync::Arc;
 
 pub struct TransactionsIndexer<C, P> {

@@ -17,7 +17,7 @@ use sp_common::{
 	BoundedString,
 };
 use sp_rpc::VerificationEvidence;
-use sp_runtime::traits::{IdentifyAccount, Verify};
+use sp_runtime::traits::{IdentifyAccount, Verify, Zero};
 use sp_std::{prelude::*, vec};
 
 #[frame_support::pallet]
@@ -165,6 +165,12 @@ pub mod pallet {
 			phone_number_hash: T::PhoneNumberHash,
 			new_phone_number_hash: Option<T::PhoneNumberHash>,
 		},
+		/// User delete its account
+		AccountDeleted {
+			account_id: T::AccountId,
+			username: T::Username,
+			phone_number_hash: T::PhoneNumberHash,
+		},
 	}
 
 	#[pallet::call]
@@ -246,7 +252,8 @@ pub mod pallet {
 			}
 
 			if let Some(phone_number_hash) = phone_number_hash.clone() {
-				let verifier_public_key = verifier_public_key.ok_or(Error::<T>::InvalidArguments)?;
+				let verifier_public_key =
+					verifier_public_key.ok_or(Error::<T>::InvalidArguments)?;
 				let verifier_signature = verifier_signature.ok_or(Error::<T>::InvalidArguments)?;
 
 				let verifier_account_id = verifier_public_key.clone().into();
@@ -293,6 +300,32 @@ pub mod pallet {
 				new_username: username,
 				phone_number_hash: identity.phone_number_hash,
 				new_phone_number_hash: phone_number_hash,
+			});
+
+			Ok(())
+		}
+
+		#[pallet::call_index(2)]
+		#[pallet::weight(10_000 + T::DbWeight::get().reads_writes(3, 1).ref_time())]
+		pub fn delete_user(origin: OriginFor<T>) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			let identity_info = IdentityOf::<T>::take(&who).ok_or(Error::<T>::NotFound)?;
+			UsernameFor::<T>::remove(&identity_info.username);
+			PhoneNumberFor::<T>::remove(&identity_info.phone_number_hash);
+
+			T::Currency::make_free_balance_be(&who, T::Balance::zero());
+
+			T::Hooks::on_delete_user(
+				who.clone(),
+				identity_info.username.clone(),
+				identity_info.phone_number_hash.clone(),
+			)?;
+
+			Self::deposit_event(Event::<T>::AccountDeleted {
+				account_id: who,
+				username: identity_info.username,
+				phone_number_hash: identity_info.phone_number_hash,
 			});
 
 			Ok(())
