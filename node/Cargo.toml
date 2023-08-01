@@ -81,6 +81,7 @@ sp-common = { version = "0.2.0", path = "../primitives/common" }
 
 # CLI-specific dependencies
 try-runtime-cli = { version = "0.10.0-dev", optional = true, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.43" }
+serde = { version = "1.0.180", features = ["derive"] }
 
 [build-dependencies]
 substrate-build-script-utils = { version = "3.0.0", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.43" }
@@ -94,11 +95,7 @@ sp-panic-handler = { version = "5.0.0", git = "https://github.com/paritytech/sub
 [features]
 default = []
 # Dependencies that are only required if runtime benchmarking should be build.
-runtime-benchmarks = [
-	"karmachain-node-runtime/runtime-benchmarks",
-	"frame-benchmarking/runtime-benchmarks",
-	"frame-benchmarking-cli/runtime-benchmarks",
-]
+runtime-benchmarks = ["karmachain-node-runtime/runtime-benchmarks", "frame-benchmarking/runtime-benchmarks", "frame-benchmarking-cli/runtime-benchmarks"]
 # Enable features that allow the runtime to be tried and debugged. Name might be subject to change
 # in the near future.
 try-runtime = ["karmachain-node-runtime/try-runtime", "try-runtime-cli/try-runtime"]
