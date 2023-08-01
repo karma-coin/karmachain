@@ -1,5 +1,9 @@
 use codec::Encode;
-use frame_support::{assert_ok, traits::fungible::Mutate, BoundedVec};
+use frame_support::{
+	assert_ok,
+	traits::{fungible::Mutate, GenesisBuild},
+	BoundedVec,
+};
 use karmachain_node_runtime::*;
 use pallet_appreciation::{Community, CommunityRole};
 use sp_common::{
@@ -30,11 +34,15 @@ where
 
 /// Construct testing environment and set Alice as PhoneVerifier
 pub fn new_test_ext() -> sp_io::TestExternalities {
+	let mut storage = frame_system::GenesisConfig::default().build_storage::<Runtime>().unwrap();
+
+	let sudo = get_account_id_from_seed::<sr25519::Public>("Alice");
+	pallet_sudo::GenesisConfig::<Runtime> { key: Some(sudo) }
+		.assimilate_storage(&mut storage)
+		.unwrap();
+
 	// Constructing testing environment
-	let mut ext: sp_io::TestExternalities = frame_system::GenesisConfig::default()
-		.build_storage::<Runtime>()
-		.unwrap()
-		.into();
+	let mut ext: sp_io::TestExternalities = storage.into();
 
 	ext.execute_with(|| {
 		// Creating Alice's AccountId

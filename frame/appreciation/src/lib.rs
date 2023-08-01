@@ -300,7 +300,17 @@ pub mod pallet {
 		/// and only members can appreciate each other in the community
 		CommunityClosed,
 		///
-		NotEnoughPermission,
+		NotAdmin,
+		/// Try to add character trait with existed property
+		/// (same `id` or `name` or `emoji`)
+		CharTraitAlreadyExists,
+		/// No more char traits can be added
+		CharTraitLimitExceeded,
+		/// Try to add character trait with existed property
+		/// (same `id` or `name` or `emoji`)
+		CommunityAlreadyExists,
+		/// No more communities can be added
+		CommunityLimitExceeded,
 	}
 
 	#[pallet::call]
@@ -365,7 +375,7 @@ pub mod pallet {
 					CommunityMembership::<T>::get(&who, community_id),
 					Some(CommunityRole::Admin)
 				),
-				Error::<T>::NotEnoughPermission
+				Error::<T>::NotAdmin
 			);
 
 			let community = Communities::<T>::get()
@@ -389,6 +399,118 @@ pub mod pallet {
 				username: new_admin_identity.username,
 				phone_number_hash: new_admin_identity.phone_number_hash,
 			});
+
+			Ok(())
+		}
+
+		/// Add new char trait directly into storage. Fails if char trait
+		/// with same id or name or emoji exists.
+		///
+		/// Can only be called by Root origin (Sudo). Use Sudo::call to call
+		/// this transaction
+		#[pallet::call_index(2)]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
+		pub fn add_char_trait(
+			origin: OriginFor<T>,
+			id: CharTraitId,
+			name: BoundedString<T::CharNameLimit>,
+			emoji: BoundedString<T::EmojiLimit>,
+		) -> DispatchResult {
+			// Only sudo can call
+			ensure_root(origin)?;
+
+			ensure!(id != NoCharTraitId::<T>::get()?, Error::<T>::CharTraitAlreadyExists);
+
+			let mut traits = CharTraits::<T>::get();
+			ensure!(
+				!traits.iter().any(|t| t.id == id || t.name == name || t.emoji == emoji),
+				Error::<T>::CharTraitAlreadyExists
+			);
+
+			let char_trait = CharTrait { id, name, emoji };
+			traits.try_push(char_trait).map_err(|_| Error::<T>::CharTraitLimitExceeded)?;
+			CharTraits::<T>::put(traits);
+
+			Ok(())
+		}
+
+		/// Add new community directly into storage. Fails if community
+		/// with same id or name exists.
+		///
+		/// Can only be called by Root origin (Sudo). Use Sudo::call to call
+		/// this transaction
+		#[pallet::call_index(3)]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
+		pub fn add_community(
+			origin: OriginFor<T>,
+			id: CommunityId,
+			name: BoundedString<T::CommunityNameLimit>,
+			desc: BoundedString<T::CommunityDescLimit>,
+			emoji: BoundedString<T::EmojiLimit>,
+			website_url: BoundedString<T::CommunityUrlLimit>,
+			twitter_url: BoundedString<T::CommunityUrlLimit>,
+			insta_url: BoundedString<T::CommunityUrlLimit>,
+			face_url: BoundedString<T::CommunityUrlLimit>,
+			discord_url: BoundedString<T::CommunityUrlLimit>,
+			char_traits: BoundedVec<CharTraitId, T::MaxCharTrait>,
+			closed: bool,
+			admin: T::AccountId,
+		) -> DispatchResult {
+			// Only sudo can call
+			ensure_root(origin)?;
+
+			ensure!(id != NoCommunityId::<T>::get()?, Error::<T>::CommunityAlreadyExists);
+
+			let mut communties = Communities::<T>::get();
+			ensure!(
+				!communties.iter().any(|c| c.id == id || c.name == name),
+				Error::<T>::CommunityAlreadyExists
+			);
+
+			let community = Community {
+				id,
+				name,
+				desc,
+				emoji,
+				website_url,
+				twitter_url,
+				insta_url,
+				face_url,
+				discord_url,
+				char_traits,
+				closed,
+			};
+			communties.try_push(community).map_err(|_| Error::<T>::CommunityLimitExceeded)?;
+			Communities::<T>::put(communties);
+
+			CommunityMembership::<T>::insert(admin, id, CommunityRole::Admin);
+
+			Ok(())
+		}
+
+		/// Remove community admin privelige for some account and set it as
+		/// a simple member
+		///
+		/// Can only be called by Root origin (Sudo). Use Sudo::call to call
+		/// this transaction
+		#[pallet::call_index(4)]
+		#[pallet::weight(10_000 + T::DbWeight::get().reads_writes(3, 1).ref_time())]
+		pub fn remove_community_admin(
+			origin: OriginFor<T>,
+			account_id: T::AccountId,
+			community_id: CommunityId,
+		) -> DispatchResult {
+			// Only sudo can call
+			ensure_root(origin)?;
+			ensure!(
+				matches!(
+					CommunityMembership::<T>::get(&account_id, community_id),
+					Some(CommunityRole::Admin)
+				),
+				Error::<T>::NotAdmin
+			);
+
+			CommunityMembership::<T>::insert(&account_id, community_id, CommunityRole::Member);
 
 			Ok(())
 		}
