@@ -121,7 +121,7 @@ where
 		if let Some(to) = call.map_appreciation() {
 			if T::IdentityProvider::exist_by_identity(&to) {
 				let referral = Identity::get_registration_time(who)
-					.map(|registration_time| registration_time <= now)
+					.map(|registration_time| registration_time >= now)
 					.unwrap_or_default();
 
 				Appreciation::set_referral_flag(referral);
