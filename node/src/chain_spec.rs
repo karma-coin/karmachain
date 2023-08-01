@@ -1,7 +1,7 @@
 use karmachain_node_runtime::{
 	opaque::SessionKeys, AccountId, AppreciationConfig, BabeConfig, BalancesConfig, GenesisConfig,
 	GrandpaConfig, IdentityConfig, RewardConfig, SessionConfig, Signature, StakingConfig,
-	SudoConfig, SystemConfig, KCOINS, WASM_BINARY,
+	SudoConfig, SystemConfig, KCOINS, WASM_BINARY, NominationPoolsConfig,
 };
 use pallet_appreciation::*;
 use pallet_staking::{Forcing, StakerStatus};
@@ -230,6 +230,11 @@ fn testnet_genesis(
 			invulnerables: initial_authorities.iter().map(|x| x.0.clone()).collect(),
 			force_era: Forcing::NotForcing,
 			slash_reward_fraction: Perbill::from_percent(10),
+			..Default::default()
+		},
+		nomination_pools: NominationPoolsConfig {
+			min_join_bond: KCOINS,
+			min_create_bond: KCOINS,
 			..Default::default()
 		},
 		appreciation: AppreciationConfig {

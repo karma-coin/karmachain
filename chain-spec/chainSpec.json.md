@@ -201,6 +201,27 @@ Determine transaction fee size
 }
 ```
 
+### Nomination pools
+
+#### Chain spec configuration
+
+```yaml
+"nominationPools": {
+  # Minimum amount to bond to join a pool
+  "minJoinBond": 1000000,
+  # Minimum bond required to create a pool
+  "minCreateBond": 1000000,
+  # Maximum number of nomination pools that can exist
+  "maxPools": 16,
+  # Maximum number of members that may belong to pool
+  "maxMembersPerPool": 32,
+  # Maximum number of members that can exist in the system
+  "maxMembers": 512,
+  # The maximum commission that can be charged by a pool
+  "globalMaxCommission": null
+},
+```
+
 ### Session
 A session key is actually several keys kept together that provide the various
 signing functions required by network authorities/validators in pursuit of their duties.

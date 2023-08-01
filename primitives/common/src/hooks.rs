@@ -99,10 +99,29 @@ pub trait Hooks<AccountId, Balance, Username, PhoneNumberHash> {
 	/// # Arguments
 	/// * `_who` - `AccountId` whose tx leads to referral
 	/// * `_whon` - `AccountId` of account who joined by referral
+	///
 	/// # Returns
 	///
 	/// `Err` cause to abort transaction and revert state
 	fn on_referral(_who: AccountId, _whom: AccountId) -> DispatchResult {
+		Ok(())
+	}
+
+	/// Deleting user account information
+	///
+	/// # Arguments
+	/// * `_account_id` - `AccountId` of user
+	/// * `_username` - `Username` of user
+	/// * `_phone_number_hash` - `PhoneNumberHash` of user
+	///
+	/// # Returns
+	///
+	/// `Err` cause to abort transaction and revert state
+	fn on_delete_user(
+		_account_id: AccountId,
+		_username: Username,
+		_phone_number_hash: PhoneNumberHash,
+	) -> DispatchResult {
 		Ok(())
 	}
 }
@@ -178,5 +197,14 @@ where
 	fn on_referral(who: AccountId, whom: AccountId) -> DispatchResult {
 		H1::on_referral(who.clone(), whom.clone())?;
 		H2::on_referral(who, whom)
+	}
+
+	fn on_delete_user(
+		account_id: AccountId,
+		username: Username,
+		phone_number_hash: PhoneNumberHash,
+	) -> DispatchResult {
+		H1::on_delete_user(account_id.clone(), username.clone(), phone_number_hash.clone())?;
+		H2::on_delete_user(account_id, username, phone_number_hash)
 	}
 }

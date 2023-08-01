@@ -193,4 +193,15 @@ impl<T: Config> sp_common::hooks::Hooks<T::AccountId, T::Balance, T::Username, T
 		Self::index_transaction_by_phone_number_hash(who_phone_number_hash)?;
 		Self::index_transaction_by_phone_number_hash(new_admin_phone_number_hash)
 	}
+
+	fn on_delete_user(
+		account_id: T::AccountId,
+		_username: T::Username,
+		phone_number_hash: T::PhoneNumberHash,
+	) -> DispatchResult {
+		AccountTransactions::<T>::remove(&account_id);
+		PhoneNumberHashTransactions::<T>::remove(&phone_number_hash);
+
+		Ok(())
+	}
 }
