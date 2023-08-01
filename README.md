@@ -51,7 +51,7 @@ You can modify `chainSpec.json` to change blockchain genesis params.
 
 Use the following command to run local node in dev mode with Alice's session keys as validator.
 
-```shell
+```sh
  cargo run -- --chain=chain-spec/chainSpec.json --alice --validator
 ```
 
@@ -84,13 +84,13 @@ curl --location 'http://localhost:9944/' \
 
 Use the following command to launch node with an enabled offchain worker that distributes karma rewards.
 
-```shell
+```sh
 cargo run --release -- --dev --offchain-worker always
 ```
 
 Next, run the following command to insert the offchain worker keys to the chain.
 
-```sha
+```sh
 curl --location 'http://localhost:9944/' \
 --header 'Content-Type: application/json' \
 --data '{
@@ -137,19 +137,19 @@ subcommands.
 
 This following command will start the single-node dev chain with non-persistent state.
 
-```bash
+```sh
 ./target/release/karmachain-node --dev
 ```
 
 The following command purges the dev chain's state.
 
-```bash
+```sh
 ./target/release/karmachain-node purge-chain --dev
 ```
 
 Use the following command to run a dev chain with detailed logging.
 
-```bash
+```sh
 RUST_BACKTRACE=1 ./target/release/karmachain-node -ldebug --dev
 ```
 
@@ -167,7 +167,7 @@ so the db can be stored in the provided folder instead of a temporal one. We cou
 to store different chain databases, as a different folder will be created per different chain that
 is ran. The following commands shows how to use a newly created folder as our db base path.
 
-```bash
+```sh
 // Create a folder to use as the db base path
 $ mkdir my-chain-state
 
