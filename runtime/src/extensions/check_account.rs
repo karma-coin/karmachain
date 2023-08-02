@@ -110,7 +110,7 @@ where
 
 	fn pre_dispatch(
 		self,
-		who: &Self::AccountId,
+		_who: &Self::AccountId,
 		call: &Self::Call,
 		_info: &DispatchInfoOf<Self::Call>,
 		_len: usize,
@@ -119,8 +119,8 @@ where
 
 		// In case this is `appreciation` transaction
 		if let Some(to) = call.map_appreciation() {
-			if T::IdentityProvider::exist_by_identity(&to) {
-				let referral = Identity::get_registration_time(who)
+			if let Some(info) = T::IdentityProvider::get_identity_info(&to) {
+				let referral = Identity::get_registration_time(&info.account_id)
 					.map(|registration_time| registration_time >= now)
 					.unwrap_or_default();
 
