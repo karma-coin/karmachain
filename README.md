@@ -110,7 +110,7 @@ curl --location 'http://localhost:9944/' \
 Running a node for tests and integration purposes requires both verifier and offchain features enabled.
 Use the following command.
 
-```sh
+```console
 cargo run --release -- --dev --verifier --bypass-token="dummy" --auth-dst="https://localhost:8080" --offchain-worker always --rpc-methods unsafe
 ```
 
