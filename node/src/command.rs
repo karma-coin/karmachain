@@ -35,14 +35,14 @@ impl SubstrateCli for Cli {
 		2017
 	}
 
-	fn load_spec(&self, id: &str) -> Result<Box<dyn sc_service::ChainSpec>, String> {
+	fn load_spec(&self, args: &str) -> Result<Box<dyn sc_service::ChainSpec>, String> {
+		let mut args = args.split(':');
+		// Save unwrap as split always returns at least one element
+		let id = args.next().unwrap();
+		let backup = args.next();
+
 		Ok(match id {
-			"" | "dev" | "local" => Box::new(chain_spec::dev::development_config()?),
-			path if path.starts_with("import:") => {
-				let path = path.trim_start_matches("import:");
-				let chain = chain_spec::import::import_config(path.to_string())?;
-				Box::new(chain)
-			},
+			"" | "dev" | "local" => Box::new(chain_spec::dev::development_config(backup)?),
 			path =>
 				Box::new(chain_spec::ChainSpec::from_json_file(std::path::PathBuf::from(path))?),
 		})

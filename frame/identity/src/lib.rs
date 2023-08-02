@@ -70,8 +70,7 @@ pub mod pallet {
 	#[pallet::genesis_config]
 	pub struct GenesisConfig<T: Config> {
 		pub phone_verifiers: sp_std::vec::Vec<T::AccountId>,
-		pub identities:
-			sp_std::vec::Vec<IdentityInfo<T::AccountId, T::Username, T::PhoneNumberHash>>,
+		pub identities: sp_std::vec::Vec<(T::AccountId, T::Username, T::PhoneNumberHash)>,
 	}
 
 	#[cfg(feature = "std")]
@@ -90,17 +89,17 @@ pub mod pallet {
 				);
 			PhoneVerifiers::<T>::put(bounded_phone_verifiers);
 
-			for identity in &self.identities {
+			for (account_id, username, phone_number_hash) in &self.identities {
 				IdentityOf::<T>::insert(
-					&identity.account_id,
+					&account_id,
 					IdentityStore {
-						username: identity.username.clone(),
-						phone_number_hash: identity.phone_number_hash.clone(),
+						username: username.clone(),
+						phone_number_hash: phone_number_hash.clone(),
 						registration_time: None,
 					},
 				);
-				UsernameFor::<T>::insert(&identity.username, &identity.account_id);
-				PhoneNumberFor::<T>::insert(&identity.phone_number_hash, &identity.account_id);
+				UsernameFor::<T>::insert(&username, &account_id);
+				PhoneNumberFor::<T>::insert(&phone_number_hash, &account_id);
 			}
 		}
 	}

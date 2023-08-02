@@ -1,21 +1,47 @@
-use super::utils::*;
+use super::{backup::BackupGenesisConfig, utils::*};
 use karmachain_node_runtime::{
 	opaque::SessionKeys, AccountId, AppreciationConfig, BabeConfig, BalancesConfig, GenesisConfig,
-	GrandpaConfig, IdentityConfig, NominationPoolsConfig, RewardConfig, SessionConfig,
-	StakingConfig, SudoConfig, SystemConfig, KCOINS, WASM_BINARY,
+	GrandpaConfig, IdentityConfig, NominationPoolsConfig, PhoneNumberHash, RewardConfig,
+	SessionConfig, StakingConfig, SudoConfig, SystemConfig, Username, KCOINS, WASM_BINARY,
 };
 use pallet_appreciation::*;
 use pallet_staking::{Forcing, StakerStatus};
 use sc_service::ChainType;
 use scale_info::prelude::string::String;
-use sp_common::types::CommunityId;
+use sp_common::types::{CharTraitId, CommunityId, Score};
 use sp_consensus_babe::AuthorityId as BabeId;
 use sp_core::sr25519;
 use sp_finality_grandpa::AuthorityId as GrandpaId;
 use sp_runtime::Perbill;
+use std::fs::File;
 
-pub fn development_config() -> Result<ChainSpec, String> {
+const ENDOWMENT: u128 = 1_000_000_000 * KCOINS;
+const STASH: u128 = 2_500_000 * KCOINS;
+
+pub fn development_config<'a>(backup: Option<&'a str>) -> Result<ChainSpec, String> {
 	let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;
+
+	let mut endowed_accounts = vec![
+		(get_account_id_from_seed::<sr25519::Public>("Alice"), ENDOWMENT),
+		(get_account_id_from_seed::<sr25519::Public>("Bob"), ENDOWMENT),
+		(get_account_id_from_seed::<sr25519::Public>("Alice//stash"), ENDOWMENT),
+		(get_account_id_from_seed::<sr25519::Public>("Bob//stash"), ENDOWMENT),
+	];
+	let mut identities = vec![];
+	let mut community_membership = vec![];
+	let mut trait_scores = vec![];
+
+	// Read backup file if given
+	if let Some(path) = backup {
+		let file = File::open(path).map_err(|_| "Failed to open backup file")?;
+		let json = serde_json::from_reader(file).map_err(|_| "Failed to parse backup file")?;
+		let mut backup = BackupGenesisConfig::from_json(json)?;
+
+		endowed_accounts.append(&mut backup.endowed_accounts);
+		identities.append(&mut backup.identities);
+		community_membership.append(&mut backup.community_membership);
+		trait_scores.append(&mut backup.trait_scores);
+	}
 
 	Ok(ChainSpec::from_genesis(
 		// Name
@@ -35,20 +61,15 @@ pub fn development_config() -> Result<ChainSpec, String> {
 				)],
 				// Sudo account
 				get_account_id_from_seed::<sr25519::Public>("Alice"),
+				// Phone versifiers accounts
+				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
+				// Offchain accounts
+				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
 				// Pre-funded accounts
-				vec![
-					get_account_id_from_seed::<sr25519::Public>("Alice"),
-					get_account_id_from_seed::<sr25519::Public>("Bob"),
-					get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
-				],
-				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
-				vec![
-					(get_account_id_from_seed::<sr25519::Public>("Alice"), 1, CommunityRole::Admin),
-					(get_account_id_from_seed::<sr25519::Public>("Bob"), 1, CommunityRole::Member),
-				],
-				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
-				true,
+				endowed_accounts.clone(),
+				identities.clone(),
+				community_membership.clone(),
+				trait_scores.clone(),
 			)
 		},
 		// Bootnodes
@@ -79,24 +100,19 @@ fn development_genesis(
 	wasm_binary: &[u8],
 	initial_authorities: Vec<(AccountId, AccountId, BabeId, GrandpaId)>,
 	root_key: AccountId,
-	endowed_accounts: Vec<AccountId>,
 	phone_verifiers: Vec<AccountId>,
-	community_membership: Vec<(AccountId, CommunityId, CommunityRole)>,
 	offchain_accounts: Vec<AccountId>,
-	_enable_println: bool,
+	endowed_accounts: Vec<(AccountId, u128)>,
+	identities: Vec<(AccountId, Username, PhoneNumberHash)>,
+	community_membership: Vec<(AccountId, CommunityId, CommunityRole)>,
+	trait_scores: Vec<(AccountId, CommunityId, CharTraitId, Score)>,
 ) -> GenesisConfig {
-	const ENDOWMENT: u128 = 1_000_000_000 * KCOINS;
-	const STASH: u128 = 2_500_000 * KCOINS;
-
 	GenesisConfig {
 		system: SystemConfig {
 			// Add Wasm runtime to storage.
 			code: wasm_binary.to_vec(),
 		},
-		balances: BalancesConfig {
-			// Configure endowed accounts with initial balance of 1 << 60.
-			balances: endowed_accounts.iter().cloned().map(|k| (k, ENDOWMENT)).collect(),
-		},
+		balances: BalancesConfig { balances: endowed_accounts },
 		grandpa: GrandpaConfig { authorities: Default::default() },
 		sudo: SudoConfig {
 			// Assign network admin rights.
@@ -217,9 +233,10 @@ fn development_genesis(
 				),
 			],
 			community_membership,
+			trait_scores,
 			..Default::default()
 		},
-		identity: IdentityConfig { phone_verifiers, ..Default::default() },
+		identity: IdentityConfig { phone_verifiers, identities },
 		reward: RewardConfig { offchain_accounts, ..Default::default() },
 	}
 }

@@ -34,7 +34,7 @@ pub struct CharTrait<CharNameLimit: Get<u32>, EmojiLimit: Get<u32>> {
 	pub emoji: BoundedString<EmojiLimit>,
 }
 
-#[derive(Encode, Decode, MaxEncodedLen, TypeInfo, RuntimeDebugNoBound, Default)]
+#[derive(Clone, Encode, Decode, MaxEncodedLen, TypeInfo, RuntimeDebugNoBound, Default)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub enum CommunityRole {
 	Admin,
