@@ -70,12 +70,14 @@ pub mod pallet {
 	#[pallet::genesis_config]
 	pub struct GenesisConfig<T: Config> {
 		pub phone_verifiers: sp_std::vec::Vec<T::AccountId>,
+		pub identities:
+			sp_std::vec::Vec<IdentityInfo<T::AccountId, T::Username, T::PhoneNumberHash>>,
 	}
 
 	#[cfg(feature = "std")]
 	impl<T: Config> Default for GenesisConfig<T> {
 		fn default() -> Self {
-			Self { phone_verifiers: vec![] }
+			Self { phone_verifiers: vec![], identities: vec![] }
 		}
 	}
 
@@ -87,6 +89,19 @@ pub mod pallet {
 					"Initial number of phone_verifiers should be lower than T::MaxPhoneVerifiers",
 				);
 			PhoneVerifiers::<T>::put(bounded_phone_verifiers);
+
+			for identity in &self.identities {
+				IdentityOf::<T>::insert(
+					&identity.account_id,
+					IdentityStore {
+						username: identity.username.clone(),
+						phone_number_hash: identity.phone_number_hash.clone(),
+						registration_time: None,
+					},
+				);
+				UsernameFor::<T>::insert(&identity.username, &identity.account_id);
+				PhoneNumberFor::<T>::insert(&identity.phone_number_hash, &identity.account_id);
+			}
 		}
 	}
 

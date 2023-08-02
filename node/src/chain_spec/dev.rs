@@ -219,7 +219,7 @@ fn development_genesis(
 			community_membership,
 			..Default::default()
 		},
-		identity: IdentityConfig { phone_verifiers },
+		identity: IdentityConfig { phone_verifiers, ..Default::default() },
 		reward: RewardConfig { offchain_accounts, ..Default::default() },
 	}
 }

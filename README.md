@@ -35,6 +35,12 @@ Use Rust's native `cargo` command to build and launch the template node:
 cargo run --release -- --dev
 ```
 
+#### Build chainspec with backup data 
+
+```sh
+cargo run -- build-spec --chain path/to/file.json > chain-spec/chainSpec.json
+```
+
 #### Running with a chainspec
 
 

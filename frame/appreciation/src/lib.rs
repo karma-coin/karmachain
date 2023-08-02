@@ -67,6 +67,8 @@ pub mod pallet {
 		pub communities: Vec<GenesisCommunity>,
 		pub community_membership: Vec<(T::AccountId, CommunityId, CommunityRole)>,
 		pub no_community_id: CommunityId,
+
+		pub trait_scores: Vec<(T::AccountId, CommunityId, CharTraitId, Score)>,
 	}
 
 	#[cfg(feature = "std")]
@@ -81,6 +83,7 @@ pub mod pallet {
 				communities: vec![],
 				community_membership: vec![],
 				no_community_id: 0,
+				trait_scores: vec![],
 			}
 		}
 	}
@@ -153,6 +156,18 @@ pub mod pallet {
 			});
 
 			NoCommunityId::<T>::put(self.no_community_id);
+
+			self.trait_scores
+				.iter()
+				.for_each(|(account_id, community_id, char_trait_id, score)| {
+					assert!(Communities::<T>::get()
+						.iter()
+						.any(|community| community.id == *community_id));
+					assert!(CharTraits::<T>::get()
+						.iter()
+						.any(|char_trait| char_trait.id == *char_trait_id));
+					TraitScores::<T>::insert((account_id, community_id, char_trait_id), score);
+				});
 		}
 	}
 
