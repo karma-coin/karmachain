@@ -65,6 +65,7 @@ pub mod pallet {
 
 	#[pallet::genesis_config]
 	pub struct GenesisConfig<T: Config> {
+		pub accounts: Vec<T::AccountId>,
 		pub offchain_accounts: Vec<T::AccountId>,
 
 		pub signup_reward_phase1_alloc: T::Balance,
@@ -95,6 +96,7 @@ pub mod pallet {
 	impl<T: Config> Default for GenesisConfig<T> {
 		fn default() -> Self {
 			Self {
+				accounts: vec![],
 				offchain_accounts: vec![],
 
 				signup_reward_phase1_alloc: 100_000_000_000_000_u128.try_into().ok().unwrap(),
@@ -125,6 +127,13 @@ pub mod pallet {
 	#[pallet::genesis_build]
 	impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
 		fn build(&self) {
+			self.accounts.iter().for_each(|account_id| {
+				AccountRewardInfo::<T>::insert(
+					account_id,
+					AccountRewardsData { signup_reward: true, ..Default::default() },
+				)
+			});
+
 			OffchainAccounts::<T>::put::<BoundedVec<_, T::MaxOffchainAccounts>>(
 				self.offchain_accounts.clone().try_into().expect("Too many offchain accounts"),
 			);

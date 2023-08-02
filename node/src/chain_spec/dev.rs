@@ -236,7 +236,11 @@ fn development_genesis(
 			trait_scores,
 			..Default::default()
 		},
-		identity: IdentityConfig { phone_verifiers, identities },
-		reward: RewardConfig { offchain_accounts, ..Default::default() },
+		identity: IdentityConfig { phone_verifiers, identities: identities.clone() },
+		reward: RewardConfig {
+			accounts: identities.into_iter().map(|(account_id, _, _)| account_id).collect(),
+			offchain_accounts,
+			..Default::default()
+		},
 	}
 }
