@@ -30,6 +30,22 @@
       "balances": {
         "balances": [
           [
+            "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+            1000000000000000
+          ],
+          [
+            "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+            1000000000000000
+          ],
+          [
+            "5GNJqTPyNqANBkUVMN1LPPrxXnFouWXoe2wNSmmEoLctxiZY",
+            1000000000000000
+          ],
+          [
+            "5HpG9w8EBLe5XCrbczpwq5TSXvedjrBGCwqxK1iQ7qUsSWFc",
+            1000000000000000
+          ],
+          [
             "5C74PnZr35CgcAJ2rn6UTBC8HJL8B6iq8GSRKpJ5oMLTEGcz",
             10007000
           ],
@@ -560,18 +576,36 @@
       "staking": {
         "validatorCount": 1,
         "minimumValidatorCount": 1,
-        "invulnerables": [],
+        "invulnerables": [
+          "5GNJqTPyNqANBkUVMN1LPPrxXnFouWXoe2wNSmmEoLctxiZY"
+        ],
         "forceEra": "NotForcing",
         "slashRewardFraction": 100000000,
         "canceledPayout": 0,
-        "stakers": [],
+        "stakers": [
+          [
+            "5GNJqTPyNqANBkUVMN1LPPrxXnFouWXoe2wNSmmEoLctxiZY",
+            "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+            2500000000000,
+            "Validator"
+          ]
+        ],
         "minNominatorBond": 0,
         "minValidatorBond": 0,
         "maxValidatorCount": null,
         "maxNominatorCount": null
       },
       "session": {
-        "keys": []
+        "keys": [
+          [
+            "5GNJqTPyNqANBkUVMN1LPPrxXnFouWXoe2wNSmmEoLctxiZY",
+            "5GNJqTPyNqANBkUVMN1LPPrxXnFouWXoe2wNSmmEoLctxiZY",
+            {
+              "babe": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+              "grandpa": "5FA9nQDVg267DEd8m1ZypXLBnvN7SFxYwV7ndqSYGiN9TTpu"
+            }
+          ]
+        ]
       },
       "grandpa": {
         "authorities": []

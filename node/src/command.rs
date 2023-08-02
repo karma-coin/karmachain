@@ -38,7 +38,13 @@ impl SubstrateCli for Cli {
 	fn load_spec(&self, id: &str) -> Result<Box<dyn sc_service::ChainSpec>, String> {
 		Ok(match id {
 			"" | "dev" | "local" => Box::new(chain_spec::dev::development_config()?),
-			path => Box::new(chain_spec::import::import_config(path.to_string())?),
+			path if path.starts_with("import:") => {
+				let path = path.trim_start_matches("import:");
+				let chain = chain_spec::import::import_config(path.to_string())?;
+				Box::new(chain)
+			},
+			path =>
+				Box::new(chain_spec::ChainSpec::from_json_file(std::path::PathBuf::from(path))?),
 		})
 	}
 

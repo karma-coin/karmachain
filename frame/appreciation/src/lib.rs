@@ -157,17 +157,13 @@ pub mod pallet {
 
 			NoCommunityId::<T>::put(self.no_community_id);
 
-			self.trait_scores
-				.iter()
-				.for_each(|(account_id, community_id, char_trait_id, score)| {
-					assert!(Communities::<T>::get()
-						.iter()
-						.any(|community| community.id == *community_id));
-					assert!(CharTraits::<T>::get()
-						.iter()
-						.any(|char_trait| char_trait.id == *char_trait_id));
+			self.trait_scores.iter().for_each(
+				|(account_id, community_id, char_trait_id, score)| {
+					assert!(Pallet::<T>::is_community_exists(*community_id).unwrap());
+					assert!(Pallet::<T>::is_char_trait_exists(*char_trait_id).unwrap());
 					TraitScores::<T>::insert((account_id, community_id, char_trait_id), score);
-				});
+				},
+			);
 		}
 	}
 
@@ -676,6 +672,16 @@ impl<T: pallet::Config> Pallet<T> {
 				(community_id, score, is_admin)
 			})
 			.collect()
+	}
+
+	fn is_char_trait_exists(char_trait_id: CharTraitId) -> Result<bool, DispatchError> {
+		Ok(NoCharTraitId::<T>::get()? == char_trait_id ||
+			CharTraits::<T>::get().iter().any(|t| t.id == char_trait_id))
+	}
+
+	fn is_community_exists(community_id: CommunityId) -> Result<bool, DispatchError> {
+		Ok(NoCommunityId::<T>::get()? == community_id ||
+			Communities::<T>::get().iter().any(|c| c.id == community_id))
 	}
 }
 

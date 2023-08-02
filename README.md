@@ -38,7 +38,7 @@ cargo run --release -- --dev
 #### Build chainspec with backup data 
 
 ```sh
-cargo run -- build-spec --chain path/to/file.json > chain-spec/chainSpec.json
+cargo run -- build-spec --chain import:path/to/file.json > chain-spec/chainSpec.json
 ```
 
 #### Running with a chainspec

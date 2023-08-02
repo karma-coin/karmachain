@@ -85,7 +85,12 @@ fn import_genesis(wasm_binary: &[u8], path: String) -> GenesisConfig {
 			let account_id: AccountId = info.account_id.data.into();
 
 			info.trait_scores.iter().map(move |trait_score| {
-				(account_id.clone(), trait_score.community_id, trait_score.trait_id, trait_score.score)
+				(
+					account_id.clone(),
+					trait_score.community_id,
+					trait_score.trait_id,
+					trait_score.score,
+				)
 			})
 		})
 		.collect();
