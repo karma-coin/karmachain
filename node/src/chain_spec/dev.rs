@@ -242,5 +242,6 @@ fn development_genesis(
 			offchain_accounts,
 			..Default::default()
 		},
+		treasury: Default::default(),
 	}
 }

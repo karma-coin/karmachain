@@ -40,7 +40,7 @@ impl pallet_staking::Config for Runtime {
 	/// The overarching event type.
 	type RuntimeEvent = RuntimeEvent;
 	/// Handler for the unbalanced reduction when slashing a staker.
-	type Slash = (); // TODO:
+	type Slash = Treasury;
 	/// Handler for the unbalanced increment when rewarding a staker.
 	/// NOTE: in most cases, the implementation of `OnUnbalanced` should modify the total
 	/// issuance.
