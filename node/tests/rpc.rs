@@ -4,24 +4,24 @@ use crate::{
 	chain::{get_blockchain_data, get_genesis_data},
 	utils::create_runner,
 };
+use karmachain_node::cli::Cli;
+use sc_cli::SubstrateCli;
 
 /// Test API that provide info about current chain state
 /// or specified block
 /// `get_block_info`, `get_blockchain_data`, `get_genesis_data`
 mod chain {
+	use crate::utils::RPC_URL;
 	use karmachain_node_runtime::AccountId;
-
 	use serde_json::{json, Value};
 	use sp_core::crypto::Ss58Codec;
 	use sp_rpc::{BlockchainStats, GenesisData};
-
-	const URL: &str = "http://localhost:9933/";
 
 	pub async fn get_blockchain_data() -> Result<(), ()> {
 		let client = reqwest::Client::new();
 
 		let response = client
-			.post(URL)
+			.post(RPC_URL)
 			.json(&json!({
 				"id": 1,
 				"jsonrpc": "2.0",
@@ -44,7 +44,7 @@ mod chain {
 		let client = reqwest::Client::new();
 
 		let response = client
-			.post(URL)
+			.post(RPC_URL)
 			.json(&json!({
 				"id": 1,
 				"jsonrpc": "2.0",
@@ -72,7 +72,11 @@ mod chain {
 #[ignore]
 #[tokio::test(flavor = "multi_thread")]
 async fn rpc_tests() -> Result<(), ()> {
-	create_runner(async move {
+	let mut cli = Cli::from_args();
+	// Setup chain in developer mode
+	cli.run.shared_params.dev = true;
+
+	create_runner(cli, async move {
 		// Wait while node runs up
 		tokio::time::sleep(tokio::time::Duration::from_secs(60)).await;
 

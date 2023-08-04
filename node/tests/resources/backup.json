@@ -1,0 +1,292 @@
+{
+  "time": "Thu Jun 29 12:00:00 2023",
+  "stats": {
+    "last_block_time": 1688031385902,
+    "tip_height": 796,
+    "transactions_count": 808,
+    "payments_transactions_count": 519,
+    "appreciations_transactions_count": 0,
+    "users_count": 270,
+    "fees_amount": 1741206,
+    "minted_amount": 79601681000806,
+    "circulation": 0,
+    "fee_subs_count": 806,
+    "fee_subs_amount": 806,
+    "signup_rewards_count": 270,
+    "signup_rewards_amount": 1380000000,
+    "referral_rewards_count": 202,
+    "referral_rewards_amount": 301000000,
+    "validator_rewards_count": 0,
+    "validator_rewards_amount": 0,
+    "update_user_transactions_count": 10,
+    "exchange_rate": 0.2,
+    "causes_rewards_amount": 0,
+    "karma_rewards_count": 0,
+    "karma_rewards_amount": 0
+  },
+  "users": [
+    {
+      "account_id": {
+        "data": [
+          0,
+          61,
+          45,
+          249,
+          203,
+          171,
+          194,
+          212,
+          239,
+          139,
+          47,
+          178,
+          151,
+          39,
+          104,
+          64,
+          21,
+          189,
+          206,
+          110,
+          129,
+          156,
+          204,
+          13,
+          224,
+          26,
+          29,
+          191,
+          121,
+          156,
+          126,
+          93
+        ]
+      },
+      "nonce": 1,
+      "user_name": "ZeroUser",
+      "mobile_number": {
+        "number": "+000000000001"
+      },
+      "balance": 0,
+      "trait_scores": [],
+      "pre_keys": [],
+      "karma_score": 0,
+      "community_memberships": []
+    },
+    {
+      "account_id": {
+        "data": [
+          1,
+          203,
+          159,
+          116,
+          109,
+          202,
+          131,
+          20,
+          216,
+          240,
+          211,
+          66,
+          224,
+          71,
+          181,
+          56,
+          180,
+          132,
+          34,
+          209,
+          164,
+          143,
+          194,
+          132,
+          178,
+          162,
+          12,
+          147,
+          105,
+          212,
+          15,
+          121
+        ]
+      },
+      "nonce": 2,
+      "user_name": "TraitScoreUser",
+      "mobile_number": {
+        "number": "+00000000002"
+      },
+      "balance": 10007000,
+      "trait_scores": [
+        {
+          "trait_id": 1,
+          "score": 1,
+          "community_id": 0
+        },
+        {
+          "trait_id": 20,
+          "score": 1,
+          "community_id": 0
+        },
+        {
+          "trait_id": 32,
+          "score": 1,
+          "community_id": 0
+        },
+        {
+          "trait_id": 6,
+          "score": 4,
+          "community_id": 0
+        },
+        {
+          "trait_id": 40,
+          "score": 1,
+          "community_id": 0
+        },
+        {
+          "trait_id": 30,
+          "score": 1,
+          "community_id": 0
+        },
+        {
+          "trait_id": 2,
+          "score": 1,
+          "community_id": 0
+        }
+      ],
+      "pre_keys": [],
+      "karma_score": 10,
+      "community_memberships": []
+    },
+    {
+      "account_id": {
+        "data": [
+          35,
+          239,
+          6,
+          92,
+          170,
+          123,
+          47,
+          25,
+          112,
+          7,
+          54,
+          33,
+          217,
+          154,
+          125,
+          149,
+          130,
+          228,
+          92,
+          187,
+          36,
+          139,
+          235,
+          114,
+          16,
+          136,
+          1,
+          224,
+          214,
+          37,
+          126,
+          117
+        ]
+      },
+      "nonce": 1,
+      "user_name": "CommunityMembershipUser",
+      "mobile_number": {
+        "number": "+000000000003"
+      },
+      "balance": 10001001,
+      "trait_scores": [
+        {
+          "trait_id": 1,
+          "score": 1,
+          "community_id": 0
+        },
+        {
+          "trait_id": 2,
+          "score": 2,
+          "community_id": 0
+        },
+        {
+          "trait_id": 15,
+          "score": 1,
+          "community_id": 0
+        },
+        {
+          "trait_id": 35,
+          "score": 1,
+          "community_id": 0
+        },
+        {
+          "trait_id": 10,
+          "score": 1,
+          "community_id": 1
+        },
+        {
+          "trait_id": 6,
+          "score": 1,
+          "community_id": 0
+        }
+      ],
+      "pre_keys": [],
+      "karma_score": 8,
+      "community_memberships": [
+        {
+          "community_id": 1,
+          "karma_score": 3,
+          "is_admin": false
+        }
+      ]
+    },
+    {
+      "account_id": {
+        "data": [
+          19,
+          137,
+          181,
+          116,
+          43,
+          227,
+          239,
+          238,
+          13,
+          87,
+          150,
+          215,
+          60,
+          220,
+          153,
+          88,
+          1,
+          214,
+          11,
+          241,
+          9,
+          72,
+          26,
+          104,
+          145,
+          83,
+          114,
+          197,
+          183,
+          233,
+          43,
+          250
+        ]
+      },
+      "nonce": 0,
+      "user_name": "BlockProducer",
+      "mobile_number": null,
+      "balance": 79600001741206,
+      "trait_scores": [],
+      "pre_keys": [],
+      "karma_score": 1,
+      "community_memberships": []
+    }
+  ]
+}
