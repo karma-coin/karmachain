@@ -44,6 +44,8 @@ pub trait IdentityApi<BlockHash, AccountId, Username, PhoneNumber, PhoneNumberHa
 	fn get_all_users(
 		&self,
 		community_id: CommunityId,
+		from_index: Option<u64>,
+		limit: Option<u64>,
 		at: Option<BlockHash>,
 	) -> RpcResult<Vec<UserInfo<AccountId>>>;
 
@@ -54,6 +56,8 @@ pub trait IdentityApi<BlockHash, AccountId, Username, PhoneNumber, PhoneNumberHa
 		&self,
 		prefix: Username,
 		community_id: Option<CommunityId>,
+		from_index: Option<u64>,
+		limit: Option<u64>,
 		at: Option<BlockHash>,
 	) -> RpcResult<Vec<Contact<AccountId>>>;
 

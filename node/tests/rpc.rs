@@ -11,7 +11,7 @@ use sc_cli::SubstrateCli;
 /// or specified block
 /// `get_block_info`, `get_blockchain_data`, `get_genesis_data`
 mod chain {
-	use crate::utils::{RPC_URL, RpcResponse};
+	use crate::utils::{RpcResponse, RPC_URL};
 	use karmachain_node_runtime::AccountId;
 	use serde_json::json;
 	use sp_core::crypto::Ss58Codec;
