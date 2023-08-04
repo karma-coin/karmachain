@@ -33,8 +33,10 @@ pub fn development_config<'a>(backup: Option<&'a str>) -> Result<ChainSpec, Stri
 
 	// Read backup file if given
 	if let Some(path) = backup {
-		let file = File::open(path).map_err(|_| "Failed to open backup file")?;
-		let json = serde_json::from_reader(file).map_err(|_| "Failed to parse backup file")?;
+		let file = File::open(path)
+			.map_err(|e| format!("Failed to open backup file: {e} by path: {path}"))?;
+		let json = serde_json::from_reader(file)
+			.map_err(|e| format!("Failed to parse backup file: {e}"))?;
 		let mut backup = BackupGenesisConfig::from_json(json)?;
 
 		endowed_accounts.append(&mut backup.endowed_accounts);
