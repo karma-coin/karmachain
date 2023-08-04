@@ -218,6 +218,7 @@ mod community {
 	#[test]
 	fn get_contacts_pagination_works() {
 		new_test_ext()
+			.with_user("Alice", "0000")
 			.with_user("Bob", "1111")
 			.with_user("Bogdan", "2222")
 			.execute_with(|| {
@@ -229,6 +230,7 @@ mod community {
 			});
 
 		new_test_ext()
+			.with_user("Alice", "0000")
 			.with_user("Bob", "1111")
 			.with_user("Bogdan", "2222")
 			.execute_with(|| {
