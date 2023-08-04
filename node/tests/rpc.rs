@@ -11,16 +11,16 @@ use sc_cli::SubstrateCli;
 /// or specified block
 /// `get_block_info`, `get_blockchain_data`, `get_genesis_data`
 mod chain {
-	use crate::utils::RPC_URL;
+	use crate::utils::{RPC_URL, RpcResponse};
 	use karmachain_node_runtime::AccountId;
-	use serde_json::{json, Value};
+	use serde_json::json;
 	use sp_core::crypto::Ss58Codec;
 	use sp_rpc::{BlockchainStats, GenesisData};
 
 	pub async fn get_blockchain_data() -> Result<(), ()> {
 		let client = reqwest::Client::new();
 
-		let response = client
+		let _response = client
 			.post(RPC_URL)
 			.json(&json!({
 				"id": 1,
@@ -30,12 +30,9 @@ mod chain {
 			.send()
 			.await
 			.unwrap()
-			.json::<Value>()
+			.json::<RpcResponse<BlockchainStats>>()
 			.await
 			.unwrap();
-
-		let _response: BlockchainStats =
-			serde_json::from_value(response.get("result").unwrap().clone()).unwrap();
 
 		Ok(())
 	}
@@ -53,15 +50,13 @@ mod chain {
 			.send()
 			.await
 			.unwrap()
-			.json::<Value>()
+			.json::<RpcResponse<GenesisData<AccountId>>>()
 			.await
 			.unwrap();
 
-		let response: GenesisData<AccountId> =
-			serde_json::from_value(response.get("result").unwrap().clone()).unwrap();
 		let alice =
 			AccountId::from_string("5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY").unwrap();
-		assert!(response.verifiers.iter().any(|value| value.account_id == alice));
+		assert!(response.result.unwrap().verifiers.iter().any(|value| value.account_id == alice));
 
 		Ok(())
 	}
@@ -69,7 +64,6 @@ mod chain {
 
 // Using one test for many tests causes because of issue with `create_runner`
 // also this safe time (spend time only to run one node)
-#[ignore]
 #[tokio::test(flavor = "multi_thread")]
 async fn rpc_tests() -> Result<(), ()> {
 	let mut cli = Cli::from_args();
@@ -77,9 +71,6 @@ async fn rpc_tests() -> Result<(), ()> {
 	cli.run.shared_params.dev = true;
 
 	create_runner(cli, async move {
-		// Wait while node runs up
-		tokio::time::sleep(tokio::time::Duration::from_secs(60)).await;
-
 		get_blockchain_data().await.expect("Get blockchain data fails");
 		get_genesis_data().await.expect("Get genesis data fails");
 
