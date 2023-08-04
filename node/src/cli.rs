@@ -13,7 +13,7 @@ pub struct Cli {
 	pub verifier_config: VerifierConfig,
 }
 
-#[derive(Debug, clap::Parser)]
+#[derive(Debug, clap::Parser, Default)]
 pub struct VerifierConfig {
 	/// Enable verifier mode.
 	///

@@ -1,6 +1,6 @@
 mod utils;
 
-use frame_support::{assert_noop, assert_ok};
+use frame_support::assert_ok;
 use karmachain_node_runtime::*;
 use sp_core::sr25519;
 use utils::*;

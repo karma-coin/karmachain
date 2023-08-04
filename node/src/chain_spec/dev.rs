@@ -1,47 +1,49 @@
+use super::{backup::BackupGenesisConfig, utils::*};
 use karmachain_node_runtime::{
 	opaque::SessionKeys, AccountId, AppreciationConfig, BabeConfig, BalancesConfig, GenesisConfig,
-	GrandpaConfig, IdentityConfig, RewardConfig, SessionConfig, Signature, StakingConfig,
-	SudoConfig, SystemConfig, KCOINS, WASM_BINARY, NominationPoolsConfig,
+	GrandpaConfig, IdentityConfig, NominationPoolsConfig, PhoneNumberHash, RewardConfig,
+	SessionConfig, StakingConfig, SudoConfig, SystemConfig, Username, KCOINS, WASM_BINARY,
 };
 use pallet_appreciation::*;
 use pallet_staking::{Forcing, StakerStatus};
 use sc_service::ChainType;
 use scale_info::prelude::string::String;
+use sp_common::types::{CharTraitId, CommunityId, Score};
 use sp_consensus_babe::AuthorityId as BabeId;
-use sp_core::{sr25519, Pair, Public};
+use sp_core::sr25519;
 use sp_finality_grandpa::AuthorityId as GrandpaId;
-use sp_runtime::{
-	traits::{IdentifyAccount, Verify},
-	Perbill,
-};
+use sp_runtime::Perbill;
+use std::fs::File;
 
-use sp_common::types::CommunityId;
+const ENDOWMENT: u128 = 1_000_000_000 * KCOINS;
+const STASH: u128 = 2_500_000 * KCOINS;
 
-// The URL for the telemetry server.
-// const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
-
-/// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
-pub type ChainSpec = sc_service::GenericChainSpec<GenesisConfig>;
-
-/// Generate a crypto pair from seed.
-pub fn get_from_seed<TPublic: Public>(seed: &str) -> <TPublic::Pair as Pair>::Public {
-	TPublic::Pair::from_string(&format!("//{seed}"), None)
-		.expect("static values are valid; qed")
-		.public()
-}
-
-type AccountPublic = <Signature as Verify>::Signer;
-
-/// Generate an account ID from seed.
-pub fn get_account_id_from_seed<TPublic: Public>(seed: &str) -> AccountId
-where
-	AccountPublic: From<<TPublic::Pair as Pair>::Public>,
-{
-	AccountPublic::from(get_from_seed::<TPublic>(seed)).into_account()
-}
-
-pub fn development_config() -> Result<ChainSpec, String> {
+pub fn development_config<'a>(backup: Option<&'a str>) -> Result<ChainSpec, String> {
 	let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;
+
+	let mut endowed_accounts = vec![
+		(get_account_id_from_seed::<sr25519::Public>("Alice"), ENDOWMENT),
+		(get_account_id_from_seed::<sr25519::Public>("Bob"), ENDOWMENT),
+		(get_account_id_from_seed::<sr25519::Public>("Alice//stash"), ENDOWMENT),
+		(get_account_id_from_seed::<sr25519::Public>("Bob//stash"), ENDOWMENT),
+	];
+	let mut identities = vec![];
+	let mut community_membership = vec![];
+	let mut trait_scores = vec![];
+
+	// Read backup file if given
+	if let Some(path) = backup {
+		let file = File::open(path)
+			.map_err(|e| format!("Failed to open backup file: {e} by path: {path}"))?;
+		let json = serde_json::from_reader(file)
+			.map_err(|e| format!("Failed to parse backup file: {e}"))?;
+		let mut backup = BackupGenesisConfig::from_json(json)?;
+
+		endowed_accounts.append(&mut backup.endowed_accounts);
+		identities.append(&mut backup.identities);
+		community_membership.append(&mut backup.community_membership);
+		trait_scores.append(&mut backup.trait_scores);
+	}
 
 	Ok(ChainSpec::from_genesis(
 		// Name
@@ -50,7 +52,7 @@ pub fn development_config() -> Result<ChainSpec, String> {
 		"dev",
 		ChainType::Development,
 		move || {
-			testnet_genesis(
+			development_genesis(
 				wasm_binary,
 				// Initial PoA authorities
 				vec![(
@@ -61,95 +63,15 @@ pub fn development_config() -> Result<ChainSpec, String> {
 				)],
 				// Sudo account
 				get_account_id_from_seed::<sr25519::Public>("Alice"),
+				// Phone versifiers accounts
+				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
+				// Offchain accounts
+				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
 				// Pre-funded accounts
-				vec![
-					get_account_id_from_seed::<sr25519::Public>("Alice"),
-					get_account_id_from_seed::<sr25519::Public>("Bob"),
-					get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
-				],
-				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
-				vec![
-					(get_account_id_from_seed::<sr25519::Public>("Alice"), 1, CommunityRole::Admin),
-					(get_account_id_from_seed::<sr25519::Public>("Bob"), 1, CommunityRole::Member),
-				],
-				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
-				true,
-			)
-		},
-		// Bootnodes
-		vec![],
-		// Telemetry
-		None,
-		// Protocol ID
-		None,
-		None,
-		// Properties
-		Some(
-			serde_json::json!({
-			  "tokenDecimals": 6,
-			  "tokenSymbol": "KCoin",
-			})
-			.as_object()
-			.expect("Map given")
-			.clone(),
-		),
-		// Extensions
-		None,
-	))
-}
-
-pub fn local_testnet_config() -> Result<ChainSpec, String> {
-	let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;
-
-	Ok(ChainSpec::from_genesis(
-		// Name
-		"Local Testnet",
-		// ID
-		"local_testnet",
-		ChainType::Local,
-		move || {
-			testnet_genesis(
-				wasm_binary,
-				// Initial PoA authorities
-				vec![
-					(
-						get_account_id_from_seed::<sr25519::Public>("Alice"),
-						get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
-						get_from_seed::<BabeId>("Alice"),
-						get_from_seed::<GrandpaId>("Alice"),
-					),
-					(
-						get_account_id_from_seed::<sr25519::Public>("Bob"),
-						get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
-						get_from_seed::<BabeId>("Bob"),
-						get_from_seed::<GrandpaId>("Bob"),
-					),
-				],
-				// Sudo account
-				get_account_id_from_seed::<sr25519::Public>("Alice"),
-				// Pre-funded accounts
-				vec![
-					get_account_id_from_seed::<sr25519::Public>("Alice"),
-					get_account_id_from_seed::<sr25519::Public>("Bob"),
-					get_account_id_from_seed::<sr25519::Public>("Charlie"),
-					get_account_id_from_seed::<sr25519::Public>("Dave"),
-					get_account_id_from_seed::<sr25519::Public>("Eve"),
-					get_account_id_from_seed::<sr25519::Public>("Ferdie"),
-					get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Charlie//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Dave//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
-				],
-				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
-				vec![
-					(get_account_id_from_seed::<sr25519::Public>("Alice"), 1, CommunityRole::Admin),
-					(get_account_id_from_seed::<sr25519::Public>("Bob"), 1, CommunityRole::Member),
-				],
-				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
-				true,
+				endowed_accounts.clone(),
+				identities.clone(),
+				community_membership.clone(),
+				trait_scores.clone(),
 			)
 		},
 		// Bootnodes
@@ -176,28 +98,23 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 
 /// Configure initial storage state for FRAME modules.
 #[allow(clippy::too_many_arguments)]
-fn testnet_genesis(
+fn development_genesis(
 	wasm_binary: &[u8],
 	initial_authorities: Vec<(AccountId, AccountId, BabeId, GrandpaId)>,
 	root_key: AccountId,
-	endowed_accounts: Vec<AccountId>,
 	phone_verifiers: Vec<AccountId>,
-	community_membership: Vec<(AccountId, CommunityId, CommunityRole)>,
 	offchain_accounts: Vec<AccountId>,
-	_enable_println: bool,
+	endowed_accounts: Vec<(AccountId, u128)>,
+	identities: Vec<(AccountId, Username, PhoneNumberHash)>,
+	community_membership: Vec<(AccountId, CommunityId, CommunityRole)>,
+	trait_scores: Vec<(AccountId, CommunityId, CharTraitId, Score)>,
 ) -> GenesisConfig {
-	const ENDOWMENT: u128 = 1_000_000_000 * KCOINS;
-	const STASH: u128 = 2_500_000 * KCOINS;
-
 	GenesisConfig {
 		system: SystemConfig {
 			// Add Wasm runtime to storage.
 			code: wasm_binary.to_vec(),
 		},
-		balances: BalancesConfig {
-			// Configure endowed accounts with initial balance of 1 << 60.
-			balances: endowed_accounts.iter().cloned().map(|k| (k, ENDOWMENT)).collect(),
-		},
+		balances: BalancesConfig { balances: endowed_accounts },
 		grandpa: GrandpaConfig { authorities: Default::default() },
 		sudo: SudoConfig {
 			// Assign network admin rights.
@@ -318,9 +235,14 @@ fn testnet_genesis(
 				),
 			],
 			community_membership,
+			trait_scores,
 			..Default::default()
 		},
-		identity: IdentityConfig { phone_verifiers },
-		reward: RewardConfig { offchain_accounts, ..Default::default() },
+		identity: IdentityConfig { phone_verifiers, identities: identities.clone() },
+		reward: RewardConfig {
+			accounts: identities.into_iter().map(|(account_id, _, _)| account_id).collect(),
+			offchain_accounts,
+			..Default::default()
+		},
 	}
 }

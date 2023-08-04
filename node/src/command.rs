@@ -35,10 +35,14 @@ impl SubstrateCli for Cli {
 		2017
 	}
 
-	fn load_spec(&self, id: &str) -> Result<Box<dyn sc_service::ChainSpec>, String> {
+	fn load_spec(&self, args: &str) -> Result<Box<dyn sc_service::ChainSpec>, String> {
+		let mut args = args.split(':');
+		// Save unwrap as split always returns at least one element
+		let id = args.next().unwrap();
+		let backup = args.next();
+
 		Ok(match id {
-			"dev" => Box::new(chain_spec::development_config()?),
-			"" | "local" => Box::new(chain_spec::local_testnet_config()?),
+			"" | "dev" | "local" => Box::new(chain_spec::dev::development_config(backup)?),
 			path =>
 				Box::new(chain_spec::ChainSpec::from_json_file(std::path::PathBuf::from(path))?),
 		})
