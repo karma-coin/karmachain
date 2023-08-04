@@ -19,12 +19,16 @@ sp_api::decl_runtime_apis! {
 		/// Provide list of community members with information about each member
 		fn get_all_users(
 			community_id: CommunityId,
+			from_index: Option<u64>,
+			limit: Option<u64>,
 		) -> Vec<UserInfo<AccountId>>;
 
 		/// Get list of user by username prefix and community
 		fn get_contacts(
 			prefix: Username,
 			community_id: Option<CommunityId>,
+			from_index: Option<u64>,
+			limit: Option<u64>,
 		) -> Vec<Contact<AccountId>>;
 	}
 }

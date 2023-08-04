@@ -114,7 +114,7 @@ mod community {
 	#[test]
 	fn get_all_users_community_not_exists() {
 		new_test_ext().execute_with(|| {
-			let users = Runtime::get_all_users(1);
+			let users = Runtime::get_all_users(1, None, None);
 			assert!(users.is_empty());
 		});
 	}
@@ -124,7 +124,7 @@ mod community {
 		const COMMUNITY_ID: u32 = 1;
 
 		new_test_ext().with_community(COMMUNITY_ID, "test", true).execute_with(|| {
-			let users = Runtime::get_all_users(COMMUNITY_ID);
+			let users = Runtime::get_all_users(COMMUNITY_ID, None, None);
 			assert!(users.is_empty());
 		});
 	}
@@ -140,8 +140,39 @@ mod community {
 			.with_user("Charlie", "2222")
 			.with_community_member(COMMUNITY_ID, "Charlie", CommunityRole::Member)
 			.execute_with(|| {
-				let users = Runtime::get_all_users(COMMUNITY_ID);
+				let users = Runtime::get_all_users(COMMUNITY_ID, None, None);
 				assert_eq!(users.len(), 2);
+			});
+	}
+
+	#[test]
+	fn get_all_users_pagination_works() {
+		const COMMUNITY_ID: u32 = 1;
+
+		new_test_ext()
+			.with_community(COMMUNITY_ID, "test", true)
+			.with_user("Bob", "1111")
+			.with_community_member(COMMUNITY_ID, "Bob", CommunityRole::Member)
+			.with_user("Charlie", "2222")
+			.with_community_member(COMMUNITY_ID, "Charlie", CommunityRole::Member)
+			.execute_with(|| {
+				let users = Runtime::get_all_users(COMMUNITY_ID, None, Some(1));
+				assert_eq!(users.len(), 1);
+				let user = users.first().unwrap();
+				assert_eq!(user.user_name, "Bob");
+			});
+
+		new_test_ext()
+			.with_community(COMMUNITY_ID, "test", true)
+			.with_user("Bob", "1111")
+			.with_community_member(COMMUNITY_ID, "Bob", CommunityRole::Member)
+			.with_user("Charlie", "2222")
+			.with_community_member(COMMUNITY_ID, "Charlie", CommunityRole::Member)
+			.execute_with(|| {
+				let users = Runtime::get_all_users(COMMUNITY_ID, Some(1), None);
+				assert_eq!(users.len(), 1);
+				let user = users.first().unwrap();
+				assert_eq!(user.user_name, "Charlie");
 			});
 	}
 
@@ -149,27 +180,27 @@ mod community {
 	fn get_contacts_no_users_exists() {
 		new_test_ext().execute_with(|| {
 			let prefix = "Bob".try_into().unwrap();
-			let users = Runtime::get_contacts(prefix, None);
+			let users = Runtime::get_contacts(prefix, None, None, None);
 			assert!(users.is_empty());
-		})
+		});
 	}
 
 	#[test]
 	fn get_contacts_case_insensative() {
 		new_test_ext().with_user("Bob", "1111").execute_with(|| {
 			let prefix = "bob".try_into().unwrap();
-			let users = Runtime::get_contacts(prefix, None);
+			let users = Runtime::get_contacts(prefix, None, None, None);
 			assert_eq!(users.len(), 1);
-		})
+		});
 	}
 
 	#[test]
 	fn get_contacts_search_only_prefix() {
 		new_test_ext().with_user("Bob", "1111").execute_with(|| {
 			let prefix = "ob".try_into().unwrap();
-			let users = Runtime::get_contacts(prefix, None);
+			let users = Runtime::get_contacts(prefix, None, None, None);
 			assert!(users.is_empty());
-		})
+		});
 	}
 
 	#[test]
@@ -179,9 +210,34 @@ mod community {
 			.with_user("Bogdan", "2222")
 			.execute_with(|| {
 				let prefix = "Bo".try_into().unwrap();
-				let users = Runtime::get_contacts(prefix, None);
+				let users = Runtime::get_contacts(prefix, None, None, None);
 				assert_eq!(users.len(), 2);
-			})
+			});
+	}
+
+	#[test]
+	fn get_contacts_pagination_works() {
+		new_test_ext()
+			.with_user("Bob", "1111")
+			.with_user("Bogdan", "2222")
+			.execute_with(|| {
+				let prefix = "Bo".try_into().unwrap();
+				let users = Runtime::get_contacts(prefix, None, Some(1), None);
+				assert_eq!(users.len(), 1);
+				let user = users.first().unwrap();
+				assert_eq!(user.user_name, "Bogdan");
+			});
+
+		new_test_ext()
+			.with_user("Bob", "1111")
+			.with_user("Bogdan", "2222")
+			.execute_with(|| {
+				let prefix = "Bo".try_into().unwrap();
+				let users = Runtime::get_contacts(prefix, None, None, Some(1));
+				assert_eq!(users.len(), 1);
+				let user = users.first().unwrap();
+				assert_eq!(user.user_name, "Bob");
+			});
 	}
 }
 
