@@ -155,11 +155,11 @@ mod community {
 	}
 
 	#[test]
-	fn get_contacts_case_matters() {
+	fn get_contacts_case_insensative() {
 		new_test_ext().with_user("Bob", "1111").execute_with(|| {
 			let prefix = "bob".try_into().unwrap();
 			let users = Runtime::get_contacts(prefix, None);
-			assert!(users.is_empty());
+			assert_eq!(users.len(), 1);
 		})
 	}
 

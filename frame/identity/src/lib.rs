@@ -546,12 +546,25 @@ where
 	UsernameLimit: Get<u32> + 'static,
 	T: Config<Username = BoundedString<UsernameLimit>>,
 {
-	/// Search for registered user who's username start with given `prefix`
+	/// Search for registered user who's username start with given `prefix`, case insensitive
 	pub fn get_contacts(
 		prefix: T::Username,
 	) -> Vec<(T::AccountId, IdentityStore<T::Username, T::PhoneNumberHash, T::Moment>)> {
+		// Convert prefix to lower case
+		let prefix_bytes =
+			prefix.0.as_slice().iter().map(|b| b.to_ascii_lowercase()).collect::<Vec<_>>();
+
 		IdentityOf::<T>::iter()
-			.filter(|(_key, value)| value.username.0.starts_with(&prefix.0))
+			.filter(|(_key, value)| {
+				let value = value
+					.username
+					.0
+					.as_slice()
+					.iter()
+					.map(|b| b.to_ascii_lowercase())
+					.collect::<Vec<_>>();
+				value.as_slice().starts_with(prefix_bytes.as_slice())
+			})
 			.collect()
 	}
 }
