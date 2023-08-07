@@ -59,7 +59,7 @@ fn deleted_user_do_not_get_signup_reward() {
 
 	test_ext.with_user("Alice1", "1111").execute_with(|| {
 		let account_id = get_account_id_from_seed::<sr25519::Public>(&"Alice1");
-		assert_ok!(Identity::delete_user(RuntimeOrigin::signed(account_id.clone()),));
+		assert_ok!(Identity::delete_user(RuntimeOrigin::signed(account_id.clone())));
 	});
 
 	test_ext.with_user("Alice2", "1111").execute_with(|| {
@@ -69,4 +69,25 @@ fn deleted_user_do_not_get_signup_reward() {
 
 		assert_eq!(info.balance, 0)
 	});
+}
+
+#[test]
+fn delete_user_balance_go_to_treasury() {
+	let mut test_ext = new_test_ext();
+
+	test_ext.with_user("Alice", "1111").execute_with(|| {
+		let account_id = get_account_id_from_seed::<sr25519::Public>(&"Alice");
+		let treasury_account_id = Treasury::account_id();
+		let treasury_initial_balance = Balances::free_balance(&treasury_account_id);
+
+		let info = Runtime::get_user_info(AccountIdentity::AccountId(account_id.clone()))
+			.expect("Fail to get info");
+
+		assert_ok!(Identity::delete_user(RuntimeOrigin::signed(account_id.clone())));
+
+		assert_eq!(
+			Balances::free_balance(&treasury_account_id),
+			treasury_initial_balance + info.balance as u128
+		);
+	})
 }
