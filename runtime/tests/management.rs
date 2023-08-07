@@ -14,7 +14,7 @@ fn add_char_trait() {
 		// Set block number to 1 because events are not emitted on block 0.
 		System::set_block_number(1);
 
-		// Adding system reserver char trait id (like `NoCharTraitId`) should failed
+		// Adding system reserved char trait id (like `NoCharTraitId`) should failed
 		let call = Box::new(RuntimeCall::Appreciation(
 			pallet_appreciation::Call::<Runtime>::add_char_trait {
 				id: 0,
@@ -28,7 +28,7 @@ fn add_char_trait() {
 			sudo_result: Err(pallet_appreciation::Error::<Runtime>::CharTraitAlreadyExists.into()),
 		}));
 
-		// Change block number to separete events for each call
+		// Change block number to separate events for each call
 		System::set_block_number(2);
 		let call = Box::new(RuntimeCall::Appreciation(
 			pallet_appreciation::Call::<Runtime>::add_char_trait {
@@ -43,7 +43,7 @@ fn add_char_trait() {
 			sudo_result: Ok(()),
 		}));
 
-		// Change block number to separete events for each call
+		// Change block number to separate events for each call
 		System::set_block_number(3);
 		// Adding char trait with same id should fail
 		let call = Box::new(RuntimeCall::Appreciation(
@@ -59,7 +59,7 @@ fn add_char_trait() {
 			sudo_result: Err(pallet_appreciation::Error::<Runtime>::CharTraitAlreadyExists.into()),
 		}));
 
-		// Change block number to separete events for each call
+		// Change block number to separate events for each call
 		System::set_block_number(4);
 		// Adding char trait with same name should fail
 		let call = Box::new(RuntimeCall::Appreciation(
@@ -75,7 +75,7 @@ fn add_char_trait() {
 			sudo_result: Err(pallet_appreciation::Error::<Runtime>::CharTraitAlreadyExists.into()),
 		}));
 
-		// Change block number to separete events for each call
+		// Change block number to separate events for each call
 		System::set_block_number(5);
 		// Adding char trait with same emoji should fail
 		let call = Box::new(RuntimeCall::Appreciation(
@@ -103,7 +103,7 @@ fn add_community() {
 		// Set block number to 1 because events are not emitted on block 0.
 		System::set_block_number(1);
 
-		// Adding system reserver community id (like `NoCommunityId`) should failed
+		// Adding system reserved community id (like `NoCommunityId`) should failed
 		let call = Box::new(RuntimeCall::Appreciation(
 			pallet_appreciation::Call::<Runtime>::add_community {
 				id: 0,
@@ -126,7 +126,7 @@ fn add_community() {
 			sudo_result: Err(pallet_appreciation::Error::<Runtime>::CommunityAlreadyExists.into()),
 		}));
 
-		// Change block number to separete events for each call
+		// Change block number to separate events for each call
 		System::set_block_number(2);
 		let call = Box::new(RuntimeCall::Appreciation(
 			pallet_appreciation::Call::<Runtime>::add_community {
@@ -150,7 +150,7 @@ fn add_community() {
 			sudo_result: Ok(()),
 		}));
 
-		// Change block number to separete events for each call
+		// Change block number to separate events for each call
 		System::set_block_number(3);
 		// Adding community with same id should fail
 		let call = Box::new(RuntimeCall::Appreciation(
@@ -175,7 +175,7 @@ fn add_community() {
 			sudo_result: Err(pallet_appreciation::Error::<Runtime>::CommunityAlreadyExists.into()),
 		}));
 
-		// Change block number to separete events for each call
+		// Change block number to separate events for each call
 		System::set_block_number(4);
 		// Adding community with same name should fail
 		let call = Box::new(RuntimeCall::Appreciation(
