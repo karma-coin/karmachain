@@ -117,12 +117,14 @@ where
 	fn get_all_users(
 		&self,
 		community_id: CommunityId,
+		from_index: Option<u64>,
+		limit: Option<u64>,
 		at: Option<<Block as BlockT>::Hash>,
 	) -> RpcResult<Vec<UserInfo<AccountId>>> {
 		let api = self.client.runtime_api();
 		let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
-		Ok(api.get_all_users(at, community_id).map_err(|e| {
+		Ok(api.get_all_users(at, community_id, from_index, limit).map_err(|e| {
 			CallError::Custom(ErrorObject::owned(
 				0,
 				"Unable to query community members.",
@@ -135,12 +137,14 @@ where
 		&self,
 		prefix: Username,
 		community_id: Option<CommunityId>,
+		from_index: Option<u64>,
+		limit: Option<u64>,
 		at: Option<<Block as BlockT>::Hash>,
 	) -> RpcResult<Vec<Contact<AccountId>>> {
 		let api = self.client.runtime_api();
 		let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
-		Ok(api.get_contacts(at, prefix, community_id).map_err(|e| {
+		Ok(api.get_contacts(at, prefix, community_id, from_index, limit).map_err(|e| {
 			CallError::Custom(ErrorObject::owned(
 				0,
 				"Unable to query community members.",

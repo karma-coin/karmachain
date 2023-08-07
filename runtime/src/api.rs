@@ -406,9 +406,13 @@ impl_runtime_apis! {
 
 		fn get_all_users(
 			community_id: CommunityId,
+			from_index: Option<u64>,
+			limit: Option<u64>,
 		) -> Vec<UserInfo<AccountId>> {
 			pallet_appreciation::CommunityMembership::<Runtime>::iter()
 				.filter(|(_, id, _)| *id == community_id)
+				.skip(from_index.unwrap_or(0) as usize)
+				.take(limit.unwrap_or(u64::MAX) as usize)
 				.flat_map(|(account_id, _, _)| Self::get_user_info(AccountIdentity::AccountId(account_id)))
 				.collect()
 		}
@@ -416,8 +420,10 @@ impl_runtime_apis! {
 		fn get_contacts(
 			prefix: BoundedString<NameLimit>,
 			community_id: Option<CommunityId>,
+			from_index: Option<u64>,
+			limit: Option<u64>,
 		) -> Vec<Contact<AccountId>> {
-			Identity::get_contacts(prefix)
+			Identity::get_contacts(prefix, from_index, limit)
 				.into_iter()
 				.filter(|(account_id, _)| {
 					// If `community_id` provided filter by it

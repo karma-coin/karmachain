@@ -23,7 +23,7 @@ pub struct UserInfo<AccountId> {
 	pub community_membership: Vec<CommunityMembership>,
 }
 
-#[derive(Encode, Decode, TypeInfo)]
+#[derive(Encode, Decode, TypeInfo, PartialEq, Eq, PartialOrd, Ord)]
 #[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
 pub struct TraitScore {
 	pub trait_id: u32,
@@ -31,7 +31,7 @@ pub struct TraitScore {
 	pub community_id: u32,
 }
 
-#[derive(Encode, Decode, TypeInfo)]
+#[derive(Encode, Decode, TypeInfo, PartialEq, Eq, PartialOrd, Ord)]
 #[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
 pub struct CommunityMembership {
 	pub community_id: u32,
