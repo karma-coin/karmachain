@@ -2,7 +2,8 @@ use super::{backup::BackupGenesisConfig, utils::*};
 use karmachain_node_runtime::{
 	opaque::SessionKeys, AccountId, AppreciationConfig, BabeConfig, BalancesConfig, GenesisConfig,
 	GrandpaConfig, IdentityConfig, NominationPoolsConfig, PhoneNumberHash, RewardConfig,
-	SessionConfig, StakingConfig, SudoConfig, SystemConfig, Username, KCOINS, WASM_BINARY,
+	SessionConfig, StakingConfig, SudoConfig, SystemConfig, Treasury, Username, KCOINS,
+	WASM_BINARY,
 };
 use pallet_appreciation::*;
 use pallet_staking::{Forcing, StakerStatus};
@@ -41,6 +42,7 @@ pub fn development_config<'a>(backup: Option<&'a str>) -> Result<ChainSpec, Stri
 		identities.append(&mut backup.identities);
 		community_membership.append(&mut backup.community_membership);
 		trait_scores.append(&mut backup.trait_scores);
+		endowed_accounts.push((Treasury::account_id(), backup.treasury));
 	}
 
 	Ok(ChainSpec::from_genesis(
