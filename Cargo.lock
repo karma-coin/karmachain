@@ -3587,6 +3587,7 @@ dependencies = [
  "pallet-staking",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc",
+ "parity-scale-codec",
  "reqwest",
  "rpc-api",
  "runtime-api",

@@ -126,7 +126,7 @@ async fn accounts_from_backup_exists_on_genesis() -> Result<(), ()> {
 				"jsonrpc": "2.0",
 				"method": "identity_getUserInfoByUsername",
 				"params": {
-					"username": "BlockProducer"
+					"username": "Block producer 1"
 				}
 			}))
 			.send()
