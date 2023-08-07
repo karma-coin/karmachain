@@ -4,6 +4,9 @@ use frame_support::assert_ok;
 use karmachain_node_runtime::*;
 use sp_core::sr25519;
 use utils::*;
+use frame_support::traits::Currency;
+use sp_runtime::MultiAddress;
+use frame_support::traits::Hooks;
 
 #[test]
 fn add_char_trait() {
@@ -200,4 +203,31 @@ fn add_community() {
 			sudo_result: Err(pallet_appreciation::Error::<Runtime>::CommunityAlreadyExists.into()),
 		}));
 	});
+}
+
+#[test]
+fn sudo_can_use_treasury() {
+	let mut test_executor = new_test_ext();
+
+	test_executor.with_user("Alice", "1111").execute_with(|| {
+		let sudo = get_account_id_from_seed::<sr25519::Public>("Alice");
+		let bob = get_account_id_from_seed::<sr25519::Public>("Bob");
+		let treasury = Treasury::account_id();
+
+		Balances::make_free_balance_be(&treasury, KCOINS);
+		assert_eq!(Balances::free_balance(&treasury), KCOINS);
+
+		// Initiate and approve spend using sudo call
+		let call = Box::new(RuntimeCall::Treasury(pallet_treasury::Call::<Runtime>::spend {
+			amount: EXISTENTIAL_DEPOSIT,
+			beneficiary: MultiAddress::Id(bob.clone()),
+		}));
+		assert_ok!(Sudo::sudo(RuntimeOrigin::signed(sudo.clone()), call));
+
+		// Wait for spend period
+		Treasury::on_initialize(6 * DAYS);
+
+		assert_eq!(Balances::free_balance(&treasury), KCOINS - EXISTENTIAL_DEPOSIT);
+		assert_eq!(Balances::free_balance(&bob), EXISTENTIAL_DEPOSIT);
+	})
 }
