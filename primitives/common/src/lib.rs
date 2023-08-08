@@ -21,16 +21,20 @@ use scale_info::{
 #[cfg(feature = "std")]
 use serde::{de, ser, Deserialize, Deserializer, Serialize, Serializer};
 
+/// Always trimed
 #[derive(
 	DebugNoBound, CloneNoBound, EqNoBound, PartialEqNoBound, MaxEncodedLen, Encode, DefaultNoBound,
 )]
-pub struct BoundedString<MaxLength: Get<u32>>(pub BoundedVec<u8, MaxLength>);
+pub struct BoundedString<MaxLength: Get<u32>>(BoundedVec<u8, MaxLength>);
 
 impl<MaxLength: Get<u32>> TryFrom<Vec<u8>> for BoundedString<MaxLength> {
 	type Error = &'static str;
 
 	fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
-		BoundedVec::try_from(value)
+		let binding = String::from_utf8(value).map_err(|_| "Invalid UTF-8 string")?;
+		let string = binding.trim();
+
+		BoundedVec::try_from(string.as_bytes().to_vec())
 			.map(|v| BoundedString(v))
 			.map_err(|_| "Out of bound. The length is too long.")
 	}
@@ -39,12 +43,6 @@ impl<MaxLength: Get<u32>> TryFrom<Vec<u8>> for BoundedString<MaxLength> {
 impl<MaxLength: Get<u32>> From<BoundedString<MaxLength>> for Vec<u8> {
 	fn from(value: BoundedString<MaxLength>) -> Self {
 		value.0.into_inner()
-	}
-}
-
-impl<MaxLength: Get<u32>> From<BoundedVec<u8, MaxLength>> for BoundedString<MaxLength> {
-	fn from(value: BoundedVec<u8, MaxLength>) -> Self {
-		Self(value)
 	}
 }
 
@@ -163,14 +161,17 @@ impl<MaxLength: Get<u32>> Ord for BoundedString<MaxLength> {
 
 impl<MaxLength: Get<u32>> MaybeLowercase for BoundedString<MaxLength> {
 	fn to_lowercase(self) -> Self {
-		let bytes = self
-			.0
-			.as_slice()
+		self.0
 			.into_iter()
 			.map(|b| b.to_ascii_lowercase())
-			.collect::<Vec<_>>();
+			.collect::<Vec<_>>()
+			.try_into()
+			.unwrap()
+	}
+}
 
-		// Save because length stays the same
-		Self(bytes.try_into().unwrap())
+impl<MaxLength: Get<u32>> BoundedString<MaxLength> {
+	pub fn as_slice(&self) -> &[u8] {
+		self.0.as_slice()
 	}
 }

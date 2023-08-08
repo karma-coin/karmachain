@@ -397,7 +397,9 @@ impl<T: Config> IdentityProvider<T::AccountId, T::Username, T::PhoneNumberHash> 
 	fn identity_by_name(
 		username: &T::Username,
 	) -> Option<IdentityInfo<T::AccountId, T::Username, T::PhoneNumberHash>> {
-		<UsernameFor<T>>::get(username.clone().to_lowercase()).as_ref().and_then(Self::identity_by_id)
+		<UsernameFor<T>>::get(username.clone().to_lowercase())
+			.as_ref()
+			.and_then(Self::identity_by_id)
 	}
 
 	fn identity_by_number(
@@ -588,7 +590,7 @@ where
 			.take(limit.unwrap_or(u64::MAX) as usize)
 			.filter(|(_key, value)| {
 				// Value is already in lowercase
-				value.username.0.as_slice().starts_with(prefix_bytes.0.as_slice())
+				value.username.as_slice().starts_with(prefix_bytes.as_slice())
 			})
 			.collect()
 	}
