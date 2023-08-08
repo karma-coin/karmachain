@@ -1,8 +1,9 @@
 mod utils;
 
 use crate::utils::{create_runner, RpcResponse, RPC_URL};
+use codec::Decode;
 use karmachain_node::cli::Cli;
-use karmachain_node_runtime::AccountId;
+use karmachain_node_runtime::{AccountId, Balance, Runtime, Treasury};
 use sc_cli::SubstrateCli;
 use serde_json::json;
 use sp_rpc::{CommunityMembership, TraitScore, UserInfo};
@@ -136,6 +137,36 @@ async fn accounts_from_backup_exists_on_genesis() -> Result<(), ()> {
 			.await
 			.expect("Fail to parse response");
 		assert!(response.result.is_none());
+
+		// Check treasury balance
+		let storage_key = frame_system::Account::<Runtime>::hashed_key_for(Treasury::account_id());
+		let storage_key = format!("0x{}", hex::encode(storage_key));
+		let response = client
+			.post(RPC_URL)
+			.json(&json!({
+				"id": 1,
+				"jsonrpc": "2.0",
+				"method": "state_getStorage",
+				"params": {
+					"key": storage_key,
+				}
+			}))
+			.send()
+			.await
+			.expect("Fail to send request")
+			.json::<RpcResponse<String>>()
+			.await
+			.expect("Fail to parse response");
+
+		let encoded_account_data = hex::decode(response.result.unwrap().trim_start_matches("0x"))
+			.expect("Failed to decode hex data");
+		let account_data =
+			frame_system::AccountInfo::<u32, pallet_balances::AccountData<Balance>>::decode(
+				&mut encoded_account_data.as_slice(),
+			)
+			.expect("Failed to decode account data");
+
+		assert_eq!(account_data.data.free, 79600001741206);
 
 		Ok(())
 	})

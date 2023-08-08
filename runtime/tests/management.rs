@@ -1,12 +1,13 @@
 mod utils;
 
-use frame_support::assert_ok;
+use frame_support::{
+	assert_ok,
+	traits::{Currency, Hooks},
+};
 use karmachain_node_runtime::*;
 use sp_core::sr25519;
-use utils::*;
-use frame_support::traits::Currency;
 use sp_runtime::MultiAddress;
-use frame_support::traits::Hooks;
+use utils::*;
 
 #[test]
 fn add_char_trait() {
