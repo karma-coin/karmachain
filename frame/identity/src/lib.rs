@@ -7,7 +7,7 @@ use codec::{Decode, Encode, MaxEncodedLen};
 use frame_support::{
 	pallet_prelude::DispatchResult,
 	traits::{Currency, ExistenceRequirement, Get},
-	BoundedVec,
+	BoundedVec, PalletId,
 };
 pub use pallet::*;
 use sp_common::{
@@ -17,7 +17,7 @@ use sp_common::{
 	BoundedString,
 };
 use sp_rpc::VerificationEvidence;
-use sp_runtime::traits::{IdentifyAccount, Verify, Zero};
+use sp_runtime::traits::{AccountIdConversion, IdentifyAccount, Verify};
 use sp_std::{prelude::*, vec};
 
 #[frame_support::pallet]
@@ -62,6 +62,10 @@ pub mod pallet {
 			+ Decode
 			+ Parameter
 			+ Into<Self::AccountId>;
+
+		/// Treasury account id to get funds from deleted accounts
+		#[pallet::constant]
+		type Treasury: Get<PalletId>;
 	}
 
 	#[pallet::pallet]
@@ -328,7 +332,13 @@ pub mod pallet {
 			UsernameFor::<T>::remove(&identity_info.username);
 			PhoneNumberFor::<T>::remove(&identity_info.phone_number_hash);
 
-			T::Currency::make_free_balance_be(&who, T::Balance::zero());
+			let balance = T::Currency::free_balance(&who);
+			T::Currency::transfer(
+				&who,
+				&T::Treasury::get().into_account_truncating(),
+				balance,
+				ExistenceRequirement::AllowDeath,
+			)?;
 
 			T::Hooks::on_delete_user(
 				who.clone(),

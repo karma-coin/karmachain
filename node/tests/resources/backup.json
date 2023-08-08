@@ -280,7 +280,7 @@
         ]
       },
       "nonce": 0,
-      "user_name": "BlockProducer",
+      "user_name": "Block producer 1",
       "mobile_number": null,
       "balance": 79600001741206,
       "trait_scores": [],

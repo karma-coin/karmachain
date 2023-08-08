@@ -17,4 +17,5 @@ pub mod system;
 pub mod timestamp;
 pub mod transaction_indexer;
 pub mod transaction_payment;
+pub mod treasury;
 pub mod utility;
