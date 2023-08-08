@@ -5,6 +5,7 @@ pub mod identity;
 pub mod traits;
 pub mod types;
 
+use crate::traits::MaybeLowercase;
 use codec::{Decode, Encode, EncodeLike, MaxEncodedLen};
 use frame_support::{
 	traits::Get, BoundedVec, CloneNoBound, DebugNoBound, DefaultNoBound, EqNoBound,
@@ -157,5 +158,19 @@ impl<MaxLength: Get<u32>> PartialOrd<BoundedString<MaxLength>> for String {
 impl<MaxLength: Get<u32>> Ord for BoundedString<MaxLength> {
 	fn cmp(&self, other: &Self) -> sp_std::cmp::Ordering {
 		self.0.cmp(&other.0)
+	}
+}
+
+impl<MaxLength: Get<u32>> MaybeLowercase for BoundedString<MaxLength> {
+	fn to_lowercase(self) -> Self {
+		let bytes = self
+			.0
+			.as_slice()
+			.into_iter()
+			.map(|b| b.to_ascii_lowercase())
+			.collect::<Vec<_>>();
+
+		// Save because length stays the same
+		Self(bytes.try_into().unwrap())
 	}
 }

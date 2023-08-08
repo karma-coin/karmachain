@@ -16,7 +16,7 @@ fn new_user_happy_flow() {
 		System::set_block_number(1);
 
 		let account_id = get_account_id_from_seed::<sr25519::Public>("Bob");
-		let username: Username = "Bob".try_into().unwrap();
+		let username: Username = "bob".try_into().unwrap();
 		let phone_number: PhoneNumber = "+0123456789".try_into().unwrap();
 		let phone_number_hash =
 			PhoneNumberHash::from(blake2_512(Vec::from(phone_number).as_slice()));

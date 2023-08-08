@@ -8,6 +8,7 @@ use karmachain_node_runtime::*;
 use pallet_appreciation::{Community, CommunityRole};
 use sp_common::{
 	identity::AccountIdentity,
+	traits::MaybeLowercase,
 	types::{CharTraitId, CommunityId},
 	BoundedString,
 };
@@ -234,6 +235,9 @@ pub fn get_verification_evidence(
 	username: Username,
 	phone_number_hash: PhoneNumberHash,
 ) -> (sp_core::sr25519::Public, sp_core::sr25519::Signature) {
+	// Cast username to lowercase
+	let username = username.to_lowercase();
+
 	let pair = sp_core::sr25519::Pair::from_string("//Alice", None).unwrap();
 	let data = VerificationEvidence::<sp_core::sr25519::Public, _, _, _> {
 		verifier_public_key: pair.public(),

@@ -8,7 +8,7 @@ mod identity {
 	use crate::utils::{get_account_id_from_seed, new_test_ext, TestUtils};
 	use karmachain_node_runtime::{NameLimit, PhoneNumber, PhoneNumberHash, Runtime};
 	use runtime_api::identity::runtime_decl_for_identity_api::IdentityApiV1;
-	use sp_common::{identity::AccountIdentity, BoundedString};
+	use sp_common::{identity::AccountIdentity, traits::MaybeLowercase, BoundedString};
 	use sp_core::{hashing::blake2_512, sr25519};
 
 	#[test]
@@ -56,7 +56,7 @@ mod identity {
 				.expect("Fail to get info");
 
 			assert_eq!(info.account_id, bob_account_id);
-			assert_eq!(info.user_name, bob_username);
+			assert_eq!(info.user_name, bob_username.to_lowercase());
 			assert_eq!(info.phone_number_hash, bob_phone_number_hash);
 		});
 	}
@@ -76,7 +76,7 @@ mod identity {
 				.expect("Fail to get info");
 
 			assert_eq!(info.account_id, bob_account_id);
-			assert_eq!(info.user_name, bob_username);
+			assert_eq!(info.user_name, bob_username.to_lowercase());
 			assert_eq!(info.phone_number_hash, bob_phone_number_hash);
 		});
 	}
@@ -97,7 +97,7 @@ mod identity {
 					.expect("Fail to get info");
 
 			assert_eq!(info.account_id, bob_account_id);
-			assert_eq!(info.user_name, bob_username);
+			assert_eq!(info.user_name, bob_username.to_lowercase());
 			assert_eq!(info.phone_number_hash, bob_phone_number_hash);
 		});
 	}
@@ -159,7 +159,7 @@ mod community {
 				let users = Runtime::get_all_users(COMMUNITY_ID, None, Some(1));
 				assert_eq!(users.len(), 1);
 				let user = users.first().unwrap();
-				assert_eq!(user.user_name, "Bob");
+				assert_eq!(user.user_name, "bob");
 			});
 
 		new_test_ext()
@@ -172,7 +172,7 @@ mod community {
 				let users = Runtime::get_all_users(COMMUNITY_ID, Some(1), None);
 				assert_eq!(users.len(), 1);
 				let user = users.first().unwrap();
-				assert_eq!(user.user_name, "Charlie");
+				assert_eq!(user.user_name, "charlie");
 			});
 	}
 
@@ -225,7 +225,7 @@ mod community {
 				let users = Runtime::get_contacts(prefix, None, Some(1), None);
 				assert_eq!(users.len(), 1);
 				let user = users.first().unwrap();
-				assert_eq!(user.user_name, "Bogdan");
+				assert_eq!(user.user_name, "bogdan");
 			});
 
 		new_test_ext()
@@ -236,7 +236,7 @@ mod community {
 				let users = Runtime::get_contacts(prefix, None, None, Some(1));
 				assert_eq!(users.len(), 1);
 				let user = users.first().unwrap();
-				assert_eq!(user.user_name, "Bob");
+				assert_eq!(user.user_name, "bob");
 			});
 	}
 }
