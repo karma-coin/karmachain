@@ -1,4 +1,4 @@
-use karmachain_node_runtime::{AccountId, PhoneNumberHash, Username};
+use karmachain_node_runtime::{AccountId, Balance, PhoneNumberHash, Username};
 use pallet_appreciation::CommunityRole;
 use scale_info::prelude::string::String;
 use sp_common::types::{CharTraitId, CommunityId, Score};
@@ -10,6 +10,7 @@ pub struct BackupGenesisConfig {
 	pub identities: Vec<(AccountId, Username, PhoneNumberHash)>,
 	pub community_membership: Vec<(AccountId, CommunityId, CommunityRole)>,
 	pub trait_scores: Vec<(AccountId, CommunityId, CharTraitId, Score)>,
+	pub treasury: Balance,
 }
 
 impl BackupGenesisConfig {
@@ -17,6 +18,15 @@ impl BackupGenesisConfig {
 	pub fn from_json(json: serde_json::Value) -> Result<Self, String> {
 		let backup: backup_json::Backup =
 			serde_json::from_value(json).map_err(|_| "Invalid JSON format.")?;
+
+		// Find `Block producer 1` and assign its balance to treasury
+		let mut block_producers = backup.users.iter().filter(|info| info.mobile_number.is_none());
+		// In the backup can be only one block producer
+		assert_eq!(block_producers.clone().count(), 1);
+		let block_producer = block_producers.next().unwrap();
+		// Check that it is exactly `Block producer 1`
+		assert_eq!(block_producer.user_name, "Block producer 1");
+		let treasury = block_producer.balance;
 
 		// Filter users with zero balance and skip validator account
 		let users: Vec<_> = backup
@@ -78,7 +88,7 @@ impl BackupGenesisConfig {
 			})
 			.collect();
 
-		Ok(Self { endowed_accounts, identities, community_membership, trait_scores })
+		Ok(Self { endowed_accounts, identities, community_membership, trait_scores, treasury })
 	}
 }
 
