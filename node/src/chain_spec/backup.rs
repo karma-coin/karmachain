@@ -46,13 +46,16 @@ impl BackupGenesisConfig {
 			.cloned()
 			.map(|info| {
 				let account_id = info.account_id.data.into();
-				let username = info.user_name.try_into().unwrap();
+				let username = info.user_name.try_into();
+				// Safety: `mobile_number` is not `None` because of `filter` above
+				let phone_number = info.mobile_number.unwrap();
 				let phone_number_hash =
-					blake2_512(String::from(info.mobile_number.unwrap()).as_bytes()).into();
+					blake2_512(String::from(phone_number).as_bytes()).into();
 
-				(account_id, username, phone_number_hash)
+				username.map(|username| (account_id, username, phone_number_hash))
 			})
-			.collect();
+			.collect::<Result<Vec<_>, _>>()
+			.map_err(|_| "Invalid username format")?;
 
 		// Read community membership
 		let community_membership = users

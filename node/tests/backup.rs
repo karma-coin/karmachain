@@ -50,7 +50,7 @@ async fn accounts_from_backup_exists_on_genesis() -> Result<(), ()> {
 		let response = client
 			.post(RPC_URL)
 			.json(&json!({
-				"id": 1,
+				"id": 2,
 				"jsonrpc": "2.0",
 				"method": "identity_getUserInfoByUsername",
 				"params": {
@@ -85,7 +85,7 @@ async fn accounts_from_backup_exists_on_genesis() -> Result<(), ()> {
 		let response = client
 			.post(RPC_URL)
 			.json(&json!({
-				"id": 1,
+				"id": 3,
 				"jsonrpc": "2.0",
 				"method": "identity_getUserInfoByUsername",
 				"params": {
@@ -123,7 +123,7 @@ async fn accounts_from_backup_exists_on_genesis() -> Result<(), ()> {
 		let response = client
 			.post(RPC_URL)
 			.json(&json!({
-				"id": 1,
+				"id": 4,
 				"jsonrpc": "2.0",
 				"method": "identity_getUserInfoByUsername",
 				"params": {
