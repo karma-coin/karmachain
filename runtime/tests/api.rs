@@ -98,6 +98,82 @@ mod identity {
 			assert_eq!(info.phone_number_hash, bob_phone_number_hash);
 		});
 	}
+
+	#[test]
+	fn get_identity_by_name_user_case_insansative() {
+		new_test_ext().with_user("Bob", "11111111111").execute_with(|| {
+			let bob_account_id = get_account_id_from_seed::<sr25519::Public>("Bob");
+			let bob_username: Username = "bob".try_into().expect("Invalid name length");
+			let bob_phone_number: PhoneNumber =
+				"11111111111".try_into().expect("Invalid phone number length");
+			let bob_phone_number_hash =
+				PhoneNumberHash::from(blake2_512(Vec::from(bob_phone_number).as_slice()));
+
+			let info = Runtime::get_user_info(AccountIdentity::Username(bob_username.clone()))
+				.expect("Fail to get info");
+
+			assert_eq!(info.account_id, bob_account_id);
+			assert_eq!(info.user_name, bob_username);
+			assert_eq!(info.phone_number_hash, bob_phone_number_hash);
+		});
+	}
+
+	#[test]
+	fn get_identity_by_name_trim_start() {
+		new_test_ext().with_user("Bob", "11111111111").execute_with(|| {
+			let bob_account_id = get_account_id_from_seed::<sr25519::Public>("Bob");
+			let bob_username: Username = " \n\tBob".try_into().expect("Invalid name length");
+			let bob_phone_number: PhoneNumber =
+				"11111111111".try_into().expect("Invalid phone number length");
+			let bob_phone_number_hash =
+				PhoneNumberHash::from(blake2_512(Vec::from(bob_phone_number).as_slice()));
+
+			let info = Runtime::get_user_info(AccountIdentity::Username(bob_username.clone()))
+				.expect("Fail to get info");
+
+			assert_eq!(info.account_id, bob_account_id);
+			assert_eq!(info.user_name, bob_username);
+			assert_eq!(info.phone_number_hash, bob_phone_number_hash);
+		});
+	}
+
+	#[test]
+	fn get_identity_by_name_trim_end() {
+		new_test_ext().with_user("Bob", "11111111111").execute_with(|| {
+			let bob_account_id = get_account_id_from_seed::<sr25519::Public>("Bob");
+			let bob_username: Username = "bob \n\t".try_into().expect("Invalid name length");
+			let bob_phone_number: PhoneNumber =
+				"11111111111".try_into().expect("Invalid phone number length");
+			let bob_phone_number_hash =
+				PhoneNumberHash::from(blake2_512(Vec::from(bob_phone_number).as_slice()));
+
+			let info = Runtime::get_user_info(AccountIdentity::Username(bob_username.clone()))
+				.expect("Fail to get info");
+
+			assert_eq!(info.account_id, bob_account_id);
+			assert_eq!(info.user_name, bob_username);
+			assert_eq!(info.phone_number_hash, bob_phone_number_hash);
+		});
+	}
+
+	#[test]
+	fn get_identity_by_name_trim() {
+		new_test_ext().with_user("Bob", "11111111111").execute_with(|| {
+			let bob_account_id = get_account_id_from_seed::<sr25519::Public>("Bob");
+			let bob_username: Username = " \n\tBob \n\t".try_into().expect("Invalid name length");
+			let bob_phone_number: PhoneNumber =
+				"11111111111".try_into().expect("Invalid phone number length");
+			let bob_phone_number_hash =
+				PhoneNumberHash::from(blake2_512(Vec::from(bob_phone_number).as_slice()));
+
+			let info = Runtime::get_user_info(AccountIdentity::Username(bob_username.clone()))
+				.expect("Fail to get info");
+
+			assert_eq!(info.account_id, bob_account_id);
+			assert_eq!(info.user_name, bob_username);
+			assert_eq!(info.phone_number_hash, bob_phone_number_hash);
+		});
+	}
 }
 
 /// Tests API that fetch list of users by params
