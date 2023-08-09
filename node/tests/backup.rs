@@ -144,7 +144,7 @@ async fn accounts_from_backup_exists_on_genesis() -> Result<(), ()> {
 		let response = client
 			.post(RPC_URL)
 			.json(&json!({
-				"id": 1,
+				"id": 5,
 				"jsonrpc": "2.0",
 				"method": "state_getStorage",
 				"params": {
@@ -157,7 +157,6 @@ async fn accounts_from_backup_exists_on_genesis() -> Result<(), ()> {
 			.json::<RpcResponse<String>>()
 			.await
 			.expect("Fail to parse response");
-
 		let encoded_account_data = hex::decode(response.result.unwrap().trim_start_matches("0x"))
 			.expect("Failed to decode hex data");
 		let account_data =
@@ -165,8 +164,48 @@ async fn accounts_from_backup_exists_on_genesis() -> Result<(), ()> {
 				&mut encoded_account_data.as_slice(),
 			)
 			.expect("Failed to decode account data");
-
 		assert_eq!(account_data.data.free, 79600001741206);
+
+		// Check account with same nickname process properly
+		let response = client
+			.post(RPC_URL)
+			.json(&json!({
+				"id": 6,
+				"jsonrpc": "2.0",
+				"method": "identity_getUserInfoByUsername",
+				"params": {
+					"username": "samename"
+				}
+			}))
+			.send()
+			.await
+			.expect("Fail to send request")
+			.json::<RpcResponse<UserInfo<AccountId>>>()
+			.await
+			.expect("Fail to parse response");
+		assert!(response.result.is_some());
+		let user_info = response.result.unwrap();
+		assert_eq!(user_info.balance, 9998000);
+
+		let response = client
+			.post(RPC_URL)
+			.json(&json!({
+				"id": 7,
+				"jsonrpc": "2.0",
+				"method": "identity_getUserInfoByUsername",
+				"params": {
+					"username": "samename_0"
+				}
+			}))
+			.send()
+			.await
+			.expect("Fail to send request")
+			.json::<RpcResponse<UserInfo<AccountId>>>()
+			.await
+			.expect("Fail to parse response");
+		assert!(response.result.is_some());
+		let user_info = response.result.unwrap();
+		assert_eq!(user_info.balance, 9999000);
 
 		Ok(())
 	})
