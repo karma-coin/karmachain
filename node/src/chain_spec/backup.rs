@@ -41,18 +41,27 @@ impl BackupGenesisConfig {
 			users.iter().map(|info| (info.account_id.data.into(), info.balance)).collect();
 
 		// Read identities
-		let identities = users
-			.iter()
-			.cloned()
-			.map(|info| {
-				let account_id = info.account_id.data.into();
-				let username = info.user_name.try_into().unwrap();
-				let phone_number_hash =
-					blake2_512(String::from(info.mobile_number.unwrap()).as_bytes()).into();
+		let mut identities = vec![];
+		for info in users.iter().cloned() {
+			let account_id = info.account_id.data.into();
+			// Safety: `mobile_number` is not `None` because of `filter` above
+			let phone_number = info.mobile_number.unwrap();
+			let phone_number_hash = blake2_512(String::from(phone_number).as_bytes()).into();
 
-				(account_id, username, phone_number_hash)
-			})
-			.collect();
+			// Check that username is unique
+			let mut index = 0;
+			let mut username = info.user_name;
+			while identities.iter().any(|(_, u, _)| *u == username) {
+				if index != 0 {
+					username = username[..username.len() - 2].to_string();
+				}
+				username = format!("{username}_{index}");
+				index += 1;
+			}
+			let username = username.try_into().map_err(|_| "Invalid username format")?;
+
+			identities.push((account_id, username, phone_number_hash));
+		}
 
 		// Read community membership
 		let community_membership = users

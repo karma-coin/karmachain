@@ -14,7 +14,7 @@ use sp_common::{
 	hooks::Hooks,
 	identity::{AccountIdentity, IdentityInfo},
 	traits::IdentityProvider,
-	BoundedString,
+	username::Username as Name,
 };
 use sp_rpc::VerificationEvidence;
 use sp_runtime::traits::{AccountIdConversion, IdentifyAccount, Verify};
@@ -554,7 +554,7 @@ impl<T: Config> Pallet<T> {
 impl<T, UsernameLimit> Pallet<T>
 where
 	UsernameLimit: Get<u32> + 'static,
-	T: Config<Username = BoundedString<UsernameLimit>>,
+	T: Config<Username = Name<UsernameLimit>>,
 {
 	/// Search for registered user who's username start with given `prefix`, case insensitive
 	pub fn get_contacts(
@@ -562,20 +562,10 @@ where
 		from_index: Option<u64>,
 		limit: Option<u64>,
 	) -> Vec<(T::AccountId, IdentityStore<T::Username, T::PhoneNumberHash, T::Moment>)> {
-		// Convert prefix to lower case
-		let prefix_bytes =
-			prefix.0.as_slice().iter().map(|b| b.to_ascii_lowercase()).collect::<Vec<_>>();
-
 		IdentityOf::<T>::iter()
 			.filter(|(_key, value)| {
-				let value = value
-					.username
-					.0
-					.as_slice()
-					.iter()
-					.map(|b| b.to_ascii_lowercase())
-					.collect::<Vec<_>>();
-				value.as_slice().starts_with(prefix_bytes.as_slice())
+				// Value is already in lowercase
+				value.username.as_slice().starts_with(prefix.as_slice())
 			})
 			.skip(from_index.unwrap_or(0) as usize)
 			.take(limit.unwrap_or(u64::MAX) as usize)

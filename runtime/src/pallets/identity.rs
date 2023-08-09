@@ -1,6 +1,6 @@
 use super::treasury::TreasuryPalletId;
 use crate::*;
-use sp_common::BoundedString;
+use sp_common::{username::Username as Name, BoundedString};
 
 parameter_types! {
 	pub const NameLimit: u32 = 40;
@@ -8,7 +8,7 @@ parameter_types! {
 	pub const MaxPhoneVerifiers: u32 = 5;
 }
 
-pub type Username = BoundedString<NameLimit>;
+pub type Username = Name<NameLimit>;
 pub type PhoneNumber = BoundedString<PhoneNumberLimit>;
 pub type PhoneNumberHash = sp_core::H512;
 

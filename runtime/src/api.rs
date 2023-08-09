@@ -3,7 +3,7 @@ use codec::{Decode, Encode};
 use frame_system::{EventRecord, Phase};
 use pallet_identity::types::VerificationResult as IdentityVerificationResult;
 use pallet_transaction_payment_rpc_runtime_api::{FeeDetails, RuntimeDispatchInfo};
-use sp_common::{types::CommunityId, BoundedString};
+use sp_common::types::CommunityId;
 use sp_rpc::{
 	BlockchainStats, CharTrait, CommunityMembership, Contact, GenesisData, PhoneVerifier,
 	SignedTransaction, SignedTransactionWithStatus, TraitScore, TransactionStatus, UserInfo,
@@ -418,7 +418,7 @@ impl_runtime_apis! {
 		}
 
 		fn get_contacts(
-			prefix: BoundedString<NameLimit>,
+			prefix: Username,
 			community_id: Option<CommunityId>,
 			from_index: Option<u64>,
 			limit: Option<u64>,

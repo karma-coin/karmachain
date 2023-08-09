@@ -4,6 +4,7 @@ pub mod hooks;
 pub mod identity;
 pub mod traits;
 pub mod types;
+pub mod username;
 
 use codec::{Decode, Encode, EncodeLike, MaxEncodedLen};
 use frame_support::{
@@ -23,7 +24,7 @@ use serde::{de, ser, Deserialize, Deserializer, Serialize, Serializer};
 #[derive(
 	DebugNoBound, CloneNoBound, EqNoBound, PartialEqNoBound, MaxEncodedLen, Encode, DefaultNoBound,
 )]
-pub struct BoundedString<MaxLength: Get<u32>>(pub BoundedVec<u8, MaxLength>);
+pub struct BoundedString<MaxLength: Get<u32>>(BoundedVec<u8, MaxLength>);
 
 impl<MaxLength: Get<u32>> TryFrom<Vec<u8>> for BoundedString<MaxLength> {
 	type Error = &'static str;
@@ -38,18 +39,6 @@ impl<MaxLength: Get<u32>> TryFrom<Vec<u8>> for BoundedString<MaxLength> {
 impl<MaxLength: Get<u32>> From<BoundedString<MaxLength>> for Vec<u8> {
 	fn from(value: BoundedString<MaxLength>) -> Self {
 		value.0.into_inner()
-	}
-}
-
-impl<MaxLength: Get<u32>> From<BoundedVec<u8, MaxLength>> for BoundedString<MaxLength> {
-	fn from(value: BoundedVec<u8, MaxLength>) -> Self {
-		Self(value)
-	}
-}
-
-impl<MaxLength: Get<u32>> From<BoundedString<MaxLength>> for BoundedVec<u8, MaxLength> {
-	fn from(value: BoundedString<MaxLength>) -> Self {
-		value.0
 	}
 }
 
@@ -157,5 +146,11 @@ impl<MaxLength: Get<u32>> PartialOrd<BoundedString<MaxLength>> for String {
 impl<MaxLength: Get<u32>> Ord for BoundedString<MaxLength> {
 	fn cmp(&self, other: &Self) -> sp_std::cmp::Ordering {
 		self.0.cmp(&other.0)
+	}
+}
+
+impl<MaxLength: Get<u32>> BoundedString<MaxLength> {
+	pub fn as_slice(&self) -> &[u8] {
+		self.0.as_slice()
 	}
 }

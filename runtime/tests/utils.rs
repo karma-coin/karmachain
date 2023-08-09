@@ -9,7 +9,6 @@ use pallet_appreciation::{Community, CommunityRole};
 use sp_common::{
 	identity::AccountIdentity,
 	types::{CharTraitId, CommunityId},
-	BoundedString,
 };
 use sp_core::{hashing::blake2_512, sr25519, Pair, Public};
 use sp_rpc::types::VerificationEvidence;
@@ -97,9 +96,9 @@ impl TestUtils for sp_io::TestExternalities {
 	fn with_user(&mut self, username: &str, phone_number: &str) -> &mut Self {
 		self.execute_with(|| {
 			let account_id = get_account_id_from_seed::<sr25519::Public>(username);
-			let username = BoundedString::try_from(username).expect("Invalid name length");
+			let username: Username = username.try_into().expect("Invalid name length");
 			let phone_number: PhoneNumber =
-				BoundedString::try_from(phone_number).expect("Invalid phone number length");
+				PhoneNumber::try_from(phone_number).expect("Invalid phone number length");
 
 			let phone_number_hash =
 				PhoneNumberHash::from(blake2_512(Vec::from(phone_number).as_slice()));
