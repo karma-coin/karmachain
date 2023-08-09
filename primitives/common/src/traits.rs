@@ -42,7 +42,3 @@ where
 pub trait ScoreProvider<AccountId> {
 	fn score_of(account_id: &AccountId) -> Score;
 }
-
-pub trait MaybeLowercase {
-	fn to_lowercase(self) -> Self;
-}
