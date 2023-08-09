@@ -23,6 +23,7 @@ async fn accounts_from_backup_exists_on_genesis() -> Result<(), ()> {
 	let backup_file_path = test_file!("backup.json");
 	// Set chain type and backup file path into config
 	cli.run.shared_params.chain = Some(format!("{chain_type}:{backup_file_path}"));
+	cli.run.tmp = true;
 
 	create_runner(cli, async move {
 		let client = reqwest::Client::new();

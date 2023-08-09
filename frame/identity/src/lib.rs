@@ -13,7 +13,7 @@ pub use pallet::*;
 use sp_common::{
 	hooks::Hooks,
 	identity::{AccountIdentity, IdentityInfo},
-	traits::{IdentityProvider, MaybeLowercase},
+	traits::{IdentityProvider, MaybeNormalized},
 	BoundedString,
 };
 use sp_rpc::VerificationEvidence;
@@ -35,7 +35,7 @@ pub mod pallet {
 		/// The overarching event type.
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 		/// Username type
-		type Username: MaybeLowercase
+		type Username: MaybeNormalized
 			+ Parameter
 			+ Member
 			+ MaybeSerializeDeserialize
@@ -101,7 +101,7 @@ pub mod pallet {
 
 			for (account_id, username, phone_number_hash) in &self.identities {
 				// Cast username to lowercase
-				let username = username.clone().to_lowercase();
+				let username = username.clone().normalize();
 
 				IdentityOf::<T>::insert(
 					&account_id,
@@ -216,7 +216,7 @@ pub mod pallet {
 			ensure!(who == account_id, Error::<T>::AccountIdMismatch);
 
 			// Cast username to lowercase
-			let username = username.to_lowercase();
+			let username = username.normalize();
 
 			let verifier_account_id = verifier_public_key.clone().into();
 			// Check verification
@@ -272,7 +272,7 @@ pub mod pallet {
 
 			if let Some(username) = username.clone() {
 				// Cast username to lowercase
-				let username = username.to_lowercase();
+				let username = username.normalize();
 
 				ensure!(identity.username != username, Error::<T>::InvalidArguments);
 				// Check username for uniqueness
@@ -380,7 +380,7 @@ impl<T: Config> IdentityProvider<T::AccountId, T::Username, T::PhoneNumberHash> 
 			AccountIdentity::AccountId(account_id) => IdentityOf::<T>::get(account_id).is_some(),
 			AccountIdentity::PhoneNumberHash(phone_number_hash) =>
 				PhoneNumberFor::<T>::get(phone_number_hash).is_some(),
-			AccountIdentity::Username(username) => UsernameFor::<T>::get(username).is_some(),
+			AccountIdentity::Username(username) => UsernameFor::<T>::get(username.clone().normalize()).is_some(),
 		}
 	}
 
@@ -397,7 +397,7 @@ impl<T: Config> IdentityProvider<T::AccountId, T::Username, T::PhoneNumberHash> 
 	fn identity_by_name(
 		username: &T::Username,
 	) -> Option<IdentityInfo<T::AccountId, T::Username, T::PhoneNumberHash>> {
-		<UsernameFor<T>>::get(username.clone().to_lowercase())
+		<UsernameFor<T>>::get(username.clone().normalize())
 			.as_ref()
 			.and_then(Self::identity_by_id)
 	}
@@ -430,7 +430,7 @@ impl<T: Config> Pallet<T> {
 		phone_number_hash: &T::PhoneNumberHash,
 	) -> VerificationResult {
 		// Cast username to lowercase
-		let username = username.clone().to_lowercase();
+		let username = username.clone().normalize();
 
 		// If such phone number hash exists migrate those account
 		// balance, trait score, etc to this new account
@@ -582,13 +582,13 @@ where
 		from_index: Option<u64>,
 		limit: Option<u64>,
 	) -> Vec<(T::AccountId, IdentityStore<T::Username, T::PhoneNumberHash, T::Moment>)> {
-		// Convert prefix to lower case
-		let prefix_bytes = prefix.to_lowercase();
+		// Convert prefix to lower case and trim
+		let prefix = prefix.normalize();
 
 		IdentityOf::<T>::iter()
 			.filter(|(_key, value)| {
 				// Value is already in lowercase
-				value.username.as_slice().starts_with(prefix_bytes.as_slice())
+				value.username.as_slice().starts_with(prefix.as_slice())
 			})
 			.skip(from_index.unwrap_or(0) as usize)
 			.take(limit.unwrap_or(u64::MAX) as usize)
