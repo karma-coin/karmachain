@@ -13,8 +13,8 @@ pub use pallet::*;
 use sp_common::{
 	hooks::Hooks,
 	identity::{AccountIdentity, IdentityInfo},
-	traits::IdentityProvider,
-	username::Username as Name,
+	traits::{IdentityProvider, MaybeLowercase},
+	BoundedString,
 };
 use sp_rpc::VerificationEvidence;
 use sp_runtime::traits::{AccountIdConversion, IdentifyAccount, Verify};
@@ -35,7 +35,13 @@ pub mod pallet {
 		/// The overarching event type.
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 		/// Username type
-		type Username: Parameter + Member + MaybeSerializeDeserialize + Debug + Ord + MaxEncodedLen;
+		type Username: MaybeLowercase
+			+ Parameter
+			+ Member
+			+ MaybeSerializeDeserialize
+			+ Debug
+			+ Ord
+			+ MaxEncodedLen;
 		/// Phone number hash type
 		type PhoneNumberHash: Parameter
 			+ Member
@@ -94,6 +100,9 @@ pub mod pallet {
 			PhoneVerifiers::<T>::put(bounded_phone_verifiers);
 
 			for (account_id, username, phone_number_hash) in &self.identities {
+				// Cast username to lowercase
+				let username = username.clone().to_lowercase();
+
 				IdentityOf::<T>::insert(
 					&account_id,
 					IdentityStore {
@@ -206,6 +215,9 @@ pub mod pallet {
 			let who = ensure_signed(origin)?;
 			ensure!(who == account_id, Error::<T>::AccountIdMismatch);
 
+			// Cast username to lowercase
+			let username = username.to_lowercase();
+
 			let verifier_account_id = verifier_public_key.clone().into();
 			// Check verification
 			ensure!(
@@ -259,6 +271,9 @@ pub mod pallet {
 			let mut identity = IdentityOf::<T>::get(&who).unwrap();
 
 			if let Some(username) = username.clone() {
+				// Cast username to lowercase
+				let username = username.to_lowercase();
+
 				ensure!(identity.username != username, Error::<T>::InvalidArguments);
 				// Check username for uniqueness
 				ensure!(!UsernameFor::<T>::contains_key(&username), Error::<T>::UserNameTaken);
@@ -382,7 +397,9 @@ impl<T: Config> IdentityProvider<T::AccountId, T::Username, T::PhoneNumberHash> 
 	fn identity_by_name(
 		username: &T::Username,
 	) -> Option<IdentityInfo<T::AccountId, T::Username, T::PhoneNumberHash>> {
-		<UsernameFor<T>>::get(username).as_ref().and_then(Self::identity_by_id)
+		<UsernameFor<T>>::get(username.clone().to_lowercase())
+			.as_ref()
+			.and_then(Self::identity_by_id)
 	}
 
 	fn identity_by_number(
@@ -412,6 +429,9 @@ impl<T: Config> Pallet<T> {
 		username: &T::Username,
 		phone_number_hash: &T::PhoneNumberHash,
 	) -> VerificationResult {
+		// Cast username to lowercase
+		let username = username.clone().to_lowercase();
+
 		// If such phone number hash exists migrate those account
 		// balance, trait score, etc to this new account
 		if PhoneNumberFor::<T>::contains_key(phone_number_hash) {
@@ -419,7 +439,7 @@ impl<T: Config> Pallet<T> {
 		}
 
 		// User update his phone number
-		if UsernameFor::<T>::get(username).as_ref() == Some(&account_id) {
+		if UsernameFor::<T>::get(&username).as_ref() == Some(&account_id) {
 			return VerificationResult::Valid
 		}
 
@@ -429,7 +449,7 @@ impl<T: Config> Pallet<T> {
 		}
 
 		// Such `Username` registered by other account
-		if UsernameFor::<T>::contains_key(username) {
+		if UsernameFor::<T>::contains_key(&username) {
 			return VerificationResult::UsernameExists
 		}
 
@@ -554,7 +574,7 @@ impl<T: Config> Pallet<T> {
 impl<T, UsernameLimit> Pallet<T>
 where
 	UsernameLimit: Get<u32> + 'static,
-	T: Config<Username = Name<UsernameLimit>>,
+	T: Config<Username = BoundedString<UsernameLimit>>,
 {
 	/// Search for registered user who's username start with given `prefix`, case insensitive
 	pub fn get_contacts(
@@ -562,10 +582,13 @@ where
 		from_index: Option<u64>,
 		limit: Option<u64>,
 	) -> Vec<(T::AccountId, IdentityStore<T::Username, T::PhoneNumberHash, T::Moment>)> {
+		// Convert prefix to lower case
+		let prefix_bytes = prefix.to_lowercase();
+
 		IdentityOf::<T>::iter()
 			.filter(|(_key, value)| {
 				// Value is already in lowercase
-				value.username.as_slice().starts_with(prefix.as_slice())
+				value.username.as_slice().starts_with(prefix_bytes.as_slice())
 			})
 			.skip(from_index.unwrap_or(0) as usize)
 			.take(limit.unwrap_or(u64::MAX) as usize)

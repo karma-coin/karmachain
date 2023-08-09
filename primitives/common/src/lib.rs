@@ -4,8 +4,8 @@ pub mod hooks;
 pub mod identity;
 pub mod traits;
 pub mod types;
-pub mod username;
 
+use crate::traits::MaybeLowercase;
 use codec::{Decode, Encode, EncodeLike, MaxEncodedLen};
 use frame_support::{
 	traits::Get, BoundedVec, CloneNoBound, DebugNoBound, DefaultNoBound, EqNoBound,
@@ -21,6 +21,7 @@ use scale_info::{
 #[cfg(feature = "std")]
 use serde::{de, ser, Deserialize, Deserializer, Serialize, Serializer};
 
+/// Always trimed
 #[derive(
 	DebugNoBound, CloneNoBound, EqNoBound, PartialEqNoBound, MaxEncodedLen, Encode, DefaultNoBound,
 )]
@@ -30,7 +31,10 @@ impl<MaxLength: Get<u32>> TryFrom<Vec<u8>> for BoundedString<MaxLength> {
 	type Error = &'static str;
 
 	fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
-		BoundedVec::try_from(value)
+		let binding = String::from_utf8(value).map_err(|_| "Invalid UTF-8 string")?;
+		let string = binding.trim();
+
+		BoundedVec::try_from(string.as_bytes().to_vec())
 			.map(|v| BoundedString(v))
 			.map_err(|_| "Out of bound. The length is too long.")
 	}
@@ -39,6 +43,12 @@ impl<MaxLength: Get<u32>> TryFrom<Vec<u8>> for BoundedString<MaxLength> {
 impl<MaxLength: Get<u32>> From<BoundedString<MaxLength>> for Vec<u8> {
 	fn from(value: BoundedString<MaxLength>) -> Self {
 		value.0.into_inner()
+	}
+}
+
+impl<MaxLength: Get<u32>> From<BoundedString<MaxLength>> for BoundedVec<u8, MaxLength> {
+	fn from(value: BoundedString<MaxLength>) -> Self {
+		value.0
 	}
 }
 
@@ -146,6 +156,17 @@ impl<MaxLength: Get<u32>> PartialOrd<BoundedString<MaxLength>> for String {
 impl<MaxLength: Get<u32>> Ord for BoundedString<MaxLength> {
 	fn cmp(&self, other: &Self) -> sp_std::cmp::Ordering {
 		self.0.cmp(&other.0)
+	}
+}
+
+impl<MaxLength: Get<u32>> MaybeLowercase for BoundedString<MaxLength> {
+	fn to_lowercase(self) -> Self {
+		self.0
+			.into_iter()
+			.map(|b| b.to_ascii_lowercase())
+			.collect::<Vec<_>>()
+			.try_into()
+			.unwrap()
 	}
 }
 

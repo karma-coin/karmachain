@@ -6,9 +6,9 @@ mod utils;
 /// `get_identity_by_account`, `get_identity_by_name`, `get_identity_by_number`
 mod identity {
 	use crate::utils::{get_account_id_from_seed, new_test_ext, TestUtils};
-	use karmachain_node_runtime::{PhoneNumber, PhoneNumberHash, Runtime, Username};
+	use karmachain_node_runtime::{NameLimit, PhoneNumber, PhoneNumberHash, Runtime};
 	use runtime_api::identity::runtime_decl_for_identity_api::IdentityApiV1;
-	use sp_common::identity::AccountIdentity;
+	use sp_common::{identity::AccountIdentity, traits::MaybeLowercase, BoundedString};
 	use sp_core::{hashing::blake2_512, sr25519};
 
 	#[test]
@@ -45,7 +45,8 @@ mod identity {
 	fn get_identity_by_account_user_happy_flow() {
 		new_test_ext().with_user("Bob", "11111111111").execute_with(|| {
 			let bob_account_id = get_account_id_from_seed::<sr25519::Public>("Bob");
-			let bob_username: Username = "Bob".try_into().expect("Invalid name length");
+			let bob_username: BoundedString<NameLimit> =
+				"Bob".try_into().expect("Invalid name length");
 			let bob_phone_number: PhoneNumber =
 				"11111111111".try_into().expect("Invalid phone number length");
 			let bob_phone_number_hash =
@@ -55,7 +56,7 @@ mod identity {
 				.expect("Fail to get info");
 
 			assert_eq!(info.account_id, bob_account_id);
-			assert_eq!(info.user_name, bob_username);
+			assert_eq!(info.user_name, bob_username.to_lowercase());
 			assert_eq!(info.phone_number_hash, bob_phone_number_hash);
 		});
 	}
@@ -64,7 +65,8 @@ mod identity {
 	fn get_identity_by_name_user_happy_flow() {
 		new_test_ext().with_user("Bob", "11111111111").execute_with(|| {
 			let bob_account_id = get_account_id_from_seed::<sr25519::Public>("Bob");
-			let bob_username: Username = "Bob".try_into().expect("Invalid name length");
+			let bob_username: BoundedString<NameLimit> =
+				"Bob".try_into().expect("Invalid name length");
 			let bob_phone_number: PhoneNumber =
 				"11111111111".try_into().expect("Invalid phone number length");
 			let bob_phone_number_hash =
@@ -74,7 +76,7 @@ mod identity {
 				.expect("Fail to get info");
 
 			assert_eq!(info.account_id, bob_account_id);
-			assert_eq!(info.user_name, bob_username);
+			assert_eq!(info.user_name, bob_username.to_lowercase());
 			assert_eq!(info.phone_number_hash, bob_phone_number_hash);
 		});
 	}
@@ -83,7 +85,8 @@ mod identity {
 	fn get_identity_by_number_user_happy_flow() {
 		new_test_ext().with_user("Bob", "11111111111").execute_with(|| {
 			let bob_account_id = get_account_id_from_seed::<sr25519::Public>("Bob");
-			let bob_username: Username = "Bob".try_into().expect("Invalid name length");
+			let bob_username: BoundedString<NameLimit> =
+				"Bob".try_into().expect("Invalid name length");
 			let bob_phone_number: PhoneNumber =
 				"11111111111".try_into().expect("Invalid phone number length");
 			let bob_phone_number_hash =
@@ -94,7 +97,7 @@ mod identity {
 					.expect("Fail to get info");
 
 			assert_eq!(info.account_id, bob_account_id);
-			assert_eq!(info.user_name, bob_username);
+			assert_eq!(info.user_name, bob_username.to_lowercase());
 			assert_eq!(info.phone_number_hash, bob_phone_number_hash);
 		});
 	}
