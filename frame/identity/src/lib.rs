@@ -567,8 +567,6 @@ where
 			prefix.0.as_slice().iter().map(|b| b.to_ascii_lowercase()).collect::<Vec<_>>();
 
 		IdentityOf::<T>::iter()
-			.skip(from_index.unwrap_or(0) as usize)
-			.take(limit.unwrap_or(u64::MAX) as usize)
 			.filter(|(_key, value)| {
 				let value = value
 					.username
@@ -579,6 +577,8 @@ where
 					.collect::<Vec<_>>();
 				value.as_slice().starts_with(prefix_bytes.as_slice())
 			})
+			.skip(from_index.unwrap_or(0) as usize)
+			.take(limit.unwrap_or(u64::MAX) as usize)
 			.collect()
 	}
 }
