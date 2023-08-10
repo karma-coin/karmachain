@@ -4,8 +4,8 @@ pub mod hooks;
 pub mod identity;
 pub mod traits;
 pub mod types;
-pub mod username;
 
+use crate::traits::MaybeNormalized;
 use codec::{Decode, Encode, EncodeLike, MaxEncodedLen};
 use frame_support::{
 	traits::Get, BoundedVec, CloneNoBound, DebugNoBound, DefaultNoBound, EqNoBound,
@@ -39,6 +39,12 @@ impl<MaxLength: Get<u32>> TryFrom<Vec<u8>> for BoundedString<MaxLength> {
 impl<MaxLength: Get<u32>> From<BoundedString<MaxLength>> for Vec<u8> {
 	fn from(value: BoundedString<MaxLength>) -> Self {
 		value.0.into_inner()
+	}
+}
+
+impl<MaxLength: Get<u32>> From<BoundedString<MaxLength>> for BoundedVec<u8, MaxLength> {
+	fn from(value: BoundedString<MaxLength>) -> Self {
+		value.0
 	}
 }
 
@@ -146,6 +152,15 @@ impl<MaxLength: Get<u32>> PartialOrd<BoundedString<MaxLength>> for String {
 impl<MaxLength: Get<u32>> Ord for BoundedString<MaxLength> {
 	fn cmp(&self, other: &Self) -> sp_std::cmp::Ordering {
 		self.0.cmp(&other.0)
+	}
+}
+
+impl<MaxLength: Get<u32>> MaybeNormalized for BoundedString<MaxLength> {
+	fn normalize(self) -> Self {
+		let normalized = String::from_utf8_lossy(&self.0).trim().to_lowercase();
+
+		// Safety: length stays the same or less
+		normalized.try_into().unwrap()
 	}
 }
 

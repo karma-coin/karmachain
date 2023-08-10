@@ -42,3 +42,7 @@ where
 pub trait ScoreProvider<AccountId> {
 	fn score_of(account_id: &AccountId) -> Score;
 }
+
+pub trait MaybeNormalized {
+	fn normalize(self) -> Self;
+}

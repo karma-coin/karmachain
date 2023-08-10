@@ -1,7 +1,10 @@
 use karmachain_node_runtime::{AccountId, Balance, PhoneNumberHash, Username};
 use pallet_appreciation::CommunityRole;
 use scale_info::prelude::string::String;
-use sp_common::types::{CharTraitId, CommunityId, Score};
+use sp_common::{
+	types::{CharTraitId, CommunityId, Score},
+	traits::MaybeNormalized,
+};
 use sp_core::hashing::blake2_512;
 
 /// Contains well prepared genesis configuration for the chain based on backup file
@@ -48,9 +51,9 @@ impl BackupGenesisConfig {
 			let phone_number = info.mobile_number.unwrap();
 			let phone_number_hash = blake2_512(String::from(phone_number).as_bytes()).into();
 
-			// Check that username is unique
+			// Make username unique
 			let mut index = 0;
-			let mut username = info.user_name;
+			let mut username = info.user_name.trim().to_lowercase().to_string();
 			while identities.iter().any(|(_, u, _)| *u == username) {
 				if index != 0 {
 					username = username[..username.len() - 2].to_string();
@@ -58,7 +61,8 @@ impl BackupGenesisConfig {
 				username = format!("{username}_{index}");
 				index += 1;
 			}
-			let username = username.try_into().map_err(|_| "Invalid username format")?;
+			let username =
+				Username::try_from(username).map_err(|_| "Invalid username format")?.normalize();
 
 			identities.push((account_id, username, phone_number_hash));
 		}

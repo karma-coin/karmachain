@@ -16,6 +16,7 @@ use sp_keystore::Keystore;
 use sp_rpc::{ByPassToken, VerificationEvidence, VerificationResponse, VerificationResult};
 use sp_runtime::{traits::Block as BlockT, KeyTypeId};
 use std::sync::Arc;
+use sp_common::traits::MaybeNormalized;
 
 const KEY_TYPE: KeyTypeId = KeyTypeId(*b"Veri");
 
@@ -46,7 +47,7 @@ where
 	Block: BlockT + Send + Sync + 'static,
 	AccountId:
 		Codec + Clone + Send + Sync + 'static + From<sp_core::sr25519::Public> + Into<AccountId32>,
-	Username: Codec + Clone + Send + Sync + 'static,
+	Username: MaybeNormalized + Codec + Clone + Send + Sync + 'static,
 	PhoneNumber: Codec + Clone + Send + Sync + 'static + TryInto<String>,
 	<PhoneNumber as TryInto<String>>::Error: std::fmt::Display,
 	Vec<u8>: From<PhoneNumber>,
@@ -64,6 +65,7 @@ where
 		let api = self.client.runtime_api();
 		let at = self.client.info().best_hash;
 
+		let username = username.normalize();
 		let phone_number_hash =
 			PhoneNumberHash::from(blake2_512(Vec::from(phone_number.clone()).as_slice()));
 
