@@ -380,7 +380,8 @@ impl<T: Config> IdentityProvider<T::AccountId, T::Username, T::PhoneNumberHash> 
 			AccountIdentity::AccountId(account_id) => IdentityOf::<T>::get(account_id).is_some(),
 			AccountIdentity::PhoneNumberHash(phone_number_hash) =>
 				PhoneNumberFor::<T>::get(phone_number_hash).is_some(),
-			AccountIdentity::Username(username) => UsernameFor::<T>::get(username.clone().normalize()).is_some(),
+			AccountIdentity::Username(username) =>
+				UsernameFor::<T>::get(username.clone().normalize()).is_some(),
 		}
 	}
 
