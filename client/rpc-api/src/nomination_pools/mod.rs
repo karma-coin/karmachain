@@ -40,5 +40,9 @@ pub trait NominationPoolsApi<BlockHash, AccountId, Balance, BlockNumber> {
 	) -> RpcResult<NominationPoolsConfiguration<Balance>>;
 
 	#[method(name = "nominationPools_memberOf")]
-	fn member_of(&self, account_id: AccountId, at: Option<BlockHash>) -> RpcResult<Option<PoolMember>>;
+	fn member_of(
+		&self,
+		account_id: AccountId,
+		at: Option<BlockHash>,
+	) -> RpcResult<Option<PoolMember<Balance>>>;
 }

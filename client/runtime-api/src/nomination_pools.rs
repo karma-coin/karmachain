@@ -27,6 +27,6 @@ sp_api::decl_runtime_apis! {
 		fn get_configuration() -> NominationPoolsConfiguration<Balance>;
 
 		/// Returns the pool id of the pool that the account is a member of
-		fn member_of(account_id: AccountId) -> Option<PoolMember>;
+		fn member_of(account_id: AccountId) -> Option<PoolMember<Balance>>;
 	}
 }

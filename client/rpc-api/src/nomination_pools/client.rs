@@ -101,7 +101,7 @@ where
 		&self,
 		account_id: AccountId,
 		at: Option<<Block as BlockT>::Hash>,
-	) -> RpcResult<Option<PoolMember>> {
+	) -> RpcResult<Option<PoolMember<Balance>>> {
 		let api = self.client.runtime_api();
 		let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
