@@ -8889,6 +8889,7 @@ dependencies = [
 name = "sp-rpc"
 version = "0.2.0"
 dependencies = [
+ "pallet-nomination-pools",
  "parity-scale-codec",
  "scale-info",
  "serde",

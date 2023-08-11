@@ -1,8 +1,11 @@
 use codec::{Decode, Encode};
+use pallet_nomination_pools::BalanceOf;
 use scale_info::TypeInfo;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_runtime::Perbill;
+
+pub type PoolId = u32;
 
 /// A pool's possible states.
 #[derive(Encode, Decode, TypeInfo, PartialEq, Clone, Copy)]
@@ -17,6 +20,16 @@ pub enum PoolState {
 	/// All members can now be permissionlessly unbonded, and the pool can never go back to any
 	/// other state other than being dissolved.
 	Destroying,
+}
+
+impl From<pallet_nomination_pools::PoolState> for PoolState {
+	fn from(pool_state: pallet_nomination_pools::PoolState) -> Self {
+		match pool_state {
+			pallet_nomination_pools::PoolState::Open => Self::Open,
+			pallet_nomination_pools::PoolState::Blocked => Self::Blocked,
+			pallet_nomination_pools::PoolState::Destroying => Self::Destroying,
+		}
+	}
 }
 
 /// Pool administration roles.
@@ -39,6 +52,17 @@ pub struct PoolRoles<AccountId> {
 	pub bouncer: Option<AccountId>,
 }
 
+impl<AccountId> From<pallet_nomination_pools::PoolRoles<AccountId>> for PoolRoles<AccountId> {
+	fn from(pool_roles: pallet_nomination_pools::PoolRoles<AccountId>) -> Self {
+		Self {
+			depositor: pool_roles.depositor,
+			root: pool_roles.root,
+			nominator: pool_roles.nominator,
+			bouncer: pool_roles.bouncer,
+		}
+	}
+}
+
 /// Pool commission change rate preferences.
 ///
 /// The pool root is able to set a commission change rate for their pool. A commission change rate
@@ -53,6 +77,19 @@ pub struct CommissionChangeRate<BlockNumber> {
 	pub max_increase: Perbill,
 	/// How often an update can take place.
 	pub min_delay: BlockNumber,
+}
+
+impl<BlockNumber> From<pallet_nomination_pools::CommissionChangeRate<BlockNumber>>
+	for CommissionChangeRate<BlockNumber>
+{
+	fn from(
+		commission_change_rate: pallet_nomination_pools::CommissionChangeRate<BlockNumber>,
+	) -> Self {
+		Self {
+			max_increase: commission_change_rate.max_increase,
+			min_delay: commission_change_rate.min_delay,
+		}
+	}
 }
 
 /// Pool commission.
@@ -70,8 +107,10 @@ pub struct CommissionChangeRate<BlockNumber> {
 #[derive(Encode, Decode, Default, TypeInfo, PartialEq, Copy, Clone)]
 #[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
 pub struct Commission<AccountId, BlockNumber> {
-	/// Optional commission rate of the pool along with the account commission is paid to.
-	pub current: Option<(Perbill, AccountId)>,
+	/// Optional the account commission is paid to.
+	pub beneficiary: Option<AccountId>,
+	/// Optional commission rate of the pool.
+	pub current: Option<Perbill>,
 	/// Optional maximum commission that can be set by the pool `root`. Once set, this value can
 	/// only be updated to a decreased value.
 	pub max: Option<Perbill>,
@@ -83,10 +122,27 @@ pub struct Commission<AccountId, BlockNumber> {
 	pub throttle_from: Option<BlockNumber>,
 }
 
+impl<T: pallet_nomination_pools::Config> From<pallet_nomination_pools::Commission<T>>
+	for Commission<T::AccountId, T::BlockNumber>
+{
+	fn from(commission: pallet_nomination_pools::Commission<T>) -> Self {
+		let (current, beneficiary) = commission.current.unzip();
+		Self {
+			beneficiary,
+			current,
+			max: commission.max,
+			change_rate: commission.change_rate.map(Into::into),
+			throttle_from: commission.throttle_from,
+		}
+	}
+}
+
 /// Pool permissions and state
 #[derive(Encode, Decode, TypeInfo, PartialEq, Clone)]
 #[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
-pub struct BondedPoolInner<AccountId, Balance, BlockNumber> {
+pub struct BondedPool<AccountId, Balance, BlockNumber> {
+	/// The identifier of the pool.
+	pub id: PoolId,
 	/// The commission rate of the pool.
 	pub commission: Commission<AccountId, BlockNumber>,
 	/// Count of members that belong to the pool.
@@ -97,6 +153,21 @@ pub struct BondedPoolInner<AccountId, Balance, BlockNumber> {
 	pub roles: PoolRoles<AccountId>,
 	/// The current state of the pool.
 	pub state: PoolState,
+}
+
+impl<T: pallet_nomination_pools::Config> From<(u32, pallet_nomination_pools::BondedPoolInner<T>)>
+	for BondedPool<T::AccountId, BalanceOf<T>, T::BlockNumber>
+{
+	fn from((id, pool): (u32, pallet_nomination_pools::BondedPoolInner<T>)) -> Self {
+		Self {
+			id,
+			commission: pool.commission.into(),
+			member_counter: pool.member_counter,
+			points: pool.points,
+			roles: pool.roles.into(),
+			state: pool.state.into(),
+		}
+	}
 }
 
 /// Current configuration of pallet nomination-pools
