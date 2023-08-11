@@ -2,7 +2,7 @@ pub mod client;
 pub mod error;
 
 use jsonrpsee::{core::RpcResult, proc_macros::rpc};
-use sp_rpc::{BondedPool, NominationPoolsConfiguration, PoolId};
+use sp_rpc::{BondedPool, NominationPoolsConfiguration, PoolId, PoolMember};
 
 #[rpc(client, server)]
 pub trait NominationPoolsApi<BlockHash, AccountId, Balance, BlockNumber> {
@@ -40,5 +40,5 @@ pub trait NominationPoolsApi<BlockHash, AccountId, Balance, BlockNumber> {
 	) -> RpcResult<NominationPoolsConfiguration<Balance>>;
 
 	#[method(name = "nominationPools_memberOf")]
-	fn member_of(&self, account_id: AccountId, at: Option<BlockHash>) -> RpcResult<Option<PoolId>>;
+	fn member_of(&self, account_id: AccountId, at: Option<BlockHash>) -> RpcResult<Option<PoolMember>>;
 }

@@ -7,6 +7,25 @@ use sp_runtime::Perbill;
 
 pub type PoolId = u32;
 
+/// A member in a pool.
+#[derive(Encode, Decode, TypeInfo, PartialEq, Clone, Copy)]
+#[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
+pub struct PoolMember<Balance> {
+	/// The identifier of the pool to which `who` belongs.
+	pub pool_id: PoolId,
+	/// The quantity of points this member has in the bonded pool or in a sub pool if
+	/// `Self::unbonding_era` is some.
+	pub points: Balance,
+}
+
+impl<T: pallet_nomination_pools::Config> From<pallet_nomination_pools::PoolMember<T>>
+	for PoolMember<BalanceOf<T>>
+{
+	fn from(pool_member: pallet_nomination_pools::PoolMember<T>) -> Self {
+		Self { pool_id: pool_member.pool_id, points: pool_member.points }
+	}
+}
+
 /// A pool's possible states.
 #[derive(Encode, Decode, TypeInfo, PartialEq, Clone, Copy)]
 #[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]

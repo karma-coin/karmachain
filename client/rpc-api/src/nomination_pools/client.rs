@@ -4,7 +4,7 @@ use jsonrpsee::core::RpcResult;
 use runtime_api::nomination_pools::NominationPoolsApi;
 use sp_api::ProvideRuntimeApi;
 use sp_blockchain::HeaderBackend;
-use sp_rpc::{BondedPool, NominationPoolsConfiguration, PoolId};
+use sp_rpc::{BondedPool, NominationPoolsConfiguration, PoolId, PoolMember};
 use sp_runtime::traits::Block as BlockT;
 use std::sync::Arc;
 
@@ -101,7 +101,7 @@ where
 		&self,
 		account_id: AccountId,
 		at: Option<<Block as BlockT>::Hash>,
-	) -> RpcResult<Option<PoolId>> {
+	) -> RpcResult<Option<PoolMember>> {
 		let api = self.client.runtime_api();
 		let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
