@@ -76,6 +76,7 @@ where
 	>,
 	C::Api:
 		runtime_api::nomination_pools::NominationPoolsApi<Block, AccountId, Balance, BlockNumber>,
+	C::Api: runtime_api::staking::StakingApi<Block, AccountId>,
 	C::Api: runtime_api::transactions::TransactionIndexer<Block, AccountId, PhoneNumberHash>,
 	C::Api: runtime_api::verifier::VerifierApi<Block, AccountId, Username, PhoneNumberHash>,
 	C::Api: BabeApi<Block>,
@@ -88,6 +89,7 @@ where
 		events::{client::EventsProvider, EventsProviderApiServer},
 		identity::{client::Identity, IdentityApiServer},
 		nomination_pools::{client::NominationPools, NominationPoolsApiServer},
+		staking::{client::Staking, StakingApiServer},
 		transactions::{client::TransactionsIndexer, TransactionsIndexerApiServer},
 		verifier::{client::Verifier, VerifierApiServer},
 	};
@@ -120,6 +122,7 @@ where
 	module.merge(EventsProvider::new(client.clone()).into_rpc())?;
 	module.merge(BlocksProvider::new(client.clone()).into_rpc())?;
 	module.merge(NominationPools::new(client.clone()).into_rpc())?;
+	module.merge(Staking::new(client.clone()).into_rpc())?;
 
 	if verifier {
 		// TODO: better way to handle error

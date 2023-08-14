@@ -7,8 +7,9 @@ use pallet_transaction_payment_rpc_runtime_api::{FeeDetails, RuntimeDispatchInfo
 use sp_common::{types::CommunityId, BoundedString};
 use sp_rpc::{
 	BlockchainStats, BondedPool, CharTrait, CommunityMembership, Contact, GenesisData,
-	NominationPoolsConfiguration, PhoneVerifier, PoolMember, SignedTransaction,
-	SignedTransactionWithStatus, TraitScore, TransactionStatus, UserInfo, VerificationResult,
+	NominationPoolsConfiguration, Nominations, PhoneVerifier, PoolMember, SignedTransaction,
+	SignedTransactionWithStatus, TraitScore, TransactionStatus, UserInfo, ValidatorPrefs,
+	VerificationResult,
 };
 use sp_runtime::{generic::SignedBlock, traits::StaticLookup};
 
@@ -508,6 +509,19 @@ impl_runtime_apis! {
 
 		fn member_of(account_id: AccountId) -> Option<PoolMember<Balance>> {
 			pallet_nomination_pools::PoolMembers::<Runtime>::get(&account_id).map(Into::into)
+		}
+	}
+
+	impl runtime_api::staking::StakingApi<Block, AccountId> for Runtime {
+		fn get_validators() -> Vec<ValidatorPrefs<AccountId>> {
+			pallet_staking::Validators::<Runtime>::iter()
+				.map(Into::into)
+				.collect()
+		}
+
+		fn get_nominations(account_id: AccountId) -> Option<Nominations<AccountId>> {
+			pallet_staking::Nominators::<Runtime>::get(&account_id)
+				.map(Into::into)
 		}
 	}
 

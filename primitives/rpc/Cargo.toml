@@ -12,6 +12,7 @@ scale-info = { version = "2.5.0", default-features = false, features = ["derive"
 sp-core = { version = "7.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.43" }
 sp-runtime = { version = "7.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.43" }
 pallet-nomination-pools = { version = "1.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.43" }
+pallet-staking = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.43" }
 
 
 [features]
@@ -23,4 +24,5 @@ std = [
 	"sp-core/std",
 	"sp-runtime/std",
 	"pallet-nomination-pools/std",
+	"pallet-staking/std",
 ]
