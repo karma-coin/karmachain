@@ -162,6 +162,8 @@ impl<T: pallet_nomination_pools::Config> From<pallet_nomination_pools::Commissio
 pub struct BondedPool<AccountId, Balance, BlockNumber> {
 	/// The identifier of the pool.
 	pub id: PoolId,
+	/// Bonded account id of this pool.
+	pub bonded_account: AccountId,
 	/// The commission rate of the pool.
 	pub commission: Commission<AccountId, BlockNumber>,
 	/// Count of members that belong to the pool.
@@ -174,12 +176,20 @@ pub struct BondedPool<AccountId, Balance, BlockNumber> {
 	pub state: PoolState,
 }
 
-impl<T: pallet_nomination_pools::Config> From<(u32, pallet_nomination_pools::BondedPoolInner<T>)>
+impl<T: pallet_nomination_pools::Config>
+	From<(u32, T::AccountId, pallet_nomination_pools::BondedPoolInner<T>)>
 	for BondedPool<T::AccountId, BalanceOf<T>, T::BlockNumber>
 {
-	fn from((id, pool): (u32, pallet_nomination_pools::BondedPoolInner<T>)) -> Self {
+	fn from(
+		(id, bonded_account, pool): (
+			u32,
+			T::AccountId,
+			pallet_nomination_pools::BondedPoolInner<T>,
+		),
+	) -> Self {
 		Self {
 			id,
+			bonded_account,
 			commission: pool.commission.into(),
 			member_counter: pool.member_counter,
 			points: pool.points,

@@ -480,6 +480,10 @@ impl_runtime_apis! {
 			pallet_nomination_pools::BondedPools::<Runtime>::iter()
 				.skip(from_index.unwrap_or(0) as usize)
 				.take(limit.unwrap_or(u32::MAX) as usize)
+				.map(|(pool_id, pool)| {
+					let bonded_account = NominationPools::create_bonded_account(pool_id);
+					(pool_id, bonded_account, pool)
+				})
 				.map(Into::into)
 				.collect()
 		}
