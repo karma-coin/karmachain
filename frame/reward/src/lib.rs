@@ -14,7 +14,7 @@ use frame_system::offchain::{SendSignedTransaction, Signer};
 use sp_common::{
 	hooks::Hooks as KarmaHooks,
 	traits::ScoreProvider,
-	types::{CharTraitId, CommunityId, Score},
+	types::{CharTraitId, CommunityId},
 };
 use sp_runtime::traits::Zero;
 use sp_std::{default::Default, vec::Vec};
@@ -467,7 +467,7 @@ impl<T: Config> Pallet<T> {
 		random_number
 	}
 
-	pub fn accounts_to_participate_in_karma_reward() -> Vec<(Score, T::AccountId)> {
+	pub fn accounts_to_participate_in_karma_reward() -> Vec<T::AccountId> {
 		// Maximum number of accounts that can participate in karma reward
 		let participates_number = KarmaRewardUsersParticipates::<T>::get();
 		// Minimum number of appreciations required to participate in karma reward
@@ -485,7 +485,11 @@ impl<T: Config> Pallet<T> {
 		accounts.sort_by(|(score_a, _), (score_b, _)| score_b.cmp(score_a));
 
 		// Take first `participates_number` accounts
-		accounts.into_iter().take(participates_number as usize).collect()
+		accounts
+			.into_iter()
+			.take(participates_number as usize)
+			.map(|(_, account_id)| account_id)
+			.collect()
 	}
 
 	fn distribute_karma_rewards(block_number: T::BlockNumber) -> Vec<T::AccountId> {
@@ -499,13 +503,12 @@ impl<T: Config> Pallet<T> {
 
 		// Winners can't be more than participates
 		if participate_accounts.len() <= winners_number as usize {
-			participate_accounts.into_iter().map(|(_, account_id)| account_id).collect()
+			participate_accounts
 		} else {
 			(0..winners_number)
 				.map(|_| {
 					let index = Self::choose_number(participate_accounts.len() as u32);
-					let (_, account_id) = participate_accounts.remove(index as usize);
-					account_id
+					participate_accounts.remove(index as usize)
 				})
 				.collect::<Vec<_>>()
 		}

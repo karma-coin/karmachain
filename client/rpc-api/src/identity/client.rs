@@ -9,7 +9,7 @@ use sp_api::ProvideRuntimeApi;
 use sp_blockchain::HeaderBackend;
 use sp_common::{identity::AccountIdentity, types::CommunityId};
 use sp_core::hashing::blake2_512;
-use sp_rpc::{Contact, LeaderBoardEntry, UserInfo};
+use sp_rpc::{Contact, UserInfo};
 use sp_runtime::traits::Block as BlockT;
 use sp_std::fmt::Debug;
 use std::sync::Arc;
@@ -156,7 +156,7 @@ where
 	fn get_leader_board(
 		&self,
 		at: Option<<Block as BlockT>::Hash>,
-	) -> RpcResult<Vec<LeaderBoardEntry<AccountId>>> {
+	) -> RpcResult<Vec<UserInfo<AccountId>>> {
 		let api = self.client.runtime_api();
 		let at = at.unwrap_or_else(|| self.client.info().best_hash);
 

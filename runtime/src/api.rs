@@ -7,9 +7,9 @@ use pallet_transaction_payment_rpc_runtime_api::{FeeDetails, RuntimeDispatchInfo
 use sp_common::{types::CommunityId, BoundedString};
 use sp_rpc::{
 	BlockchainStats, BondedPool, CharTrait, CommunityMembership, Contact, GenesisData,
-	LeaderBoardEntry, NominationPoolsConfiguration, Nominations, PhoneVerifier, PoolMember,
-	SignedTransaction, SignedTransactionWithStatus, TraitScore, TransactionStatus, UserInfo,
-	ValidatorPrefs, VerificationResult,
+	NominationPoolsConfiguration, Nominations, PhoneVerifier, PoolMember, SignedTransaction,
+	SignedTransactionWithStatus, TraitScore, TransactionStatus, UserInfo, ValidatorPrefs,
+	VerificationResult,
 };
 use sp_runtime::{generic::SignedBlock, traits::StaticLookup};
 
@@ -463,14 +463,12 @@ impl_runtime_apis! {
 				.collect()
 		}
 
-		fn get_leader_board() -> Vec<LeaderBoardEntry<AccountId>> {
+		fn get_leader_board() -> Vec<UserInfo<AccountId>> {
 			Reward::accounts_to_participate_in_karma_reward()
 				.into_iter()
-				.map(|(score, account_id)| {
-					LeaderBoardEntry {
-						account_id,
-						score
-					}
+				.map(|account_id| {
+					// Safety: if account participate in karma reward it must have identity
+					Self::get_user_info(AccountIdentity::AccountId(account_id)).unwrap()
 				})
 				.collect()
 		}

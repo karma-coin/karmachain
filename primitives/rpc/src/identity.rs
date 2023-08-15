@@ -47,10 +47,3 @@ pub struct Contact<AccountId> {
 	pub community_membership: Vec<CommunityMembership>,
 	pub trait_scores: Vec<TraitScore>,
 }
-
-#[derive(Encode, Decode, TypeInfo)]
-#[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
-pub struct LeaderBoardEntry<AccountId> {
-	pub account_id: AccountId,
-	pub score: u32,
-}
