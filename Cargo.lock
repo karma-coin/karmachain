@@ -6769,6 +6769,7 @@ dependencies = [
 name = "runtime-api"
 version = "0.2.0"
 dependencies = [
+ "pallet-nomination-pools",
  "parity-scale-codec",
  "scale-info",
  "serde",
@@ -8888,10 +8889,13 @@ dependencies = [
 name = "sp-rpc"
 version = "0.2.0"
 dependencies = [
+ "pallet-nomination-pools",
+ "pallet-staking",
  "parity-scale-codec",
  "scale-info",
  "serde",
  "sp-core",
+ "sp-runtime",
 ]
 
 [[package]]

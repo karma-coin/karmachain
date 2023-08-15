@@ -2,11 +2,13 @@ use crate::{validators_rewards::era_payout, *};
 use codec::{Decode, Encode};
 use frame_system::{EventRecord, Phase};
 use pallet_identity::types::VerificationResult as IdentityVerificationResult;
+use pallet_nomination_pools::PoolId;
 use pallet_transaction_payment_rpc_runtime_api::{FeeDetails, RuntimeDispatchInfo};
 use sp_common::{types::CommunityId, BoundedString};
 use sp_rpc::{
-	BlockchainStats, CharTrait, CommunityMembership, Contact, GenesisData, PhoneVerifier,
-	SignedTransaction, SignedTransactionWithStatus, TraitScore, TransactionStatus, UserInfo,
+	BlockchainStats, BondedPool, CharTrait, CommunityMembership, Contact, GenesisData,
+	NominationPoolsConfiguration, Nominations, PhoneVerifier, PoolMember, SignedTransaction,
+	SignedTransactionWithStatus, TraitScore, TransactionStatus, UserInfo, ValidatorPrefs,
 	VerificationResult,
 };
 use sp_runtime::{generic::SignedBlock, traits::StaticLookup};
@@ -459,6 +461,67 @@ impl_runtime_apis! {
 					}
 				})
 				.collect()
+		}
+	}
+
+	impl runtime_api::nomination_pools::NominationPoolsApi<Block, AccountId, Balance, BlockNumber> for Runtime {
+		fn pending_rewards(who: AccountId) -> Option<Balance> {
+			NominationPools::api_pending_rewards(who)
+		}
+
+		fn points_to_balance(pool_id: PoolId, points: Balance) -> Balance {
+			NominationPools::api_points_to_balance(pool_id, points)
+		}
+
+		fn balance_to_points(pool_id: PoolId, new_funds: Balance) -> Balance {
+			NominationPools::api_balance_to_points(pool_id, new_funds)
+		}
+
+		fn get_pools(from_index: Option<u32>, limit: Option<u32>) -> Vec<BondedPool<AccountId, Balance, BlockNumber>> {
+			pallet_nomination_pools::BondedPools::<Runtime>::iter()
+				.skip(from_index.unwrap_or(0) as usize)
+				.take(limit.unwrap_or(u32::MAX) as usize)
+				.map(|(pool_id, pool)| {
+					let bonded_account = NominationPools::create_bonded_account(pool_id);
+					(pool_id, bonded_account, pool)
+				})
+				.map(Into::into)
+				.collect()
+		}
+
+		fn get_configuration() -> NominationPoolsConfiguration<Balance> {
+			let min_join_bond = pallet_nomination_pools::MinJoinBond::<Runtime>::get();
+			let min_create_bond = pallet_nomination_pools::MinCreateBond::<Runtime>::get();
+			let max_pools = pallet_nomination_pools::MaxPools::<Runtime>::get();
+			let max_members_per_pool = pallet_nomination_pools::MaxPoolMembersPerPool::<Runtime>::get();
+			let max_members = pallet_nomination_pools::MaxPoolMembers::<Runtime>::get();
+			let global_max_commission = pallet_nomination_pools::GlobalMaxCommission::<Runtime>::get();
+
+			NominationPoolsConfiguration {
+				min_join_bond,
+				min_create_bond,
+				max_pools,
+				max_members_per_pool,
+				max_members,
+				global_max_commission,
+			}
+		}
+
+		fn member_of(account_id: AccountId) -> Option<PoolMember<Balance>> {
+			pallet_nomination_pools::PoolMembers::<Runtime>::get(&account_id).map(Into::into)
+		}
+	}
+
+	impl runtime_api::staking::StakingApi<Block, AccountId> for Runtime {
+		fn get_validators() -> Vec<ValidatorPrefs<AccountId>> {
+			pallet_staking::Validators::<Runtime>::iter()
+				.map(Into::into)
+				.collect()
+		}
+
+		fn get_nominations(account_id: AccountId) -> Option<Nominations<AccountId>> {
+			pallet_staking::Nominators::<Runtime>::get(&account_id)
+				.map(Into::into)
 		}
 	}
 
