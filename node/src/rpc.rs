@@ -54,6 +54,7 @@ pub fn create_full<C, P, SC>(
 	verifier: bool,
 	bypass_token: Option<ByPassToken>,
 	auth_dst: Option<String>,
+	network_id: String,
 ) -> Result<RpcModule<()>, Box<dyn std::error::Error + Send + Sync>>
 where
 	C: ProvideRuntimeApi<Block>,
@@ -85,7 +86,7 @@ where
 {
 	use pallet_transaction_payment_rpc::{TransactionPayment, TransactionPaymentApiServer};
 	use rpc_api::{
-		chain::{client::BlocksProvider, BlocksProviderApiServer},
+		chain::{client::ChainDataProvider, ChainDataProviderApiServer},
 		events::{client::EventsProvider, EventsProviderApiServer},
 		identity::{client::Identity, IdentityApiServer},
 		nomination_pools::{client::NominationPools, NominationPoolsApiServer},
@@ -120,7 +121,7 @@ where
 	)?;
 	module.merge(TransactionsIndexer::new(client.clone()).into_rpc())?;
 	module.merge(EventsProvider::new(client.clone()).into_rpc())?;
-	module.merge(BlocksProvider::new(client.clone()).into_rpc())?;
+	module.merge(ChainDataProvider::new(client.clone(), network_id).into_rpc())?;
 	module.merge(NominationPools::new(client.clone()).into_rpc())?;
 	module.merge(Staking::new(client.clone()).into_rpc())?;
 

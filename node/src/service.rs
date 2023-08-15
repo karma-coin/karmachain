@@ -149,6 +149,7 @@ pub fn new_partial(
 		let pool = transaction_pool.clone();
 		let select_chain = select_chain.clone();
 		let keystore = keystore_container.keystore();
+		let network_id = config.chain_spec.id().to_string();
 
 		Box::new(move |deny_unsafe, _| {
 			let deps = crate::rpc::FullDeps {
@@ -166,6 +167,7 @@ pub fn new_partial(
 				verifier_config.verifier,
 				verifier_config.bypass_token.clone(),
 				verifier_config.auth_dst.clone(),
+				network_id.clone(),
 			)
 			.map_err(Into::into)
 		})

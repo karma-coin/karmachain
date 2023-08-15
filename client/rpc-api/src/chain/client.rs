@@ -1,4 +1,4 @@
-use crate::chain::{error::map_err, BlocksProviderApiServer};
+use crate::chain::{error::map_err, ChainDataProviderApiServer};
 use codec::Codec;
 use jsonrpsee::core::RpcResult;
 use runtime_api::chain::BlockInfoProvider;
@@ -9,19 +9,21 @@ use sp_rpc::{BlockchainStats, GenesisData};
 use sp_runtime::generic::SignedBlock;
 use std::sync::Arc;
 
-pub struct BlocksProvider<C, P> {
+pub struct ChainDataProvider<C, P> {
 	/// Shared reference to the client.
 	client: Arc<C>,
+	network_id: String,
 	_marker: std::marker::PhantomData<P>,
 }
 
-impl<C, P> BlocksProvider<C, P> {
-	pub fn new(client: Arc<C>) -> Self {
-		Self { client, _marker: Default::default() }
+impl<C, P> ChainDataProvider<C, P> {
+	pub fn new(client: Arc<C>, network_id: String) -> Self {
+		Self { client, network_id, _marker: Default::default() }
 	}
 }
 
-impl<C, Block, AccountId> BlocksProviderApiServer<Block, AccountId> for BlocksProvider<C, Block>
+impl<C, Block, AccountId> ChainDataProviderApiServer<Block, AccountId>
+	for ChainDataProvider<C, Block>
 where
 	Block: BlockT,
 	AccountId: Codec,
@@ -52,5 +54,9 @@ where
 			api.get_genesis_data(at).map_err(|e| map_err(e, "Failed to get genesis data"))?;
 
 		Ok(genesis_data)
+	}
+
+	fn get_network_id(&self) -> RpcResult<String> {
+		Ok(self.network_id.clone())
 	}
 }
