@@ -50,9 +50,7 @@ pub struct Contact<AccountId> {
 
 #[derive(Encode, Decode, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]
-pub struct LeaderboardEntry<AccountId> {
-	pub user_name: String,
+pub struct LeaderBoardEntry<AccountId> {
 	pub account_id: AccountId,
 	pub score: u32,
-	char_traits_ids: u32,
 }

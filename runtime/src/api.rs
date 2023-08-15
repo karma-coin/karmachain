@@ -7,9 +7,9 @@ use pallet_transaction_payment_rpc_runtime_api::{FeeDetails, RuntimeDispatchInfo
 use sp_common::{types::CommunityId, BoundedString};
 use sp_rpc::{
 	BlockchainStats, BondedPool, CharTrait, CommunityMembership, Contact, GenesisData,
-	NominationPoolsConfiguration, Nominations, PhoneVerifier, PoolMember, SignedTransaction,
-	SignedTransactionWithStatus, TraitScore, TransactionStatus, UserInfo, ValidatorPrefs,
-	VerificationResult,
+	LeaderBoardEntry, NominationPoolsConfiguration, Nominations, PhoneVerifier, PoolMember,
+	SignedTransaction, SignedTransactionWithStatus, TraitScore, TransactionStatus, UserInfo,
+	ValidatorPrefs, VerificationResult,
 };
 use sp_runtime::{generic::SignedBlock, traits::StaticLookup};
 
@@ -458,6 +458,18 @@ impl_runtime_apis! {
 						phone_number_hash: identity_store.phone_number_hash,
 						community_membership,
 						trait_scores,
+					}
+				})
+				.collect()
+		}
+
+		fn get_leader_board() -> Vec<LeaderBoardEntry<AccountId>> {
+			Reward::accounts_to_participate_in_karma_reward()
+				.into_iter()
+				.map(|(score, account_id)| {
+					LeaderBoardEntry {
+						account_id,
+						score
 					}
 				})
 				.collect()

@@ -1,7 +1,7 @@
 use codec::{Codec, MaxEncodedLen};
 use scale_info::prelude::vec::Vec;
 use sp_common::{identity::AccountIdentity, types::CommunityId};
-use sp_rpc::{Contact, UserInfo};
+use sp_rpc::{Contact, LeaderBoardEntry, UserInfo};
 use sp_std::fmt::Debug;
 
 sp_api::decl_runtime_apis! {
@@ -30,5 +30,8 @@ sp_api::decl_runtime_apis! {
 			from_index: Option<u64>,
 			limit: Option<u64>,
 		) -> Vec<Contact<AccountId>>;
+
+		// Get list of users that participate in karma reward
+		fn get_leader_board() -> Vec<LeaderBoardEntry<AccountId>>;
 	}
 }
