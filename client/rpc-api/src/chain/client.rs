@@ -1,11 +1,11 @@
 use crate::chain::{error::map_err, ChainDataProviderApiServer};
 use codec::Codec;
 use jsonrpsee::core::RpcResult;
-use runtime_api::chain::BlockInfoProvider;
+use runtime_api::chain::ChainDataProvider as RuntimeChainDataProvider;
 use sc_client_api::BlockBackend;
 use sp_api::{BlockT, ProvideRuntimeApi};
 use sp_blockchain::HeaderBackend;
-use sp_rpc::{BlockchainStats, GenesisData};
+use sp_rpc::{BlockchainStats, CharTrait, GenesisData};
 use sp_runtime::generic::SignedBlock;
 use std::sync::Arc;
 
@@ -33,7 +33,7 @@ where
 		+ Send
 		+ Sync
 		+ 'static,
-	C::Api: BlockInfoProvider<Block, SignedBlock<Block>, AccountId, Block::Hash>,
+	C::Api: RuntimeChainDataProvider<Block, SignedBlock<Block>, AccountId, Block::Hash>,
 {
 	fn get_blockchain_data(&self) -> RpcResult<BlockchainStats> {
 		let api = self.client.runtime_api();
@@ -58,5 +58,21 @@ where
 
 	fn get_network_id(&self) -> RpcResult<String> {
 		Ok(self.network_id.clone())
+	}
+
+	fn get_char_traits(
+		&self,
+		from_index: Option<u32>,
+		limit: Option<u32>,
+		at: Option<<Block as BlockT>::Hash>,
+	) -> RpcResult<Vec<CharTrait>> {
+		let api = self.client.runtime_api();
+		let at = at.unwrap_or_else(|| self.client.info().best_hash);
+
+		let char_traits = api
+			.get_char_traits(at, from_index, limit)
+			.map_err(|e| map_err(e, "Failed to get char traits"))?;
+
+		Ok(char_traits)
 	}
 }

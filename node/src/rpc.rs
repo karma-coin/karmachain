@@ -65,7 +65,7 @@ where
 	C::Api: substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Index>,
 	C::Api: pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>,
 	C::Api: BlockBuilder<Block>,
-	C::Api: runtime_api::chain::BlockInfoProvider<Block, SignedBlock<Block>, AccountId, Hash>,
+	C::Api: runtime_api::chain::ChainDataProvider<Block, SignedBlock<Block>, AccountId, Hash>,
 	C::Api: runtime_api::events::EventProvider<Block, EventRecord<RuntimeEvent, Hash>>,
 	C::Api: runtime_api::identity::IdentityApi<Block, AccountId, Username, PhoneNumberHash>,
 	C::Api: runtime_api::transactions::TransactionInfoProvider<

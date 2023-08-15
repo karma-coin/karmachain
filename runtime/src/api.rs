@@ -230,7 +230,7 @@ impl_runtime_apis! {
 		}
 	}
 
-	impl runtime_api::chain::BlockInfoProvider<Block, SignedBlock<Block>, AccountId, Hash> for Runtime {
+	impl runtime_api::chain::ChainDataProvider<Block, SignedBlock<Block>, AccountId, Hash> for Runtime {
 		fn get_blockchain_data() -> BlockchainStats {
 			let tip_height = System::block_number().into();
 			let transaction_count = pallet_transaction_indexer::TransactionsCount::<Runtime>::get();
@@ -336,6 +336,21 @@ impl_runtime_apis! {
 				char_traits,
 				verifiers,
 			}
+		}
+
+		fn get_char_traits(from_index: Option<u32>, limit: Option<u32>) -> Vec<CharTrait> {
+			pallet_appreciation::CharTraits::<Runtime>::get()
+				.into_iter()
+				.skip(from_index.unwrap_or(0) as usize)
+				.take(limit.unwrap_or(u32::MAX) as usize)
+				.map(|char_trait| CharTrait {
+					id: char_trait.id,
+					// Safety: name is always a valid UTF-8 string
+					name: char_trait.name.try_into().unwrap(),
+					// Safety: emoji is always a valid UTF-8 string
+					emoji: char_trait.emoji.try_into().unwrap(),
+				})
+				.collect()
 		}
 	}
 
