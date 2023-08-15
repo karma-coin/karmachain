@@ -70,16 +70,16 @@ pub mod pallet {
 
 		pub signup_reward_phase1_alloc: T::Balance,
 		pub signup_reward_phase2_alloc: T::Balance,
-
 		pub signup_reward_phase1_amount: T::Balance,
 		pub signup_reward_phase2_amount: T::Balance,
 		pub signup_reward_phase3_amount: T::Balance,
 
 		pub referral_reward_phase1_alloc: T::Balance,
 		pub referral_reward_phase2_alloc: T::Balance,
-
+		pub referral_reward_phase3_alloc: T::Balance,
 		pub referral_reward_phase1_amount: T::Balance,
 		pub referral_reward_phase2_amount: T::Balance,
+		pub referral_reward_phase3_amount: T::Balance,
 
 		pub tx_fee_subsidy_max_per_user: u8,
 		pub tx_fee_subsidies_alloc: T::Balance,
@@ -101,15 +101,16 @@ pub mod pallet {
 
 				signup_reward_phase1_alloc: 100_000_000_000_000_u128.try_into().ok().unwrap(),
 				signup_reward_phase2_alloc: 200_000_000_000_000_u128.try_into().ok().unwrap(),
-
 				signup_reward_phase1_amount: 10_000_000_u128.try_into().ok().unwrap(),
 				signup_reward_phase2_amount: 1_000_000_u128.try_into().ok().unwrap(),
 				signup_reward_phase3_amount: 1_000_u128.try_into().ok().unwrap(),
+
 				referral_reward_phase1_alloc: 10_000_000_000_000_u128.try_into().ok().unwrap(),
 				referral_reward_phase2_alloc: 200_000_000_000_000_u128.try_into().ok().unwrap(),
-
-				referral_reward_phase1_amount: 10_000_000_u128.try_into().ok().unwrap(),
-				referral_reward_phase2_amount: 1_000_000_u128.try_into().ok().unwrap(),
+				referral_reward_phase3_alloc: 200_000_000_000_000_u128.try_into().ok().unwrap(),
+				referral_reward_phase1_amount: 100_000_000_u128.try_into().ok().unwrap(),
+				referral_reward_phase2_amount: 10_000_000_u128.try_into().ok().unwrap(),
+				referral_reward_phase3_amount: 1_000_000_u128.try_into().ok().unwrap(),
 
 				tx_fee_subsidy_max_per_user: 10,
 				tx_fee_subsidies_alloc: 250_000_000_000_000_u128.try_into().ok().unwrap(),
@@ -140,16 +141,16 @@ pub mod pallet {
 
 			SignupRewardPhase1Alloc::<T>::put(self.signup_reward_phase1_alloc);
 			SignupRewardPhase2Alloc::<T>::put(self.signup_reward_phase2_alloc);
-
 			SignupRewardPhase1Amount::<T>::put(self.signup_reward_phase1_amount);
 			SignupRewardPhase2Amount::<T>::put(self.signup_reward_phase2_amount);
 			SignupRewardPhase3Amount::<T>::put(self.signup_reward_phase3_amount);
 
 			ReferralRewardPhase1Alloc::<T>::put(self.referral_reward_phase1_alloc);
 			ReferralRewardPhase2Alloc::<T>::put(self.referral_reward_phase2_alloc);
-
+			ReferralRewardPhase3Alloc::<T>::put(self.referral_reward_phase3_alloc);
 			ReferralRewardPhase1Amount::<T>::put(self.referral_reward_phase1_amount);
 			ReferralRewardPhase2Amount::<T>::put(self.referral_reward_phase2_amount);
+			ReferralRewardPhase3Amount::<T>::put(self.referral_reward_phase3_amount);
 
 			TxFeeSubsidyMaxPerUser::<T>::put(self.tx_fee_subsidy_max_per_user);
 			TxFeeSubsidyMaxAmount::<T>::put(self.tx_fee_subsidy_max_amount);
@@ -187,11 +188,14 @@ pub mod pallet {
 	pub type ReferralRewardPhase1Alloc<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
 	#[pallet::storage]
 	pub type ReferralRewardPhase2Alloc<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
-
+	#[pallet::storage]
+	pub type ReferralRewardPhase3Alloc<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
 	#[pallet::storage]
 	pub type ReferralRewardPhase1Amount<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
 	#[pallet::storage]
 	pub type ReferralRewardPhase2Amount<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
+	#[pallet::storage]
+	pub type ReferralRewardPhase3Amount<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
 
 	#[pallet::storage]
 	pub type TxFeeSubsidyMaxPerUser<T: Config> = StorageValue<_, u8, ValueQuery>;
@@ -605,8 +609,12 @@ impl<T: Config> KarmaHooks<T::AccountId, T::Balance, T::Username, T::PhoneNumber
 
 		let reward = if total_allocated < ReferralRewardPhase1Alloc::<T>::get() {
 			ReferralRewardPhase1Amount::<T>::get()
-		} else {
+		} else if total_allocated <
+			(ReferralRewardPhase2Alloc::<T>::get() + ReferralRewardPhase1Alloc::<T>::get())
+		{
 			ReferralRewardPhase2Amount::<T>::get()
+		} else {
+			ReferralRewardPhase3Amount::<T>::get()
 		};
 
 		Self::issue_referral_reward(&who, reward)?;

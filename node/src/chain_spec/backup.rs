@@ -2,8 +2,8 @@ use karmachain_node_runtime::{AccountId, Balance, PhoneNumberHash, Username};
 use pallet_appreciation::CommunityRole;
 use scale_info::prelude::string::String;
 use sp_common::{
-	types::{CharTraitId, CommunityId, Score},
 	traits::MaybeNormalized,
+	types::{CharTraitId, CommunityId, Score},
 };
 use sp_core::hashing::blake2_512;
 

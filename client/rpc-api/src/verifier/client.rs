@@ -11,12 +11,12 @@ use jsonrpsee::{
 use runtime_api::verifier::VerifierApi;
 use sp_api::ProvideRuntimeApi;
 use sp_blockchain::HeaderBackend;
+use sp_common::traits::MaybeNormalized;
 use sp_core::{crypto::AccountId32, hashing::blake2_512, ByteArray};
 use sp_keystore::Keystore;
 use sp_rpc::{ByPassToken, VerificationEvidence, VerificationResponse, VerificationResult};
 use sp_runtime::{traits::Block as BlockT, KeyTypeId};
 use std::sync::Arc;
-use sp_common::traits::MaybeNormalized;
 
 const KEY_TYPE: KeyTypeId = KeyTypeId(*b"Veri");
 
