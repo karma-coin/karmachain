@@ -238,16 +238,9 @@ impl_runtime_apis! {
 			let appreciations_transactions_count = pallet_transaction_indexer::AppreciationTransactionsCount::<Runtime>::get();
 			let update_user_transactions_count = pallet_transaction_indexer::UpdateUserTransactionsCount::<Runtime>::get();
 			let users_count = pallet_identity::IdentityOf::<Runtime>::count().into();
-			let fees_amount = 0; // TODO:
-			let minted_amount = Reward::total_rewarded();
-			let circulation = Reward::total_rewarded();
-			let fee_subs_count = 0; // TODO:
 			let fee_subs_amount = pallet_reward::TxFeeSubsidiesTotalAllocated::<Runtime>::get();
-			let signup_rewards_count = 0; // TODO:
 			let signup_rewards_amount = pallet_reward::SignupRewardTotalAllocated::<Runtime>::get();
-			let referral_rewards_count = 0; // TODO:
 			let referral_rewards_amount = pallet_reward::ReferralRewardTotalAllocated::<Runtime>::get();
-			let validator_rewards_count = 0;
 			let validator_rewards_amount = (0..Staking::current_era().unwrap_or_default())
 				.map(era_payout)
 				.sum();
@@ -261,16 +254,9 @@ impl_runtime_apis! {
 				appreciations_transactions_count,
 				update_user_transactions_count,
 				users_count,
-				fees_amount,
-				minted_amount,
-				circulation,
-				fee_subs_count,
 				fee_subs_amount,
-				signup_rewards_count,
 				signup_rewards_amount,
-				referral_rewards_count,
 				referral_rewards_amount,
-				validator_rewards_count,
 				validator_rewards_amount,
 				causes_rewards_amount,
 			}
