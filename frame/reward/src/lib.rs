@@ -467,16 +467,13 @@ impl<T: Config> Pallet<T> {
 		random_number
 	}
 
-	fn distribute_karma_rewards(block_number: T::BlockNumber) -> Vec<T::AccountId> {
-		if block_number % KarmaRewardFrequency::<T>::get() != T::BlockNumber::zero() {
-			// Too early, skipping rewards for now
-			return sp_std::vec![]
-		}
-
+	pub fn accounts_to_participate_in_karma_reward() -> Vec<T::AccountId> {
+		// Maximum number of accounts that can participate in karma reward
 		let participates_number = KarmaRewardUsersParticipates::<T>::get();
-		let winners_number = T::MaxWinners::get();
+		// Minimum number of appreciations required to participate in karma reward
 		let appreciations_requires = KarmaRewardAppreciationsRequires::<T>::get();
 
+		// Accounts that do not get rewards yet and have enough appreciations
 		let mut accounts = AccountRewardInfo::<T>::iter()
 			.filter(|(_, info)| {
 				!info.karma_reward && info.appreciation_count >= appreciations_requires
@@ -484,13 +481,25 @@ impl<T: Config> Pallet<T> {
 			.map(|(account_id, _)| (T::ScoreProvider::score_of(&account_id), account_id))
 			.collect::<Vec<_>>();
 
+		// Sort by score
 		accounts.sort_by(|(score_a, _), (score_b, _)| score_b.cmp(score_a));
 
-		let mut participate_accounts = accounts
+		// Take first `participates_number` accounts
+		accounts
 			.into_iter()
-			.map(|(_, account_id)| account_id)
 			.take(participates_number as usize)
-			.collect::<Vec<_>>();
+			.map(|(_, account_id)| account_id)
+			.collect()
+	}
+
+	fn distribute_karma_rewards(block_number: T::BlockNumber) -> Vec<T::AccountId> {
+		if block_number % KarmaRewardFrequency::<T>::get() != T::BlockNumber::zero() {
+			// Too early, skipping rewards for now
+			return sp_std::vec![]
+		}
+
+		let winners_number = T::MaxWinners::get();
+		let mut participate_accounts = Self::accounts_to_participate_in_karma_reward();
 
 		// Winners can't be more than participates
 		if participate_accounts.len() <= winners_number as usize {

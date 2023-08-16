@@ -30,5 +30,8 @@ sp_api::decl_runtime_apis! {
 			from_index: Option<u64>,
 			limit: Option<u64>,
 		) -> Vec<Contact<AccountId>>;
+
+		// Get list of users that participate in karma reward
+		fn get_leader_board() -> Vec<UserInfo<AccountId>>;
 	}
 }

@@ -462,6 +462,16 @@ impl_runtime_apis! {
 				})
 				.collect()
 		}
+
+		fn get_leader_board() -> Vec<UserInfo<AccountId>> {
+			Reward::accounts_to_participate_in_karma_reward()
+				.into_iter()
+				.map(|account_id| {
+					// Safety: if account participate in karma reward it must have identity
+					Self::get_user_info(AccountIdentity::AccountId(account_id)).unwrap()
+				})
+				.collect()
+		}
 	}
 
 	impl runtime_api::nomination_pools::NominationPoolsApi<Block, AccountId, Balance, BlockNumber> for Runtime {
