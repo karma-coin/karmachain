@@ -233,32 +233,73 @@ impl_runtime_apis! {
 	impl runtime_api::chain::ChainDataProvider<Block, SignedBlock<Block>, AccountId, Hash> for Runtime {
 		fn get_blockchain_data() -> BlockchainStats {
 			let tip_height = System::block_number().into();
+			let total_issuance = Balances::total_issuance();
 			let transaction_count = pallet_transaction_indexer::TransactionsCount::<Runtime>::get();
 			let payment_transaction_count = pallet_transaction_indexer::PaymentTransactionsCount::<Runtime>::get();
 			let appreciations_transactions_count = pallet_transaction_indexer::AppreciationTransactionsCount::<Runtime>::get();
 			let update_user_transactions_count = pallet_transaction_indexer::UpdateUserTransactionsCount::<Runtime>::get();
 			let users_count = pallet_identity::IdentityOf::<Runtime>::count().into();
-			let fee_subs_amount = pallet_reward::TxFeeSubsidiesTotalAllocated::<Runtime>::get();
-			let signup_rewards_amount = pallet_reward::SignupRewardTotalAllocated::<Runtime>::get();
-			let referral_rewards_amount = pallet_reward::ReferralRewardTotalAllocated::<Runtime>::get();
-			let validator_rewards_amount = (0..Staking::current_era().unwrap_or_default())
-				.map(era_payout)
-				.sum();
-			let causes_rewards_amount = 0;
+
+			let fee_subs_total_issued_amount = pallet_reward::TxFeeSubsidiesTotalAllocated::<Runtime>::get();
+			let fee_subs_count = pallet_reward::TxFeeSubsidiesCounter::<Runtime>::get();
+			let fee_subs_current_reward_amount = Reward::get_current_fee_subsidie_amount();
+
+			let signup_rewards_total_issued_amount = pallet_reward::SignupRewardTotalAllocated::<Runtime>::get();
+			let signup_rewards_count = pallet_reward::SignupRewardsCounter::<Runtime>::get();
+			let signup_rewards_current_reward_amount = Reward::get_current_signup_reward_amount();
+
+			let referral_rewards_total_issued_amount = pallet_reward::ReferralRewardTotalAllocated::<Runtime>::get();
+			let referral_rewards_count = pallet_reward::ReferralRewardsCounter::<Runtime>::get();
+			let referral_rewards_current_reward_amount = Reward::get_current_referral_reward_amount();
+
+			let current_era = Staking::current_era().unwrap_or_default();
+
+			let validator_rewards_total_issued_amount = (0..current_era).map(era_payout).sum();
+			let validator_rewards_count = current_era.into();
+			let validator_rewards_current_reward_amount = era_payout(current_era);
+
+			// TODO: causes rewards not yet implemented
+			let causes_rewards_total_issued_amount = 0;
+			let causes_rewards_count = 0;
+			let causes_rewards_current_reward_amount = 0;
+
+			let karma_rewards_total_issued_amount = pallet_reward::KarmaRewardTotalAllocated::<Runtime>::get();
+			let karma_rewards_count = pallet_reward::KarmaRewardsCounter::<Runtime>::get();
+			let karma_rewards_current_reward_amount = Reward::get_current_karma_reward_amount();
+			let karma_rewards_users_rewarded_count = pallet_reward::KarmaRewardsUsersRewardedCounter::<Runtime>::get();
+			let karma_rewards_last_time = pallet_reward::KarmaRewardLastTime::<Runtime>::get().into();
+			let karma_rewards_next_time = pallet_reward::KarmaRewardNextTime::<Runtime>::get().into();
 
 			BlockchainStats {
 				last_block_time: MILLISECS_PER_BLOCK,
 				tip_height,
+				total_issuance,
 				transaction_count,
 				payment_transaction_count,
 				appreciations_transactions_count,
 				update_user_transactions_count,
 				users_count,
-				fee_subs_amount,
-				signup_rewards_amount,
-				referral_rewards_amount,
-				validator_rewards_amount,
-				causes_rewards_amount,
+				fee_subs_total_issued_amount,
+				fee_subs_count,
+				fee_subs_current_reward_amount,
+				signup_rewards_total_issued_amount,
+				signup_rewards_count,
+				signup_rewards_current_reward_amount,
+				referral_rewards_total_issued_amount,
+				referral_rewards_count,
+				referral_rewards_current_reward_amount,
+				validator_rewards_total_issued_amount,
+				validator_rewards_count,
+				validator_rewards_current_reward_amount,
+				causes_rewards_total_issued_amount,
+				causes_rewards_count,
+				causes_rewards_current_reward_amount,
+				karma_rewards_total_issued_amount,
+				karma_rewards_count,
+				karma_rewards_current_reward_amount,
+				karma_rewards_users_rewarded_count,
+				karma_rewards_last_time,
+				karma_rewards_next_time,
 			}
 		}
 

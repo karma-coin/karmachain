@@ -28,6 +28,8 @@ pub struct BlockchainStats {
 	pub last_block_time: u64,
 	/// Current block height
 	pub tip_height: u64,
+	/// The total units issued in the system.
+	pub total_issuance: u128,
 	/// Total number of executed transactions
 	pub transaction_count: u64,
 	/// Total number of payment transactions
@@ -38,13 +40,48 @@ pub struct BlockchainStats {
 	pub update_user_transactions_count: u64,
 	/// Total number of verified user accounts
 	pub users_count: u64,
-	/// Total tx fee subsidies issued by the protocol
-	pub fee_subs_amount: u128,
-	pub signup_rewards_amount: u128,
-	pub referral_rewards_amount: u128,
-	pub validator_rewards_amount: u128,
+	/// Total transaction fee subsidies issued by the protocol
+	pub fee_subs_total_issued_amount: u128,
+	/// Total number of transaction fee subsidies issued by the protocol
+	pub fee_subs_count: u64,
+	/// Current amount of transaction fee subsidies reward
+	pub fee_subs_current_reward_amount: u128,
+	/// Total funds issued by the protocol for signup
+	pub signup_rewards_total_issued_amount: u128,
+	/// Total number of funds issued by the protocol for signup
+	pub signup_rewards_count: u64,
+	/// Current amount of funds issued by the protocol for signup
+	pub signup_rewards_current_reward_amount: u128,
+	/// Total funds issued by the protocol for referrals
+	pub referral_rewards_total_issued_amount: u128,
+	/// Total number of funds issued by the protocol for referrals
+	pub referral_rewards_count: u64,
+	/// Current amount of funds issued by the protocol for referrals
+	pub referral_rewards_current_reward_amount: u128,
+	/// Total funds issued by the protocol for validating
+	pub validator_rewards_total_issued_amount: u128,
+	/// Total number of funds issued by the protocol for validating
+	pub validator_rewards_count: u64,
+	/// Current amount of funds issued by the protocol for validating
+	pub validator_rewards_current_reward_amount: u128,
 	/// Amount of rewards paid to causes
-	pub causes_rewards_amount: u128,
+	pub causes_rewards_total_issued_amount: u128,
+	/// Total number of rewards paid to causes
+	pub causes_rewards_count: u64,
+	/// Current amount of rewards paid to causes
+	pub causes_rewards_current_reward_amount: u128,
+	/// Current amount of funds issued by the protocol for karma
+	pub karma_rewards_total_issued_amount: u128,
+	/// Total number of funds issued by the protocol for karma
+	pub karma_rewards_count: u64,
+	/// Current amount of funds issued by the protocol for karma
+	pub karma_rewards_current_reward_amount: u128,
+	/// Total number of users that get karma rewards
+	pub karma_rewards_users_rewarded_count: u64,
+	/// Last time when karma reward were issued, measured in blocks
+	pub karma_rewards_last_time: u64,
+	/// Next time when karma reward will be issued, measured in blocks
+	pub karma_rewards_next_time: u64,
 }
 
 #[derive(Encode, Decode, TypeInfo)]
