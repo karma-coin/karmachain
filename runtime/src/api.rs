@@ -232,6 +232,7 @@ impl_runtime_apis! {
 
 	impl runtime_api::chain::ChainDataProvider<Block, SignedBlock<Block>, AccountId, Hash> for Runtime {
 		fn get_blockchain_data() -> BlockchainStats {
+			let last_block_time = Timestamp::get();
 			let tip_height = System::block_number().into();
 			let total_issuance = Balances::total_issuance();
 			let transaction_count = pallet_transaction_indexer::TransactionsCount::<Runtime>::get();
@@ -271,7 +272,7 @@ impl_runtime_apis! {
 			let karma_rewards_next_time = pallet_reward::KarmaRewardNextTime::<Runtime>::get().into();
 
 			BlockchainStats {
-				last_block_time: MILLISECS_PER_BLOCK,
+				last_block_time,
 				tip_height,
 				total_issuance,
 				transaction_count,
