@@ -38,20 +38,10 @@ pub struct BlockchainStats {
 	pub update_user_transactions_count: u64,
 	/// Total number of verified user accounts
 	pub users_count: u64,
-	/// Total tx fees collected by block producers
-	pub fees_amount: u128,
-	/// Total number of kCents minted by the protocol since genesis
-	pub minted_amount: u128,
-	/// Total number of kCents in circulation by minting. Not including pre-mint
-	pub circulation: u128,
 	/// Total tx fee subsidies issued by the protocol
-	pub fee_subs_count: u64,
 	pub fee_subs_amount: u128,
-	pub signup_rewards_count: u64,
 	pub signup_rewards_amount: u128,
-	pub referral_rewards_count: u64,
 	pub referral_rewards_amount: u128,
-	pub validator_rewards_count: u64,
 	pub validator_rewards_amount: u128,
 	/// Amount of rewards paid to causes
 	pub causes_rewards_amount: u128,

@@ -230,7 +230,7 @@ impl_runtime_apis! {
 		}
 	}
 
-	impl runtime_api::chain::BlockInfoProvider<Block, SignedBlock<Block>, AccountId, Hash> for Runtime {
+	impl runtime_api::chain::ChainDataProvider<Block, SignedBlock<Block>, AccountId, Hash> for Runtime {
 		fn get_blockchain_data() -> BlockchainStats {
 			let tip_height = System::block_number().into();
 			let transaction_count = pallet_transaction_indexer::TransactionsCount::<Runtime>::get();
@@ -238,16 +238,9 @@ impl_runtime_apis! {
 			let appreciations_transactions_count = pallet_transaction_indexer::AppreciationTransactionsCount::<Runtime>::get();
 			let update_user_transactions_count = pallet_transaction_indexer::UpdateUserTransactionsCount::<Runtime>::get();
 			let users_count = pallet_identity::IdentityOf::<Runtime>::count().into();
-			let fees_amount = 0; // TODO:
-			let minted_amount = Reward::total_rewarded();
-			let circulation = Reward::total_rewarded();
-			let fee_subs_count = 0; // TODO:
 			let fee_subs_amount = pallet_reward::TxFeeSubsidiesTotalAllocated::<Runtime>::get();
-			let signup_rewards_count = 0; // TODO:
 			let signup_rewards_amount = pallet_reward::SignupRewardTotalAllocated::<Runtime>::get();
-			let referral_rewards_count = 0; // TODO:
 			let referral_rewards_amount = pallet_reward::ReferralRewardTotalAllocated::<Runtime>::get();
-			let validator_rewards_count = 0;
 			let validator_rewards_amount = (0..Staking::current_era().unwrap_or_default())
 				.map(era_payout)
 				.sum();
@@ -261,16 +254,9 @@ impl_runtime_apis! {
 				appreciations_transactions_count,
 				update_user_transactions_count,
 				users_count,
-				fees_amount,
-				minted_amount,
-				circulation,
-				fee_subs_count,
 				fee_subs_amount,
-				signup_rewards_count,
 				signup_rewards_amount,
-				referral_rewards_count,
 				referral_rewards_amount,
-				validator_rewards_count,
 				validator_rewards_amount,
 				causes_rewards_amount,
 			}
@@ -350,6 +336,21 @@ impl_runtime_apis! {
 				char_traits,
 				verifiers,
 			}
+		}
+
+		fn get_char_traits(from_index: Option<u32>, limit: Option<u32>) -> Vec<CharTrait> {
+			pallet_appreciation::CharTraits::<Runtime>::get()
+				.into_iter()
+				.skip(from_index.unwrap_or(0) as usize)
+				.take(limit.unwrap_or(u32::MAX) as usize)
+				.map(|char_trait| CharTrait {
+					id: char_trait.id,
+					// Safety: name is always a valid UTF-8 string
+					name: char_trait.name.try_into().unwrap(),
+					// Safety: emoji is always a valid UTF-8 string
+					emoji: char_trait.emoji.try_into().unwrap(),
+				})
+				.collect()
 		}
 	}
 
