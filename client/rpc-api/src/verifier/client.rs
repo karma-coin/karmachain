@@ -46,7 +46,7 @@ impl<C, Block, AccountId, Username, PhoneNumber, PhoneNumberHash>
 where
 	Block: BlockT + Send + Sync + 'static,
 	AccountId:
-		Codec + Clone + Send + Sync + 'static + From<sp_core::sr25519::Public> + Into<AccountId32>,
+		Codec + Clone + Send + Sync + 'static + From<sp_core::ed25519::Public> + Into<AccountId32>,
 	Username: MaybeNormalized + Codec + Clone + Send + Sync + 'static,
 	PhoneNumber: Codec + Clone + Send + Sync + 'static + TryInto<String>,
 	<PhoneNumber as TryInto<String>>::Error: std::fmt::Display,
@@ -112,7 +112,7 @@ where
 		};
 
 		if let VerificationResult::Verified = verification_result {
-			let public_key = Keystore::sr25519_public_keys(self.crypto_store.as_ref(), KEY_TYPE)
+			let public_key = Keystore::ed25519_public_keys(self.crypto_store.as_ref(), KEY_TYPE)
 				.pop()
 				.ok_or(map_err(Error::KeyNotFound, "No verifier keys"))?;
 
@@ -126,10 +126,10 @@ where
 			.encode();
 
 			let bytes =
-				Keystore::sr25519_sign(self.crypto_store.as_ref(), KEY_TYPE, &public_key, &data)
+				Keystore::ed25519_sign(self.crypto_store.as_ref(), KEY_TYPE, &public_key, &data)
 					.map_err(|e| map_err(Error::SignatureFailed, e))?
 					.ok_or(map_err(Error::SignatureFailed, "Internal error"))?;
-			let signature = sp_core::sr25519::Signature::try_from(bytes.0.as_slice())
+			let signature = sp_core::ed25519::Signature::try_from(bytes.0.as_slice())
 				.map_err(|_| map_err(Error::SignatureFailed, "Fail to wrap signature"))?;
 
 			result.verifier_account_id = Some(verifier_public_key);

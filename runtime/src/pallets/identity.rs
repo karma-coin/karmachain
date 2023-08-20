@@ -26,9 +26,9 @@ impl pallet_identity::Config for Runtime {
 	/// The currency mechanism.
 	type Currency = Balances;
 	/// Signature that used by `PhoneVerifier`
-	type Signature = sp_core::sr25519::Signature;
+	type Signature = sp_core::ed25519::Signature;
 	/// This is required by the `Signature` type.
-	type PublicKey = sp_core::sr25519::Public;
+	type PublicKey = sp_core::ed25519::Public;
 	/// Treasury account id to get funds from deleted accounts
 	type Treasury = TreasuryPalletId;
 }
