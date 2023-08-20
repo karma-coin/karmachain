@@ -130,6 +130,10 @@ Use the following command to build a node without launching it:
 cargo build --release
 ```
 
+### Interacting
+Run a dev node and connect polkadot.js/apps to it using this url: https://polkadot.js.org/apps/?rpc=ws%3A%2F%2F127.0.0.1%3A9944#/explorer
+
+
 # Sudo 
 
 ## Overview
