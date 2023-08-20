@@ -15,6 +15,7 @@ use sp_core::sr25519;
 use sp_finality_grandpa::AuthorityId as GrandpaId;
 use sp_runtime::Perbill;
 use std::fs::File;
+use hex_literal::hex;
 
 const ENDOWMENT: u128 = 1_000_000_000 * KCOINS;
 const STASH: u128 = 2_500_000 * KCOINS;
@@ -66,7 +67,11 @@ pub fn development_config<'a>(backup: Option<&'a str>) -> Result<ChainSpec, Stri
 				// Sudo account
 				get_account_id_from_seed::<sr25519::Public>("Alice"),
 				// Phone versifiers accounts
-				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
+				vec![
+					get_account_id_from_seed::<sr25519::Public>("Alice"),
+					// 5EUH4CC5czdqfXbgE1fLkXcqMos1thxJSaj93J6N5bSareuz
+					hex!("6a72de3655f40058d341020a2d5339ae3ac4101da6d75dcd98f6c2f787634da8").into(),
+				],
 				// Offchain accounts
 				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
 				// Pre-funded accounts
