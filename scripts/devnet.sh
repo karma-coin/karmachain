@@ -44,7 +44,7 @@ insert_offchain_worker_key() {
         "params": {
             "key_type": "Veri",
             "suri": "//Alice",
-            "public": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d"
+            "public": "0x88dc3417d5058ec4b4503e0c12ea1a0a89be200fe98922423d4334014fa6b0ee"
         }
     }'
 }
