@@ -51,5 +51,5 @@ pub struct VerificationResponse<AccountId, Username, PhoneNumberHash> {
 	pub account_id: Option<AccountId>,
 	pub phone_number_hash: Option<PhoneNumberHash>,
 	pub username: Option<Username>,
-	pub signature: Option<sp_core::sr25519::Signature>,
+	pub signature: Option<sp_core::ed25519::Signature>,
 }

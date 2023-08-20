@@ -1,4 +1,5 @@
 use super::{backup::BackupGenesisConfig, utils::*};
+use hex_literal::hex;
 use karmachain_node_runtime::{
 	opaque::SessionKeys, AccountId, AppreciationConfig, BabeConfig, BalancesConfig, GenesisConfig,
 	GrandpaConfig, IdentityConfig, NominationPoolsConfig, PhoneNumberHash, RewardConfig,
@@ -11,11 +12,10 @@ use sc_service::ChainType;
 use scale_info::prelude::string::String;
 use sp_common::types::{CharTraitId, CommunityId, Score};
 use sp_consensus_babe::AuthorityId as BabeId;
-use sp_core::sr25519;
+use sp_core::{sr25519, ed25519};
 use sp_finality_grandpa::AuthorityId as GrandpaId;
 use sp_runtime::Perbill;
 use std::fs::File;
-use hex_literal::hex;
 
 const ENDOWMENT: u128 = 1_000_000_000 * KCOINS;
 const STASH: u128 = 2_500_000 * KCOINS;
@@ -68,7 +68,7 @@ pub fn development_config<'a>(backup: Option<&'a str>) -> Result<ChainSpec, Stri
 				get_account_id_from_seed::<sr25519::Public>("Alice"),
 				// Phone versifiers accounts
 				vec![
-					get_account_id_from_seed::<sr25519::Public>("Alice"),
+					get_account_id_from_seed::<ed25519::Public>("Alice"),
 					// 5EUH4CC5czdqfXbgE1fLkXcqMos1thxJSaj93J6N5bSareuz
 					hex!("6a72de3655f40058d341020a2d5339ae3ac4101da6d75dcd98f6c2f787634da8").into(),
 				],
