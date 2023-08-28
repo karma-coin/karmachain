@@ -22,7 +22,7 @@ pub const DAYS: BlockNumber = HOURS * 24;
 pub const MONTHS: BlockNumber = DAYS * 30;
 
 /// Existential deposit.
-pub const EXISTENTIAL_DEPOSIT: u128 = 100 * KCENTS;
+pub const EXISTENTIAL_DEPOSIT: u128 = 0;
 
 pub const KCENTS: Balance = 1;
 pub const KCOINS: Balance = 1_000_000 * KCENTS;
