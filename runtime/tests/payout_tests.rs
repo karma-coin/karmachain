@@ -29,7 +29,7 @@ fn check_month_payouts(month_index: u32, total_month_reward: Balance) {
 	for era_index in start_era_index..end_era_index {
 		set_era(era_index);
 		let (payout, rest) = EraPayout::<Staking>::era_payout(0, 0, 0);
-		assert_eq!(payout, total_month_reward / 30 / 4);
+		assert_eq!(payout, total_month_reward / 30 / 1);
 		assert_eq!(rest, 0);
 	}
 }
