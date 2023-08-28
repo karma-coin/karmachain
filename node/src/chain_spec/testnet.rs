@@ -172,6 +172,7 @@ fn testnet_genesis(
 			slash_reward_fraction: Perbill::from_percent(10),
 			min_nominator_bond: 1 * KCOINS,
 			min_validator_bond: 100 * KCOINS,
+			max_validator_count: Some(10),
 			..Default::default()
 		},
 		nomination_pools: NominationPoolsConfig {
