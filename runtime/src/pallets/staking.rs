@@ -2,7 +2,7 @@ use crate::*;
 
 parameter_types! {
 	pub const SessionsPerEra: SessionIndex = ERA_DURATION_IN_EPOCH;
-	pub const BondingDuration: sp_staking::EraIndex = 28;
+	pub const BondingDuration: sp_staking::EraIndex = 7;
 	pub const SlashDeferDuration: sp_staking::EraIndex = 27;
 	pub const MaxNominatorRewardedPerValidator: u32 = 512;
 	pub const OffendingValidatorsThreshold: Perbill = Perbill::from_percent(17);
