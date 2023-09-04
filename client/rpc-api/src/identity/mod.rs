@@ -38,6 +38,14 @@ pub trait IdentityApi<BlockHash, AccountId, Username, PhoneNumber, PhoneNumberHa
 		at: Option<BlockHash>,
 	) -> RpcResult<Option<UserInfo<AccountId>>>;
 
+	/// RPC method provides account metadata
+	#[method(name = "identity_getMetadata")]
+	fn get_metadata(
+		&self,
+		account_id: AccountId,
+		at: Option<BlockHash>,
+	) -> RpcResult<Option<Vec<u8>>>;
+
 	/// RPC method provides list of community members with information
 	/// about each member account
 	#[method(name = "community_getAllUsers")]

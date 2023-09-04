@@ -12,7 +12,7 @@ use sp_common::{
 	types::{CharTraitId, CommunityId},
 	BoundedString,
 };
-use sp_core::{hashing::blake2_512, sr25519, ed25519, Pair, Public};
+use sp_core::{ed25519, hashing::blake2_512, sr25519, Pair, Public};
 use sp_rpc::verifier::VerificationEvidence;
 use sp_runtime::traits::{IdentifyAccount, Verify};
 
