@@ -55,7 +55,7 @@ mod chain {
 			.unwrap();
 
 		let alice =
-			AccountId::from_string("5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY").unwrap();
+			AccountId::from_string("5EUH4CC5czdqfXbgE1fLkXcqMos1thxJSaj93J6N5bSareuz").unwrap();
 		assert!(response.result.unwrap().verifiers.iter().any(|value| value.account_id == alice));
 
 		Ok(())

@@ -12,7 +12,7 @@ use sc_service::ChainType;
 use scale_info::prelude::string::String;
 use sp_common::types::{CharTraitId, CommunityId, Score};
 use sp_consensus_babe::AuthorityId as BabeId;
-use sp_core::{sr25519, ed25519};
+use sp_core::{ed25519, sr25519};
 use sp_finality_grandpa::AuthorityId as GrandpaId;
 use sp_runtime::Perbill;
 use std::fs::File;
