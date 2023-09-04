@@ -72,6 +72,10 @@ pub mod pallet {
 		/// Treasury account id to get funds from deleted accounts
 		#[pallet::constant]
 		type Treasury: Get<PalletId>;
+
+		/// The maximum length of metadata per account
+		#[pallet::constant]
+		type MaxMetadataLength: Get<u32>;
 	}
 
 	#[pallet::pallet]
@@ -146,6 +150,12 @@ pub mod pallet {
 	#[pallet::getter(fn verifiers)]
 	pub type PhoneVerifiers<T: Config> =
 		StorageValue<_, BoundedVec<T::AccountId, T::MaxPhoneVerifiers>, ValueQuery>;
+
+	/// Store metadata per `AccountId`
+	#[pallet::storage]
+	#[pallet::getter(fn metadata)]
+	pub type Metadata<T: Config> =
+		StorageMap<_, Blake2_128Concat, T::AccountId, BoundedVec<u8, T::MaxMetadataLength>>;
 
 	#[pallet::error]
 	pub enum Error<T> {
@@ -366,6 +376,28 @@ pub mod pallet {
 				username: identity_info.username,
 				phone_number_hash: identity_info.phone_number_hash,
 			});
+
+			Ok(())
+		}
+
+		/// Set metadata for sender account, in case of metadata already exists override it
+		#[pallet::call_index(3)]
+		#[pallet::weight(10_000 + T::DbWeight::get().reads_writes(3, 1).ref_time())]
+		pub fn set_metadata(origin: OriginFor<T>, metadata: BoundedVec<u8, T::MaxMetadataLength>) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			Metadata::<T>::insert(&who, metadata);
+
+			Ok(())
+		}
+
+		/// Remove metadata for sender account
+		#[pallet::call_index(4)]
+		#[pallet::weight(10_000 + T::DbWeight::get().reads_writes(3, 1).ref_time())]
+		pub fn remove_metadata(origin: OriginFor<T>) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			Metadata::<T>::remove(&who);
 
 			Ok(())
 		}
