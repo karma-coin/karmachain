@@ -449,6 +449,10 @@ impl_runtime_apis! {
 			})
 		}
 
+		fn get_metadata(account_id: AccountId) -> Option<Vec<u8>> {
+			Identity::metadata(account_id).map(Into::into)
+		}
+
 		fn get_all_users(
 			community_id: CommunityId,
 			from_index: Option<u64>,

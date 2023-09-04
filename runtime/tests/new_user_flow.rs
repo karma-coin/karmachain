@@ -4,7 +4,7 @@ use frame_support::{assert_noop, assert_ok};
 use karmachain_node_runtime::*;
 use runtime_api::identity::runtime_decl_for_identity_api::IdentityApiV1;
 use sp_common::identity::AccountIdentity;
-use sp_core::{hashing::blake2_512, sr25519, ed25519};
+use sp_core::{ed25519, hashing::blake2_512, sr25519};
 use utils::*;
 
 #[test]

@@ -2,7 +2,7 @@ mod utils;
 
 use frame_support::assert_ok;
 use karmachain_node_runtime::*;
-use sp_core::{sr25519};
+use sp_core::sr25519;
 use utils::*;
 
 #[test]
@@ -13,7 +13,11 @@ fn set_metadata_works() {
 
 		assert_ok!(Identity::set_metadata(
 			RuntimeOrigin::signed(account_id.clone()),
-			metadata_string.as_bytes().to_vec().try_into().expect("Metadata exceeds [`Config::MaxMetadataLen`]")
+			metadata_string
+				.as_bytes()
+				.to_vec()
+				.try_into()
+				.expect("Metadata exceeds [`Config::MaxMetadataLen`]")
 		));
 
 		let metadata = Identity::metadata(&account_id).expect("Missing metadata");
@@ -32,7 +36,11 @@ fn set_metadata_override_with_no_error() {
 
 		assert_ok!(Identity::set_metadata(
 			RuntimeOrigin::signed(account_id.clone()),
-			metadata_string.as_bytes().to_vec().try_into().expect("Metadata exceeds [`Config::MaxMetadataLen`]")
+			metadata_string
+				.as_bytes()
+				.to_vec()
+				.try_into()
+				.expect("Metadata exceeds [`Config::MaxMetadataLen`]")
 		));
 
 		let metadata = Identity::metadata(&account_id).expect("Missing metadata");
@@ -45,7 +53,11 @@ fn set_metadata_override_with_no_error() {
 
 		assert_ok!(Identity::set_metadata(
 			RuntimeOrigin::signed(account_id.clone()),
-			new_metadata_string.as_bytes().to_vec().try_into().expect("Metadata exceeds [`Config::MaxMetadataLen`]")
+			new_metadata_string
+				.as_bytes()
+				.to_vec()
+				.try_into()
+				.expect("Metadata exceeds [`Config::MaxMetadataLen`]")
 		));
 
 		let metadata = Identity::metadata(&account_id).expect("Missing metadata");
@@ -60,12 +72,16 @@ fn set_metadata_override_with_no_error() {
 #[should_panic]
 fn set_metadata_check_metadata_length() {
 	let account_id = get_account_id_from_seed::<sr25519::Public>("Alice");
-		let metadata_string = "b".repeat(257);
+	let metadata_string = "b".repeat(257);
 
-		assert_ok!(Identity::set_metadata(
-			RuntimeOrigin::signed(account_id.clone()),
-			metadata_string.as_bytes().to_vec().try_into().expect("Metadata exceeds [`Config::MaxMetadataLen`]")
-		));
+	assert_ok!(Identity::set_metadata(
+		RuntimeOrigin::signed(account_id.clone()),
+		metadata_string
+			.as_bytes()
+			.to_vec()
+			.try_into()
+			.expect("Metadata exceeds [`Config::MaxMetadataLen`]")
+	));
 }
 
 #[test]
@@ -76,7 +92,11 @@ fn remove_metadata_works() {
 
 		assert_ok!(Identity::set_metadata(
 			RuntimeOrigin::signed(account_id.clone()),
-			metadata_string.as_bytes().to_vec().try_into().expect("Metadata exceeds [`Config::MaxMetadataLen`]")
+			metadata_string
+				.as_bytes()
+				.to_vec()
+				.try_into()
+				.expect("Metadata exceeds [`Config::MaxMetadataLen`]")
 		));
 
 		let metadata = Identity::metadata(&account_id).expect("Missing metadata");

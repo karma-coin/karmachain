@@ -114,6 +114,23 @@ where
 			})?)
 	}
 
+	fn get_metadata(
+		&self,
+		account_id: AccountId,
+		at: Option<<Block as BlockT>::Hash>,
+	) -> RpcResult<Option<Vec<u8>>> {
+		let api = self.client.runtime_api();
+		let at = at.unwrap_or_else(|| self.client.info().best_hash);
+
+		Ok(api.get_metadata(at, account_id).map_err(|e| {
+			CallError::Custom(ErrorObject::owned(
+				0,
+				"Unable to query user info.",
+				Some(format!("{e:?}")),
+			))
+		})?)
+	}
+
 	fn get_all_users(
 		&self,
 		community_id: CommunityId,

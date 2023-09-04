@@ -383,7 +383,10 @@ pub mod pallet {
 		/// Set metadata for sender account, in case of metadata already exists override it
 		#[pallet::call_index(3)]
 		#[pallet::weight(10_000 + T::DbWeight::get().reads_writes(3, 1).ref_time())]
-		pub fn set_metadata(origin: OriginFor<T>, metadata: BoundedVec<u8, T::MaxMetadataLength>) -> DispatchResult {
+		pub fn set_metadata(
+			origin: OriginFor<T>,
+			metadata: BoundedVec<u8, T::MaxMetadataLength>,
+		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
 			Metadata::<T>::insert(&who, metadata);
