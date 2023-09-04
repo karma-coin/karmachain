@@ -6,6 +6,7 @@ parameter_types! {
 	pub const NameLimit: u32 = 40;
 	pub const PhoneNumberLimit: u32 = 12;
 	pub const MaxPhoneVerifiers: u32 = 5;
+	pub const MaxMetadataLength: u32= 256;
 }
 
 pub type Username = BoundedString<NameLimit>;
@@ -31,4 +32,6 @@ impl pallet_identity::Config for Runtime {
 	type PublicKey = sp_core::ed25519::Public;
 	/// Treasury account id to get funds from deleted accounts
 	type Treasury = TreasuryPalletId;
+	/// The maximum length of metadata per account.
+	type MaxMetadataLength = MaxMetadataLength;
 }
