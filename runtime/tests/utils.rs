@@ -15,7 +15,6 @@ use sp_common::{
 use sp_core::{hashing::blake2_512, sr25519, ed25519, Pair, Public};
 use sp_rpc::verifier::VerificationEvidence;
 use sp_runtime::traits::{IdentifyAccount, Verify};
-use sp_core::crypto::DEV_PHRASE;
 
 /// Generate a crypto pair from seed.
 pub fn get_from_seed<TPublic: Public>(seed: &str) -> <TPublic::Pair as Pair>::Public {
