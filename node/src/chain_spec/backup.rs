@@ -1,4 +1,4 @@
-use karmachain_node_runtime::{AccountId, NameLimit, Balance, PhoneNumberHash, Username};
+use karmachain_node_runtime::{AccountId, Balance, PhoneNumberHash, Username};
 use pallet_appreciation::CommunityRole;
 use scale_info::prelude::string::String;
 use sp_common::{
@@ -62,11 +62,10 @@ impl BackupGenesisConfig {
 				index += 1;
 			}
 
-			
-			let username =Username::try_from(username);
+			let username = Username::try_from(username);
 			// Skip invalid usernames
 			if username.is_err() {
-				continue;
+				continue
 			}
 			let username = username.unwrap().normalize();
 
