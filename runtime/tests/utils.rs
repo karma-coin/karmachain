@@ -12,8 +12,8 @@ use sp_common::{
 	types::{CharTraitId, CommunityId},
 	BoundedString,
 };
-use sp_core::{hashing::blake2_512, sr25519, Pair, Public};
-use sp_rpc::types::VerificationEvidence;
+use sp_core::{ed25519, hashing::blake2_512, sr25519, Pair, Public};
+use sp_rpc::verifier::VerificationEvidence;
 use sp_runtime::traits::{IdentifyAccount, Verify};
 
 /// Generate a crypto pair from seed.
@@ -47,7 +47,7 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 
 	ext.execute_with(|| {
 		// Creating Alice's AccountId
-		let alice = get_account_id_from_seed::<sr25519::Public>("Alice");
+		let alice = get_account_id_from_seed::<ed25519::Public>("Alice");
 		let bounded_vec: BoundedVec<_, MaxPhoneVerifiers> = vec![alice].try_into().unwrap();
 		// Set Alice as phone verifier
 		pallet_identity::PhoneVerifiers::<Runtime>::put(bounded_vec);
@@ -234,12 +234,12 @@ pub fn get_verification_evidence(
 	account_id: AccountId,
 	username: Username,
 	phone_number_hash: PhoneNumberHash,
-) -> (sp_core::sr25519::Public, sp_core::sr25519::Signature) {
+) -> (sp_core::ed25519::Public, sp_core::ed25519::Signature) {
 	// Cast username to lowercase
 	let username = username.normalize();
 
-	let pair = sp_core::sr25519::Pair::from_string("//Alice", None).unwrap();
-	let data = VerificationEvidence::<sp_core::sr25519::Public, _, _, _> {
+	let pair = sp_core::ed25519::Pair::from_string("//Alice", None).unwrap();
+	let data = VerificationEvidence::<sp_core::ed25519::Public, _, _, _> {
 		verifier_public_key: pair.public(),
 		account_id,
 		username,

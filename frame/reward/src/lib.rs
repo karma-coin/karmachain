@@ -16,7 +16,6 @@ use sp_common::{
 	traits::ScoreProvider,
 	types::{CharTraitId, CommunityId},
 };
-use sp_runtime::traits::Zero;
 use sp_std::{default::Default, vec::Vec};
 
 #[frame_support::pallet]
@@ -156,6 +155,7 @@ pub mod pallet {
 			TxFeeSubsidyMaxAmount::<T>::put(self.tx_fee_subsidy_max_amount);
 			TxFeeSubsidiesAlloc::<T>::put(self.tx_fee_subsidies_alloc);
 
+			KarmaRewardNextTime::<T>::put(self.karma_reward_frequency);
 			KarmaRewardFrequency::<T>::put(self.karma_reward_frequency);
 			KarmaRewardAmount::<T>::put(self.karma_reward_amount);
 			MaxKarmaRewardAlloc::<T>::put(self.karma_reward_alloc);
@@ -169,12 +169,13 @@ pub mod pallet {
 		StorageValue<_, BoundedVec<T::AccountId, T::MaxOffchainAccounts>, ValueQuery>;
 
 	#[pallet::storage]
+	pub type SignupRewardsCounter<T: Config> = StorageValue<_, u64, ValueQuery>;
+	#[pallet::storage]
 	pub type SignupRewardTotalAllocated<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
 	#[pallet::storage]
 	pub type SignupRewardPhase1Alloc<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
 	#[pallet::storage]
 	pub type SignupRewardPhase2Alloc<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
-
 	#[pallet::storage]
 	pub type SignupRewardPhase1Amount<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
 	#[pallet::storage]
@@ -183,6 +184,8 @@ pub mod pallet {
 	pub type SignupRewardPhase3Amount<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
 
 	#[pallet::storage]
+	pub type ReferralRewardsCounter<T: Config> = StorageValue<_, u64, ValueQuery>;
+	#[pallet::storage]
 	pub type ReferralRewardTotalAllocated<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
 	#[pallet::storage]
 	pub type ReferralRewardPhase1Alloc<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
@@ -190,6 +193,7 @@ pub mod pallet {
 	pub type ReferralRewardPhase2Alloc<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
 	#[pallet::storage]
 	pub type ReferralRewardPhase3Alloc<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
+
 	#[pallet::storage]
 	pub type ReferralRewardPhase1Amount<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
 	#[pallet::storage]
@@ -198,15 +202,24 @@ pub mod pallet {
 	pub type ReferralRewardPhase3Amount<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
 
 	#[pallet::storage]
+	pub type TxFeeSubsidiesCounter<T: Config> = StorageValue<_, u64, ValueQuery>;
+	#[pallet::storage]
 	pub type TxFeeSubsidyMaxPerUser<T: Config> = StorageValue<_, u8, ValueQuery>;
 	#[pallet::storage]
 	pub type TxFeeSubsidyMaxAmount<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
-
 	#[pallet::storage]
 	pub type TxFeeSubsidiesTotalAllocated<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
 	#[pallet::storage]
 	pub type TxFeeSubsidiesAlloc<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
 
+	#[pallet::storage]
+	pub type KarmaRewardsCounter<T: Config> = StorageValue<_, u64, ValueQuery>;
+	#[pallet::storage]
+	pub type KarmaRewardsUsersRewardedCounter<T: Config> = StorageValue<_, u64, ValueQuery>;
+	#[pallet::storage]
+	pub type KarmaRewardLastTime<T: Config> = StorageValue<_, T::BlockNumber, ValueQuery>;
+	#[pallet::storage]
+	pub type KarmaRewardNextTime<T: Config> = StorageValue<_, T::BlockNumber, ValueQuery>;
 	#[pallet::storage]
 	pub type KarmaRewardFrequency<T: Config> = StorageValue<_, T::BlockNumber, ValueQuery>;
 	#[pallet::storage]
@@ -253,7 +266,12 @@ pub mod pallet {
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
 		fn offchain_worker(n: BlockNumberFor<T>) {
-			let winners = Self::distribute_karma_rewards(n);
+			// Too early for karma reward
+			if n < KarmaRewardNextTime::<T>::get() {
+				return
+			}
+
+			let winners = Self::distribute_karma_rewards();
 
 			if winners.is_empty() {
 				return
@@ -279,7 +297,7 @@ pub mod pallet {
 
 			let reward_total_allocated = KarmaRewardTotalAllocated::<T>::get();
 			let reward_allocated = MaxKarmaRewardAlloc::<T>::get();
-			let reward = KarmaRewardAmount::<T>::get();
+			let reward = Self::get_current_karma_reward_amount();
 
 			// How many accounts can be rewarded due to remained reward amount
 			let can_reward_n_accounts = (reward_total_allocated - reward_allocated) / reward;
@@ -290,12 +308,36 @@ pub mod pallet {
 				Self::issue_karma_reward(&winner, reward)?;
 			}
 
+			let current_block_number = <frame_system::Pallet<T>>::block_number();
+			let karma_reward_frequency = KarmaRewardFrequency::<T>::get();
+			// If current reward is out of schedule
+			let next_karma_reward_block_number = current_block_number + karma_reward_frequency -
+				current_block_number % karma_reward_frequency;
+
+			KarmaRewardLastTime::<T>::put(current_block_number);
+			KarmaRewardNextTime::<T>::put(next_karma_reward_block_number);
+			KarmaRewardsCounter::<T>::mutate(|n| *n += 1);
+
 			Ok(())
 		}
 	}
 }
 
 impl<T: Config> Pallet<T> {
+	pub fn get_current_signup_reward_amount() -> T::Balance {
+		let total_allocated = SignupRewardTotalAllocated::<T>::get();
+
+		if total_allocated < SignupRewardPhase1Alloc::<T>::get() {
+			SignupRewardPhase1Amount::<T>::get()
+		} else if total_allocated <
+			(SignupRewardPhase2Alloc::<T>::get() + SignupRewardPhase1Alloc::<T>::get())
+		{
+			SignupRewardPhase2Amount::<T>::get()
+		} else {
+			SignupRewardPhase3Amount::<T>::get()
+		}
+	}
+
 	pub(crate) fn issue_signup_reward(who: &T::AccountId, amount: T::Balance) -> DispatchResult {
 		// Check that user do not get the reward earlier
 		let mut account_reward_info = AccountRewardInfo::<T>::get(who);
@@ -304,9 +346,11 @@ impl<T: Config> Pallet<T> {
 		// Mark that user get the reward
 		account_reward_info.signup_reward = true;
 		AccountRewardInfo::<T>::set(who, account_reward_info);
-
-		// Increase total allocated amount of the reward and deposit the reward to user
+		// Increase reward counter
+		SignupRewardsCounter::<T>::mutate(|value| *value += 1);
+		// Increase total allocated amount of the reward
 		SignupRewardTotalAllocated::<T>::mutate(|value| *value += amount);
+		// Deposit the reward to user
 		T::Currency::deposit_creating(who, amount);
 
 		Self::deposit_event(Event::<T>::RewardIssued {
@@ -318,6 +362,20 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
+	pub fn get_current_referral_reward_amount() -> T::Balance {
+		let total_allocated = ReferralRewardTotalAllocated::<T>::get();
+
+		if total_allocated < ReferralRewardPhase1Alloc::<T>::get() {
+			ReferralRewardPhase1Amount::<T>::get()
+		} else if total_allocated <
+			(ReferralRewardPhase2Alloc::<T>::get() + ReferralRewardPhase1Alloc::<T>::get())
+		{
+			ReferralRewardPhase2Amount::<T>::get()
+		} else {
+			ReferralRewardPhase3Amount::<T>::get()
+		}
+	}
+
 	pub(crate) fn issue_referral_reward(who: &T::AccountId, amount: T::Balance) -> DispatchResult {
 		// Check that user do not get the reward earlier
 		let mut account_reward_info = AccountRewardInfo::<T>::get(who);
@@ -326,9 +384,11 @@ impl<T: Config> Pallet<T> {
 		// Mark that user get the reward
 		account_reward_info.referral_reward = true;
 		AccountRewardInfo::<T>::set(who, account_reward_info);
-
-		// Increase total allocated amount of the reward and deposit the reward to user
+		// Increase reward counter
+		ReferralRewardsCounter::<T>::mutate(|value| *value += 1);
+		// Increase total allocated amount of the reward
 		ReferralRewardTotalAllocated::<T>::mutate(|value| *value += amount);
+		// Deposit the reward to user
 		T::Currency::deposit_creating(who, amount);
 
 		Self::deposit_event(Event::<T>::RewardIssued {
@@ -340,6 +400,10 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
+	pub fn get_current_karma_reward_amount() -> T::Balance {
+		KarmaRewardAmount::<T>::get()
+	}
+
 	pub(crate) fn issue_karma_reward(who: &T::AccountId, amount: T::Balance) -> DispatchResult {
 		// Check that user do not get the reward earlier
 		let mut account_reward_info = AccountRewardInfo::<T>::get(who);
@@ -348,9 +412,11 @@ impl<T: Config> Pallet<T> {
 		// Mark that user get the reward
 		account_reward_info.karma_reward = true;
 		AccountRewardInfo::<T>::set(who, account_reward_info);
-
-		// Increase total allocated amount of the reward and deposit the reward to user
+		// Increase reward counter
+		KarmaRewardsUsersRewardedCounter::<T>::mutate(|value| *value += 1);
+		// Increase total allocated amount of the reward
 		KarmaRewardTotalAllocated::<T>::mutate(|value| *value += amount);
+		// Deposit the reward to user
 		T::Currency::deposit_creating(who, amount);
 
 		Self::deposit_event(Event::<T>::RewardIssued {
@@ -362,6 +428,10 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
+	pub fn get_current_fee_subsidie_amount() -> T::Balance {
+		TxFeeSubsidyMaxAmount::<T>::get()
+	}
+
 	pub fn subsidies_tx_fee(who: &T::AccountId, amount: T::Balance) -> bool {
 		// Not more tokens left
 		if TxFeeSubsidiesTotalAllocated::<T>::get() >= TxFeeSubsidiesAlloc::<T>::get() {
@@ -369,18 +439,22 @@ impl<T: Config> Pallet<T> {
 		}
 
 		// Fee is too big
-		if amount > TxFeeSubsidyMaxAmount::<T>::get() {
+		if amount > Self::get_current_fee_subsidie_amount() {
 			return false
 		}
 
-		// No more tx fee subsidies allowed
+		// No more transaction fee subsidies allowed
 		if AccountRewardInfo::<T>::get(who).transaction_subsidized >=
 			TxFeeSubsidyMaxPerUser::<T>::get()
 		{
 			return false
 		}
 
+		// Mark that user get the subsidies
 		AccountRewardInfo::<T>::mutate(who, |info| info.transaction_subsidized += 1);
+		// Increase reward counter
+		TxFeeSubsidiesCounter::<T>::mutate(|value| *value += 1);
+		// Increase total allocated amount of the reward
 		TxFeeSubsidiesTotalAllocated::<T>::mutate(|value| *value += amount);
 
 		Self::deposit_event(Event::<T>::RewardIssued {
@@ -471,16 +545,13 @@ impl<T: Config> Pallet<T> {
 		random_number
 	}
 
-	fn distribute_karma_rewards(block_number: T::BlockNumber) -> Vec<T::AccountId> {
-		if block_number % KarmaRewardFrequency::<T>::get() != T::BlockNumber::zero() {
-			// Too early, skipping rewards for now
-			return sp_std::vec![]
-		}
-
+	pub fn accounts_to_participate_in_karma_reward() -> Vec<T::AccountId> {
+		// Maximum number of accounts that can participate in karma reward
 		let participates_number = KarmaRewardUsersParticipates::<T>::get();
-		let winners_number = T::MaxWinners::get();
+		// Minimum number of appreciations required to participate in karma reward
 		let appreciations_requires = KarmaRewardAppreciationsRequires::<T>::get();
 
+		// Accounts that do not get rewards yet and have enough appreciations
 		let mut accounts = AccountRewardInfo::<T>::iter()
 			.filter(|(_, info)| {
 				!info.karma_reward && info.appreciation_count >= appreciations_requires
@@ -488,13 +559,20 @@ impl<T: Config> Pallet<T> {
 			.map(|(account_id, _)| (T::ScoreProvider::score_of(&account_id), account_id))
 			.collect::<Vec<_>>();
 
+		// Sort by score
 		accounts.sort_by(|(score_a, _), (score_b, _)| score_b.cmp(score_a));
 
-		let mut participate_accounts = accounts
+		// Take first `participates_number` accounts
+		accounts
 			.into_iter()
-			.map(|(_, account_id)| account_id)
 			.take(participates_number as usize)
-			.collect::<Vec<_>>();
+			.map(|(_, account_id)| account_id)
+			.collect()
+	}
+
+	fn distribute_karma_rewards() -> Vec<T::AccountId> {
+		let winners_number = T::MaxWinners::get();
+		let mut participate_accounts = Self::accounts_to_participate_in_karma_reward();
 
 		// Winners can't be more than participates
 		if participate_accounts.len() <= winners_number as usize {
@@ -550,19 +628,9 @@ impl<T: Config> KarmaHooks<T::AccountId, T::Balance, T::Username, T::PhoneNumber
 			return Ok(())
 		}
 
-		let total_allocated = SignupRewardTotalAllocated::<T>::get();
-
-		let reward = if total_allocated < SignupRewardPhase1Alloc::<T>::get() {
-			SignupRewardPhase1Amount::<T>::get()
-		} else if total_allocated <
-			(SignupRewardPhase2Alloc::<T>::get() + SignupRewardPhase1Alloc::<T>::get())
-		{
-			SignupRewardPhase2Amount::<T>::get()
-		} else {
-			SignupRewardPhase3Amount::<T>::get()
-		};
-
+		let reward = Self::get_current_signup_reward_amount();
 		Self::issue_signup_reward(&who, reward)?;
+
 		Ok(())
 	}
 
@@ -605,18 +673,7 @@ impl<T: Config> KarmaHooks<T::AccountId, T::Balance, T::Username, T::PhoneNumber
 	}
 
 	fn on_referral(who: T::AccountId, _whom: T::AccountId) -> DispatchResult {
-		let total_allocated = ReferralRewardTotalAllocated::<T>::get();
-
-		let reward = if total_allocated < ReferralRewardPhase1Alloc::<T>::get() {
-			ReferralRewardPhase1Amount::<T>::get()
-		} else if total_allocated <
-			(ReferralRewardPhase2Alloc::<T>::get() + ReferralRewardPhase1Alloc::<T>::get())
-		{
-			ReferralRewardPhase2Amount::<T>::get()
-		} else {
-			ReferralRewardPhase3Amount::<T>::get()
-		};
-
+		let reward = Self::get_current_referral_reward_amount();
 		Self::issue_referral_reward(&who, reward)?;
 
 		Ok(())

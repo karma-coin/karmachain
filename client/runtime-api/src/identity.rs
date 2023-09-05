@@ -16,6 +16,9 @@ sp_api::decl_runtime_apis! {
 			account_identity: AccountIdentity<AccountId, Username, PhoneNumberHash>,
 		) -> Option<UserInfo<AccountId>>;
 
+		// Get user metadata
+		fn get_metadata(account_id: AccountId) -> Option<Vec<u8>>;
+
 		/// Provide list of community members with information about each member
 		fn get_all_users(
 			community_id: CommunityId,
@@ -30,5 +33,8 @@ sp_api::decl_runtime_apis! {
 			from_index: Option<u64>,
 			limit: Option<u64>,
 		) -> Vec<Contact<AccountId>>;
+
+		// Get list of users that participate in karma reward
+		fn get_leader_board() -> Vec<UserInfo<AccountId>>;
 	}
 }

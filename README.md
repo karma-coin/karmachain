@@ -81,7 +81,7 @@ curl --location 'http://localhost:9944/' \
     "params": {
         "key_type": "Veri",
         "suri": "//Alice",
-        "public": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d"
+        "public": "0x88dc3417d5058ec4b4503e0c12ea1a0a89be200fe98922423d4334014fa6b0ee"
     }
 }'
 ```
@@ -129,6 +129,10 @@ Use the following command to build a node without launching it:
 ```sh
 cargo build --release
 ```
+
+### Interacting
+Run a dev node and connect polkadot.js/apps to it using this url: https://polkadot.js.org/apps/?rpc=ws%3A%2F%2F127.0.0.1%3A9944#/explorer
+
 
 # Sudo 
 

@@ -2,11 +2,13 @@ use crate::{validators_rewards::era_payout, *};
 use codec::{Decode, Encode};
 use frame_system::{EventRecord, Phase};
 use pallet_identity::types::VerificationResult as IdentityVerificationResult;
+use pallet_nomination_pools::PoolId;
 use pallet_transaction_payment_rpc_runtime_api::{FeeDetails, RuntimeDispatchInfo};
 use sp_common::{types::CommunityId, BoundedString};
 use sp_rpc::{
-	BlockchainStats, CharTrait, CommunityMembership, Contact, GenesisData, PhoneVerifier,
-	SignedTransaction, SignedTransactionWithStatus, TraitScore, TransactionStatus, UserInfo,
+	BlockchainStats, BondedPool, CharTrait, CommunityMembership, Contact, GenesisData,
+	NominationPoolsConfiguration, Nominations, PhoneVerifier, PoolMember, SignedTransaction,
+	SignedTransactionWithStatus, TraitScore, TransactionStatus, UserInfo, ValidatorPrefs,
 	VerificationResult,
 };
 use sp_runtime::{generic::SignedBlock, traits::StaticLookup};
@@ -228,49 +230,77 @@ impl_runtime_apis! {
 		}
 	}
 
-	impl runtime_api::chain::BlockInfoProvider<Block, SignedBlock<Block>, AccountId, Hash> for Runtime {
+	impl runtime_api::chain::ChainDataProvider<Block, SignedBlock<Block>, AccountId, Hash> for Runtime {
 		fn get_blockchain_data() -> BlockchainStats {
+			let last_block_time = Timestamp::get();
 			let tip_height = System::block_number().into();
+			let total_issuance = Balances::total_issuance();
 			let transaction_count = pallet_transaction_indexer::TransactionsCount::<Runtime>::get();
 			let payment_transaction_count = pallet_transaction_indexer::PaymentTransactionsCount::<Runtime>::get();
 			let appreciations_transactions_count = pallet_transaction_indexer::AppreciationTransactionsCount::<Runtime>::get();
 			let update_user_transactions_count = pallet_transaction_indexer::UpdateUserTransactionsCount::<Runtime>::get();
 			let users_count = pallet_identity::IdentityOf::<Runtime>::count().into();
-			let fees_amount = 0; // TODO:
-			let minted_amount = Reward::total_rewarded();
-			let circulation = Reward::total_rewarded();
-			let fee_subs_count = 0; // TODO:
-			let fee_subs_amount = pallet_reward::TxFeeSubsidiesTotalAllocated::<Runtime>::get();
-			let signup_rewards_count = 0; // TODO:
-			let signup_rewards_amount = pallet_reward::SignupRewardTotalAllocated::<Runtime>::get();
-			let referral_rewards_count = 0; // TODO:
-			let referral_rewards_amount = pallet_reward::ReferralRewardTotalAllocated::<Runtime>::get();
-			let validator_rewards_count = 0;
-			let validator_rewards_amount = (0..Staking::current_era().unwrap_or_default())
-				.map(era_payout)
-				.sum();
-			let causes_rewards_amount = 0;
+
+			let fee_subs_total_issued_amount = pallet_reward::TxFeeSubsidiesTotalAllocated::<Runtime>::get();
+			let fee_subs_count = pallet_reward::TxFeeSubsidiesCounter::<Runtime>::get();
+			let fee_subs_current_reward_amount = Reward::get_current_fee_subsidie_amount();
+
+			let signup_rewards_total_issued_amount = pallet_reward::SignupRewardTotalAllocated::<Runtime>::get();
+			let signup_rewards_count = pallet_reward::SignupRewardsCounter::<Runtime>::get();
+			let signup_rewards_current_reward_amount = Reward::get_current_signup_reward_amount();
+
+			let referral_rewards_total_issued_amount = pallet_reward::ReferralRewardTotalAllocated::<Runtime>::get();
+			let referral_rewards_count = pallet_reward::ReferralRewardsCounter::<Runtime>::get();
+			let referral_rewards_current_reward_amount = Reward::get_current_referral_reward_amount();
+
+			let current_era = Staking::current_era().unwrap_or_default();
+
+			let validator_rewards_total_issued_amount = (0..current_era).map(era_payout).sum();
+			let validator_rewards_count = current_era.into();
+			let validator_rewards_current_reward_amount = era_payout(current_era);
+
+			// TODO: causes rewards not yet implemented
+			let causes_rewards_total_issued_amount = 0;
+			let causes_rewards_count = 0;
+			let causes_rewards_current_reward_amount = 0;
+
+			let karma_rewards_total_issued_amount = pallet_reward::KarmaRewardTotalAllocated::<Runtime>::get();
+			let karma_rewards_count = pallet_reward::KarmaRewardsCounter::<Runtime>::get();
+			let karma_rewards_current_reward_amount = Reward::get_current_karma_reward_amount();
+			let karma_rewards_users_rewarded_count = pallet_reward::KarmaRewardsUsersRewardedCounter::<Runtime>::get();
+			let karma_rewards_last_time = pallet_reward::KarmaRewardLastTime::<Runtime>::get().into();
+			let karma_rewards_next_time = pallet_reward::KarmaRewardNextTime::<Runtime>::get().into();
 
 			BlockchainStats {
-				last_block_time: MILLISECS_PER_BLOCK,
+				last_block_time,
 				tip_height,
+				total_issuance,
 				transaction_count,
 				payment_transaction_count,
 				appreciations_transactions_count,
 				update_user_transactions_count,
 				users_count,
-				fees_amount,
-				minted_amount,
-				circulation,
+				fee_subs_total_issued_amount,
 				fee_subs_count,
-				fee_subs_amount,
+				fee_subs_current_reward_amount,
+				signup_rewards_total_issued_amount,
 				signup_rewards_count,
-				signup_rewards_amount,
+				signup_rewards_current_reward_amount,
+				referral_rewards_total_issued_amount,
 				referral_rewards_count,
-				referral_rewards_amount,
+				referral_rewards_current_reward_amount,
+				validator_rewards_total_issued_amount,
 				validator_rewards_count,
-				validator_rewards_amount,
-				causes_rewards_amount,
+				validator_rewards_current_reward_amount,
+				causes_rewards_total_issued_amount,
+				causes_rewards_count,
+				causes_rewards_current_reward_amount,
+				karma_rewards_total_issued_amount,
+				karma_rewards_count,
+				karma_rewards_current_reward_amount,
+				karma_rewards_users_rewarded_count,
+				karma_rewards_last_time,
+				karma_rewards_next_time,
 			}
 		}
 
@@ -349,6 +379,21 @@ impl_runtime_apis! {
 				verifiers,
 			}
 		}
+
+		fn get_char_traits(from_index: Option<u32>, limit: Option<u32>) -> Vec<CharTrait> {
+			pallet_appreciation::CharTraits::<Runtime>::get()
+				.into_iter()
+				.skip(from_index.unwrap_or(0) as usize)
+				.take(limit.unwrap_or(u32::MAX) as usize)
+				.map(|char_trait| CharTrait {
+					id: char_trait.id,
+					// Safety: name is always a valid UTF-8 string
+					name: char_trait.name.try_into().unwrap(),
+					// Safety: emoji is always a valid UTF-8 string
+					emoji: char_trait.emoji.try_into().unwrap(),
+				})
+				.collect()
+		}
 	}
 
 	impl runtime_api::events::EventProvider<Block, EventRecord<RuntimeEvent, Hash>> for Runtime {
@@ -402,6 +447,10 @@ impl_runtime_apis! {
 					community_membership,
 				}
 			})
+		}
+
+		fn get_metadata(account_id: AccountId) -> Option<Vec<u8>> {
+			Identity::metadata(account_id).map(Into::into)
 		}
 
 		fn get_all_users(
@@ -459,6 +508,77 @@ impl_runtime_apis! {
 					}
 				})
 				.collect()
+		}
+
+		fn get_leader_board() -> Vec<UserInfo<AccountId>> {
+			Reward::accounts_to_participate_in_karma_reward()
+				.into_iter()
+				.map(|account_id| {
+					// Safety: if account participate in karma reward it must have identity
+					Self::get_user_info(AccountIdentity::AccountId(account_id)).unwrap()
+				})
+				.collect()
+		}
+	}
+
+	impl runtime_api::nomination_pools::NominationPoolsApi<Block, AccountId, Balance, BlockNumber> for Runtime {
+		fn pending_rewards(who: AccountId) -> Option<Balance> {
+			NominationPools::api_pending_rewards(who)
+		}
+
+		fn points_to_balance(pool_id: PoolId, points: Balance) -> Balance {
+			NominationPools::api_points_to_balance(pool_id, points)
+		}
+
+		fn balance_to_points(pool_id: PoolId, new_funds: Balance) -> Balance {
+			NominationPools::api_balance_to_points(pool_id, new_funds)
+		}
+
+		fn get_pools(from_index: Option<u32>, limit: Option<u32>) -> Vec<BondedPool<AccountId, Balance, BlockNumber>> {
+			pallet_nomination_pools::BondedPools::<Runtime>::iter()
+				.skip(from_index.unwrap_or(0) as usize)
+				.take(limit.unwrap_or(u32::MAX) as usize)
+				.map(|(pool_id, pool)| {
+					let bonded_account = NominationPools::create_bonded_account(pool_id);
+					(pool_id, bonded_account, pool)
+				})
+				.map(Into::into)
+				.collect()
+		}
+
+		fn get_configuration() -> NominationPoolsConfiguration<Balance> {
+			let min_join_bond = pallet_nomination_pools::MinJoinBond::<Runtime>::get();
+			let min_create_bond = pallet_nomination_pools::MinCreateBond::<Runtime>::get();
+			let max_pools = pallet_nomination_pools::MaxPools::<Runtime>::get();
+			let max_members_per_pool = pallet_nomination_pools::MaxPoolMembersPerPool::<Runtime>::get();
+			let max_members = pallet_nomination_pools::MaxPoolMembers::<Runtime>::get();
+			let global_max_commission = pallet_nomination_pools::GlobalMaxCommission::<Runtime>::get();
+
+			NominationPoolsConfiguration {
+				min_join_bond,
+				min_create_bond,
+				max_pools,
+				max_members_per_pool,
+				max_members,
+				global_max_commission,
+			}
+		}
+
+		fn member_of(account_id: AccountId) -> Option<PoolMember<Balance>> {
+			pallet_nomination_pools::PoolMembers::<Runtime>::get(&account_id).map(Into::into)
+		}
+	}
+
+	impl runtime_api::staking::StakingApi<Block, AccountId> for Runtime {
+		fn get_validators() -> Vec<ValidatorPrefs<AccountId>> {
+			pallet_staking::Validators::<Runtime>::iter()
+				.map(Into::into)
+				.collect()
+		}
+
+		fn get_nominations(account_id: AccountId) -> Option<Nominations<AccountId>> {
+			pallet_staking::Nominators::<Runtime>::get(&account_id)
+				.map(Into::into)
 		}
 	}
 

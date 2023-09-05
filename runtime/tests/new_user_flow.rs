@@ -4,7 +4,7 @@ use frame_support::{assert_noop, assert_ok};
 use karmachain_node_runtime::*;
 use runtime_api::identity::runtime_decl_for_identity_api::IdentityApiV1;
 use sp_common::identity::AccountIdentity;
-use sp_core::{hashing::blake2_512, sr25519};
+use sp_core::{ed25519, hashing::blake2_512, sr25519};
 use utils::*;
 
 #[test]
@@ -88,7 +88,7 @@ fn new_user_happy_flow() {
 		// TODO: check chain stats
 		// Check that signup char trait score increasing emits event
 
-		let alice = get_account_id_from_seed::<sr25519::Public>("Alice");
+		let alice = get_account_id_from_seed::<ed25519::Public>("Alice");
 		System::assert_has_event(
 			pallet_appreciation::Event::<Runtime>::CharTraitScoreIncreased {
 				who: user_info.account_id.clone(),
@@ -166,7 +166,7 @@ fn new_user_existing_user_name() {
 
 #[test]
 fn new_user_migrate_account_flow() {
-	let alice = get_account_id_from_seed::<sr25519::Public>("Alice");
+	let alice = get_account_id_from_seed::<ed25519::Public>("Alice");
 	let mut ext: sp_io::TestExternalities = new_test_ext();
 
 	ext.execute_with(|| {

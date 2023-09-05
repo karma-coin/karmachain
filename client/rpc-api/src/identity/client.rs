@@ -9,7 +9,7 @@ use sp_api::ProvideRuntimeApi;
 use sp_blockchain::HeaderBackend;
 use sp_common::{identity::AccountIdentity, types::CommunityId};
 use sp_core::hashing::blake2_512;
-use sp_rpc::{Contact, LeaderboardEntry, UserInfo};
+use sp_rpc::{Contact, UserInfo};
 use sp_runtime::traits::Block as BlockT;
 use sp_std::fmt::Debug;
 use std::sync::Arc;
@@ -114,6 +114,23 @@ where
 			})?)
 	}
 
+	fn get_metadata(
+		&self,
+		account_id: AccountId,
+		at: Option<<Block as BlockT>::Hash>,
+	) -> RpcResult<Option<Vec<u8>>> {
+		let api = self.client.runtime_api();
+		let at = at.unwrap_or_else(|| self.client.info().best_hash);
+
+		Ok(api.get_metadata(at, account_id).map_err(|e| {
+			CallError::Custom(ErrorObject::owned(
+				0,
+				"Unable to query user info.",
+				Some(format!("{e:?}")),
+			))
+		})?)
+	}
+
 	fn get_all_users(
 		&self,
 		community_id: CommunityId,
@@ -147,14 +164,25 @@ where
 		Ok(api.get_contacts(at, prefix, community_id, from_index, limit).map_err(|e| {
 			CallError::Custom(ErrorObject::owned(
 				0,
-				"Unable to query community members.",
+				"Unable to query contacts.",
 				Some(format!("{e:?}")),
 			))
 		})?)
 	}
 
-	fn get_leader_board(&self) -> RpcResult<Vec<LeaderboardEntry<AccountId>>> {
-		// TODO: impl this with karma rewards logic
-		Ok(vec![])
+	fn get_leader_board(
+		&self,
+		at: Option<<Block as BlockT>::Hash>,
+	) -> RpcResult<Vec<UserInfo<AccountId>>> {
+		let api = self.client.runtime_api();
+		let at = at.unwrap_or_else(|| self.client.info().best_hash);
+
+		Ok(api.get_leader_board(at).map_err(|e| {
+			CallError::Custom(ErrorObject::owned(
+				0,
+				"Unable to query karma participators.",
+				Some(format!("{e:?}")),
+			))
+		})?)
 	}
 }

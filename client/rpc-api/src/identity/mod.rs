@@ -2,7 +2,7 @@ pub mod client;
 
 use jsonrpsee::{core::RpcResult, proc_macros::rpc};
 use sp_common::types::CommunityId;
-use sp_rpc::{Contact, LeaderboardEntry, UserInfo};
+use sp_rpc::{Contact, UserInfo};
 
 #[rpc(client, server)]
 pub trait IdentityApi<BlockHash, AccountId, Username, PhoneNumber, PhoneNumberHash> {
@@ -38,6 +38,14 @@ pub trait IdentityApi<BlockHash, AccountId, Username, PhoneNumber, PhoneNumberHa
 		at: Option<BlockHash>,
 	) -> RpcResult<Option<UserInfo<AccountId>>>;
 
+	/// RPC method provides account metadata
+	#[method(name = "identity_getMetadata")]
+	fn get_metadata(
+		&self,
+		account_id: AccountId,
+		at: Option<BlockHash>,
+	) -> RpcResult<Option<Vec<u8>>>;
+
 	/// RPC method provides list of community members with information
 	/// about each member account
 	#[method(name = "community_getAllUsers")]
@@ -63,5 +71,5 @@ pub trait IdentityApi<BlockHash, AccountId, Username, PhoneNumber, PhoneNumberHa
 
 	/// RPC method provides info about karma rewards period leaderboard
 	#[method(name = "community_getLeaderBoard")]
-	fn get_leader_board(&self) -> RpcResult<Vec<LeaderboardEntry<AccountId>>>;
+	fn get_leader_board(&self, at: Option<BlockHash>) -> RpcResult<Vec<UserInfo<AccountId>>>;
 }

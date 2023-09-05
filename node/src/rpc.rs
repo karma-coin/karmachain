@@ -10,8 +10,8 @@ use frame_system::EventRecord;
 use jsonrpsee::RpcModule;
 use karmachain_node_runtime::{
 	opaque::{Block, UncheckedExtrinsic},
-	AccountId, Balance, Hash, Index, PhoneNumber, PhoneNumberHash, RuntimeEvent, Signature,
-	Username,
+	AccountId, Balance, BlockNumber, Hash, Index, PhoneNumber, PhoneNumberHash, RuntimeEvent,
+	Signature, Username,
 };
 use sc_client_api::{BlockBackend, StorageProvider};
 pub use sc_rpc_api::DenyUnsafe;
@@ -54,6 +54,7 @@ pub fn create_full<C, P, SC>(
 	verifier: bool,
 	bypass_token: Option<ByPassToken>,
 	auth_dst: Option<String>,
+	network_id: String,
 ) -> Result<RpcModule<()>, Box<dyn std::error::Error + Send + Sync>>
 where
 	C: ProvideRuntimeApi<Block>,
@@ -64,7 +65,7 @@ where
 	C::Api: substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Index>,
 	C::Api: pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>,
 	C::Api: BlockBuilder<Block>,
-	C::Api: runtime_api::chain::BlockInfoProvider<Block, SignedBlock<Block>, AccountId, Hash>,
+	C::Api: runtime_api::chain::ChainDataProvider<Block, SignedBlock<Block>, AccountId, Hash>,
 	C::Api: runtime_api::events::EventProvider<Block, EventRecord<RuntimeEvent, Hash>>,
 	C::Api: runtime_api::identity::IdentityApi<Block, AccountId, Username, PhoneNumberHash>,
 	C::Api: runtime_api::transactions::TransactionInfoProvider<
@@ -74,6 +75,9 @@ where
 		Signature,
 		EventRecord<RuntimeEvent, Hash>,
 	>,
+	C::Api:
+		runtime_api::nomination_pools::NominationPoolsApi<Block, AccountId, Balance, BlockNumber>,
+	C::Api: runtime_api::staking::StakingApi<Block, AccountId>,
 	C::Api: runtime_api::transactions::TransactionIndexer<Block, AccountId, PhoneNumberHash>,
 	C::Api: runtime_api::verifier::VerifierApi<Block, AccountId, Username, PhoneNumberHash>,
 	C::Api: BabeApi<Block>,
@@ -82,9 +86,11 @@ where
 {
 	use pallet_transaction_payment_rpc::{TransactionPayment, TransactionPaymentApiServer};
 	use rpc_api::{
-		chain::{client::BlocksProvider, BlocksProviderApiServer},
+		chain::{client::ChainDataProvider, ChainDataProviderApiServer},
 		events::{client::EventsProvider, EventsProviderApiServer},
 		identity::{client::Identity, IdentityApiServer},
+		nomination_pools::{client::NominationPools, NominationPoolsApiServer},
+		staking::{client::Staking, StakingApiServer},
 		transactions::{client::TransactionsIndexer, TransactionsIndexerApiServer},
 		verifier::{client::Verifier, VerifierApiServer},
 	};
@@ -115,7 +121,9 @@ where
 	)?;
 	module.merge(TransactionsIndexer::new(client.clone()).into_rpc())?;
 	module.merge(EventsProvider::new(client.clone()).into_rpc())?;
-	module.merge(BlocksProvider::new(client.clone()).into_rpc())?;
+	module.merge(ChainDataProvider::new(client.clone(), network_id).into_rpc())?;
+	module.merge(NominationPools::new(client.clone()).into_rpc())?;
+	module.merge(Staking::new(client.clone()).into_rpc())?;
 
 	if verifier {
 		// TODO: better way to handle error
