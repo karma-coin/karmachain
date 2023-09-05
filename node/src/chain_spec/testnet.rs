@@ -23,7 +23,7 @@ pub fn testnet_config<'a>(backup: Option<&'a str>) -> Result<ChainSpec, String> 
 	let mut endowed_accounts = vec![
 		(
 			// 5GpsQN8PxCcRPAzuEVTASqzRFX3fDQUb1dHvRkAUt8Dxg7su
-			hex!["d29fde31e3bd33dc0db22c4982f845d79620bd8c8ad5d77eaa1904f19f313856"].into(),
+			hex!["ac9add5297f10ff04001f1f13fc51be3639ab3aacd03e57c000421c3a500a034"].into(),
 			100 * KCOINS
 		),
 		// Tokens for offchain account to allow sign karma reward transactions
@@ -40,7 +40,7 @@ pub fn testnet_config<'a>(backup: Option<&'a str>) -> Result<ChainSpec, String> 
 	// Initial PoA authorities
 	let initial_authorities = vec![(
 		// 5GpsQN8PxCcRPAzuEVTASqzRFX3fDQUb1dHvRkAUt8Dxg7su
-		hex!["d29fde31e3bd33dc0db22c4982f845d79620bd8c8ad5d77eaa1904f19f313856"].into(),
+		hex!["ac9add5297f10ff04001f1f13fc51be3639ab3aacd03e57c000421c3a500a034"].into(),
 		// 5Fy26cwbon8k8Pfx6YRJdeA6W6P8rbZH7mo57uRiLUyZmMSo
 		hex!["ac9add5297f10ff04001f1f13fc51be3639ab3aacd03e57c000421c3a500a034"].into(),
 		// 5Fy26cwbon8k8Pfx6YRJdeA6W6P8rbZH7mo57uRiLUyZmMSo
@@ -51,8 +51,8 @@ pub fn testnet_config<'a>(backup: Option<&'a str>) -> Result<ChainSpec, String> 
 	// 5HarYoXkJhxCWWio78TQLXrMf3GoZf8RgHE26fHRNCmt5mPw
 	let sudo: AccountId = hex!["f42bca078eb5ca56b30b4619c78009965ceda81af098dcaa4c255d14ae84b33c"].into();
 	let phone_verifiers = vec![
-		// 5GQsws5PNtebqzq5X4hc8QRrNbe1xM2Zt7LGRiZ2RpHBLSJj
-		hex!["c053ce72f0411dd4a3b561fa7ed267e8cabd9b255513c7a3aba0efe215f74037"].into(),
+		// 5EUH4CC5czdqfXbgE1fLkXcqMos1thxJSaj93J6N5bSareuz
+		hex!["6a72de3655f40058d341020a2d5339ae3ac4101da6d75dcd98f6c2f787634da8"].into(),
 	];
 	let offchain_accounts = vec![
 		// 5EWQqmfGFzFVr39cGQKFN1gWkFwtLcLwNx4QubwuwM7DHUTv
@@ -170,14 +170,17 @@ fn testnet_genesis(
 			invulnerables: initial_authorities.iter().map(|x| x.0.clone()).collect(),
 			force_era: Forcing::NotForcing,
 			slash_reward_fraction: Perbill::from_percent(10),
-			min_nominator_bond: 1 * KCOINS,
-			min_validator_bond: 100 * KCOINS,
-			max_validator_count: Some(10),
+			min_nominator_bond: 50_000 * KCOINS,
+			min_validator_bond: 500_000 * KCOINS,
+			max_validator_count: Some(100),
+			max_nominator_count: Some(1_000),
 			..Default::default()
 		},
 		nomination_pools: NominationPoolsConfig {
 			min_join_bond: KCOINS,
 			min_create_bond: KCOINS,
+			max_pools: Some(512),
+			max_members_per_pool: Some(5000),
 			..Default::default()
 		},
 		appreciation: AppreciationConfig {
