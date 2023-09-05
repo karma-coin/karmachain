@@ -1,4 +1,5 @@
 use super::{backup::BackupGenesisConfig, utils::*};
+use hex_literal::hex;
 use karmachain_node_runtime::{
 	opaque::SessionKeys, AccountId, AppreciationConfig, BabeConfig, BalancesConfig, GenesisConfig,
 	GrandpaConfig, IdentityConfig, NominationPoolsConfig, PhoneNumberHash, RewardConfig,
@@ -11,11 +12,10 @@ use sc_service::ChainType;
 use scale_info::prelude::string::String;
 use sp_common::types::{CharTraitId, CommunityId, Score};
 use sp_consensus_babe::AuthorityId as BabeId;
+use sp_core::crypto::UncheckedInto;
 use sp_finality_grandpa::AuthorityId as GrandpaId;
 use sp_runtime::Perbill;
 use std::fs::File;
-use hex_literal::hex;
-use sp_core::crypto::UncheckedInto;
 
 pub fn testnet_config<'a>(backup: Option<&'a str>) -> Result<ChainSpec, String> {
 	let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;
@@ -24,13 +24,13 @@ pub fn testnet_config<'a>(backup: Option<&'a str>) -> Result<ChainSpec, String> 
 		(
 			// 5GpsQN8PxCcRPAzuEVTASqzRFX3fDQUb1dHvRkAUt8Dxg7su
 			hex!["ac9add5297f10ff04001f1f13fc51be3639ab3aacd03e57c000421c3a500a034"].into(),
-			100 * KCOINS
+			100 * KCOINS,
 		),
 		// Tokens for offchain account to allow sign karma reward transactions
 		(
 			// 5EWQqmfGFzFVr39cGQKFN1gWkFwtLcLwNx4QubwuwM7DHUTv
 			hex!["6c139175aee0d20425b97644d7ce20148f8db69655999882531a1fe307f3b811"].into(),
-			100 * KCOINS
+			100 * KCOINS,
 		),
 	];
 	let mut identities = vec![];
@@ -49,14 +49,15 @@ pub fn testnet_config<'a>(backup: Option<&'a str>) -> Result<ChainSpec, String> 
 		hex!["768cefd0d4abbf1d056d0095f4c3353a6bb9485f833b785eed1f10e9c5251b68"].unchecked_into(),
 	)];
 	// 5HarYoXkJhxCWWio78TQLXrMf3GoZf8RgHE26fHRNCmt5mPw
-	let sudo: AccountId = hex!["f42bca078eb5ca56b30b4619c78009965ceda81af098dcaa4c255d14ae84b33c"].into();
+	let sudo: AccountId =
+		hex!["f42bca078eb5ca56b30b4619c78009965ceda81af098dcaa4c255d14ae84b33c"].into();
 	let phone_verifiers = vec![
 		// 5EUH4CC5czdqfXbgE1fLkXcqMos1thxJSaj93J6N5bSareuz
 		hex!["6a72de3655f40058d341020a2d5339ae3ac4101da6d75dcd98f6c2f787634da8"].into(),
 	];
 	let offchain_accounts = vec![
 		// 5EWQqmfGFzFVr39cGQKFN1gWkFwtLcLwNx4QubwuwM7DHUTv
-		hex!["6c139175aee0d20425b97644d7ce20148f8db69655999882531a1fe307f3b811"].into()
+		hex!["6c139175aee0d20425b97644d7ce20148f8db69655999882531a1fe307f3b811"].into(),
 	];
 
 	// Read backup file if given
@@ -82,7 +83,7 @@ pub fn testnet_config<'a>(backup: Option<&'a str>) -> Result<ChainSpec, String> 
 		ChainType::Live,
 		move || {
 			testnet_genesis(
-				wasm_binary,			
+				wasm_binary,
 				initial_authorities.clone(),
 				// Sudo account
 				sudo.clone(),
