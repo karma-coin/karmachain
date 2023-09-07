@@ -1,7 +1,6 @@
 use crate::{validators_rewards::era_payout, *};
 use codec::{Decode, Encode};
 use frame_system::{EventRecord, Phase};
-use pallet_identity::types::VerificationResult as IdentityVerificationResult;
 use pallet_nomination_pools::PoolId;
 use pallet_transaction_payment_rpc_runtime_api::{FeeDetails, RuntimeDispatchInfo};
 use sp_common::{types::CommunityId, BoundedString};
@@ -9,7 +8,6 @@ use sp_rpc::{
 	BlockchainStats, BondedPool, CharTrait, CommunityMembership, Contact, GenesisData,
 	NominationPoolsConfiguration, Nominations, PhoneVerifier, PoolMember, SignedTransaction,
 	SignedTransactionWithStatus, TraitScore, TransactionStatus, UserInfo, ValidatorPrefs,
-	VerificationResult,
 };
 use sp_runtime::{generic::SignedBlock, traits::StaticLookup};
 
@@ -638,21 +636,6 @@ impl_runtime_apis! {
 
 		fn get_transaction(tx_hash: Hash) -> Option<(BlockNumber, u32)> {
 			TransactionIndexer::tx_block_and_index(tx_hash)
-		}
-	}
-
-	impl runtime_api::verifier::VerifierApi<Block, AccountId, Username, PhoneNumberHash> for Runtime {
-		fn verify(
-			account_id: &AccountId,
-			username: &Username,
-			phone_number_hash: &PhoneNumberHash,
-		) -> VerificationResult {
-			match Identity::verify(account_id, username, phone_number_hash) {
-				IdentityVerificationResult::Valid => VerificationResult::Verified,
-				IdentityVerificationResult::Migration => VerificationResult::Verified,
-				IdentityVerificationResult::AccountIdExists => VerificationResult::AccountMismatch,
-				IdentityVerificationResult::UsernameExists => VerificationResult::UserNameTaken,
-			}
 		}
 	}
 

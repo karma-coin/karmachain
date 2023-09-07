@@ -1,6 +1,5 @@
 //! Service and ServiceFactory implementation. Specialized wrapper over substrate service.
 
-use crate::cli::VerifierConfig;
 use karmachain_node_runtime::{self, opaque::Block, RuntimeApi};
 use sc_client_api::BlockBackend;
 pub use sc_executor::NativeElseWasmExecutor;
@@ -39,7 +38,6 @@ type FullGrandpaBlockImport =
 #[allow(clippy::type_complexity)]
 pub fn new_partial(
 	config: &Configuration,
-	verifier_config: VerifierConfig,
 ) -> Result<
 	sc_service::PartialComponents<
 		FullClient,
@@ -162,14 +160,7 @@ pub fn new_partial(
 					keystore: keystore.clone(),
 				},
 			};
-			crate::rpc::create_full(
-				deps,
-				verifier_config.verifier,
-				verifier_config.bypass_token.clone(),
-				verifier_config.auth_dst.clone(),
-				network_id.clone(),
-			)
-			.map_err(Into::into)
+			crate::rpc::create_full(deps, network_id.clone()).map_err(Into::into)
 		})
 	};
 
@@ -186,10 +177,7 @@ pub fn new_partial(
 }
 
 /// Builds a new service for a full client.
-pub fn new_full(
-	config: Configuration,
-	verifier_config: VerifierConfig,
-) -> Result<TaskManager, ServiceError> {
+pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
 	let sc_service::PartialComponents {
 		client,
 		backend,
@@ -199,7 +187,7 @@ pub fn new_full(
 		select_chain,
 		transaction_pool,
 		other: (rpc_extensions_builder, block_import, grandpa_link, babe_link, mut telemetry),
-	} = new_partial(&config, verifier_config)?;
+	} = new_partial(&config)?;
 	let mut net_config = sc_network::config::FullNetworkConfiguration::new(&config.network);
 
 	let grandpa_protocol_name = sc_finality_grandpa::protocol_standard_name(
