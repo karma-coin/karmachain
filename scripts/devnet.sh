@@ -4,10 +4,10 @@ set -e
 
 echo "Starting dev net"
 
-cargo build --release
+cargo build --release --features dev
 
 run_node() {
-    cargo run --release -- --dev \
+    cargo run --release --features dev -- --dev \
         --verifier \
         --bypass-token="dummy" \
         --auth-dst="https://localhost:8080" \

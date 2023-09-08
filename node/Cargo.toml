@@ -103,3 +103,6 @@ runtime-benchmarks = ["karmachain-node-runtime/runtime-benchmarks", "frame-bench
 # Enable features that allow the runtime to be tried and debugged. Name might be subject to change
 # in the near future.
 try-runtime = ["karmachain-node-runtime/try-runtime", "try-runtime-cli/try-runtime"]
+dev = [
+	"karmachain-node-runtime/dev",
+]
