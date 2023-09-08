@@ -45,4 +45,13 @@ pub trait NominationPoolsApi<BlockHash, AccountId, Balance, BlockNumber> {
 		account_id: AccountId,
 		at: Option<BlockHash>,
 	) -> RpcResult<Option<PoolMember<Balance>>>;
+
+	#[method(name = "nominationPools_getPoolMembers")]
+	fn get_pool_members(
+		&self,
+		pool_id: PoolId,
+		from_index: Option<u32>,
+		limit: Option<u32>,
+		at: Option<BlockHash>,
+	) -> RpcResult<Vec<AccountId>>;
 }
