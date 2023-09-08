@@ -433,8 +433,8 @@ impl_runtime_apis! {
 						community_id, karma_score, is_admin
 					})
 					.collect::<Vec<_>>();
-
 				let karma_score = trait_scores.iter().map(|score| score.karma_score).sum::<u32>() + community_membership.len() as u32;
+				let metadata = Identity::metadata(&identity_info.account_id).map(Into::into);
 
 				UserInfo {
 					account_id: identity_info.account_id,
@@ -445,6 +445,7 @@ impl_runtime_apis! {
 					trait_scores,
 					karma_score,
 					community_membership,
+					metadata: metadata,
 				}
 			})
 		}
@@ -498,6 +499,7 @@ impl_runtime_apis! {
 							community_id, karma_score, is_admin
 						})
 						.collect();
+					let metadata = Identity::metadata(&account_id).map(Into::into);
 
 					Contact {
 						user_name: identity_store.username.try_into().unwrap_or_default(),
@@ -505,6 +507,7 @@ impl_runtime_apis! {
 						phone_number_hash: identity_store.phone_number_hash,
 						community_membership,
 						trait_scores,
+						metadata: metadata,
 					}
 				})
 				.collect()
