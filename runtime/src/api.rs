@@ -570,6 +570,15 @@ impl_runtime_apis! {
 		fn member_of(account_id: AccountId) -> Option<PoolMember<Balance>> {
 			pallet_nomination_pools::PoolMembers::<Runtime>::get(&account_id).map(Into::into)
 		}
+
+		fn get_pool_members(pool_id: PoolId, from_index: Option<u32>, limit: Option<u32>) -> Vec<AccountId> {
+			pallet_nomination_pools::PoolMembers::<Runtime>::iter()
+				.filter(|(_, pool)| pool.pool_id == pool_id)
+				.skip(from_index.unwrap_or(0) as usize)
+				.take(limit.unwrap_or(u32::MAX) as usize)
+				.map(|(account_id, _)| account_id)
+				.collect()
+		}
 	}
 
 	impl runtime_api::staking::StakingApi<Block, AccountId> for Runtime {
