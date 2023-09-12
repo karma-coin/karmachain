@@ -11,11 +11,8 @@ pub const MILLISECS_PER_BLOCK: u64 = 12_000;
 // NOTE: Currently it is not possible to change the slot duration after the chain has started.
 //       Attempting to do so will brick block production.
 pub const SLOT_DURATION: u64 = MILLISECS_PER_BLOCK;
-#[cfg(not(feature = "dev"))]
-pub const EPOCH_DURATION_IN_SLOTS: BlockNumber = HOURS;
-#[cfg(feature = "dev")]
-pub const EPOCH_DURATION_IN_SLOTS: BlockNumber = MINUTES;
-pub const ERA_DURATION_IN_EPOCH: u32 = 6;
+pub const EPOCH_DURATION_IN_SLOTS: BlockNumber = prod_or_fast!(HOURS, MINUTES);
+pub const ERA_DURATION_IN_EPOCH: u32 = prod_or_fast!(6, 2);
 
 // Time is measured by number of blocks.
 pub const MINUTES: BlockNumber = 60_000 / (MILLISECS_PER_BLOCK as BlockNumber);
