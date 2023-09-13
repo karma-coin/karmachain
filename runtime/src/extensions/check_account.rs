@@ -10,11 +10,7 @@ use sp_runtime::{
 };
 use sp_std::vec;
 
-pub type AccountIdentityTag = AccountIdentity<
-	<Runtime as frame_system::Config>::AccountId,
-	<Runtime as pallet_identity::Config>::Username,
-	<Runtime as pallet_identity::Config>::PhoneNumberHash,
->;
+pub type AccountIdentityTag = AccountIdentity;
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(skip_type_params(T))]
