@@ -61,8 +61,13 @@ impl BackupGenesisConfig {
 				username = format!("{username}_{index}");
 				index += 1;
 			}
-			let username =
-				Username::try_from(username).map_err(|_| "Invalid username format")?.normalize();
+
+			let username = Username::try_from(username);
+			// Skip invalid usernames
+			if username.is_err() {
+				continue
+			}
+			let username = username.unwrap().normalize();
 
 			identities.push((account_id, username, phone_number_hash));
 		}

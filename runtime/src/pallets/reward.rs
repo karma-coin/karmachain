@@ -6,7 +6,7 @@ use pallet_reward::crypto::AuthorityId;
 parameter_types! {
 	pub const RewardPalletId: PalletId = PalletId(*b"kr/rewar");
 	pub const MaxGenerateRandom: u32 = 10;
-	pub const MaxWinners: u32 = 10;
+	pub const MaxWinners: u32 = 1000;
 	pub const MaxOffchainAccounts: u32 = 10;
 }
 
