@@ -26,3 +26,16 @@ pub const EXISTENTIAL_DEPOSIT: u128 = 100 * KCENTS;
 
 pub const KCENTS: Balance = 1;
 pub const KCOINS: Balance = 1_000_000 * KCENTS;
+
+// Validator rewards configuration
+// Initial(first) month payout
+pub const INITIAL_AMOUNT: u128 = prod_or_fast!(
+	10_000_000 * KCOINS,
+	// Because of the fast chain, we need to increase the initial amount
+	// to match the initial amount of the prod chain
+	// Epoch 60 times faster, era 3 times faster
+	10_000_000 * KCOINS * 60 * 3
+);
+// Lambda is a coefficient of payout reduction per month
+pub const LAMBDA: u128 = 20_036;
+pub const LAMBDA_DELIMETER: u128 = 1_000_000;
