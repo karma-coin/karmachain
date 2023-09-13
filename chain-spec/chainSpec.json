@@ -3,7 +3,7 @@
   "id": "dev",
   "chainType": "Development",
   "bootNodes": [
-    "/ip4/127.0.0.1/tcp/30333/p2p/12D3KooWJwQLpnU2FMfupyyN8Npv9fVMrshFTSyN6YwZ5QesMPQV"
+    "/ip4/127.0.0.1/tcp/30333/p2p/12D3KooWHhsC5bAfVH4D6ErPZVroFe74neKuHLrfc1QtzpNcwzAb"
   ],
   "telemetryEndpoints": null,
   "protocolId": null,
@@ -463,7 +463,7 @@
         "signupRewardPhase2Amount": 1000000,
         "signupRewardPhase3Amount": 1000,
         "referralRewardPhase1Alloc": 10000000000000,
-        "referralRewardPhase2Alloc": 200000000000000,
+        "referralRewardPhase2Alloc": 99000000000000,
         "referralRewardPhase3Alloc": 200000000000000,
         "referralRewardPhase1Amount": 100000000,
         "referralRewardPhase2Amount": 10000000,

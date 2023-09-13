@@ -105,7 +105,7 @@ pub mod pallet {
 				signup_reward_phase3_amount: 1_000_u128.try_into().ok().unwrap(),
 
 				referral_reward_phase1_alloc: 10_000_000_000_000_u128.try_into().ok().unwrap(),
-				referral_reward_phase2_alloc: 200_000_000_000_000_u128.try_into().ok().unwrap(),
+				referral_reward_phase2_alloc: 99_000_000_000_000_u128.try_into().ok().unwrap(),
 				referral_reward_phase3_alloc: 200_000_000_000_000_u128.try_into().ok().unwrap(),
 				referral_reward_phase1_amount: 100_000_000_u128.try_into().ok().unwrap(),
 				referral_reward_phase2_amount: 10_000_000_u128.try_into().ok().unwrap(),
