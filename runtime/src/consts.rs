@@ -33,8 +33,8 @@ pub const INITIAL_AMOUNT: u128 = prod_or_fast!(
 	10_000_000 * KCOINS,
 	// Because of the fast chain, we need to increase the initial amount
 	// to match the initial amount of the prod chain
-	// Epoch 60 times faster, era 3 times faster
-	10_000_000 * KCOINS * 60 * 3
+	// Epoch 240 times faster, era 3 times faster
+	10_000_000 * KCOINS * 240 * 3
 );
 // Lambda is a coefficient of payout reduction per month
 pub const LAMBDA: u128 = 20_036;
