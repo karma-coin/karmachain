@@ -1,6 +1,5 @@
 use codec::{Decode, Encode, MaxEncodedLen};
 use scale_info::TypeInfo;
-#[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_std::fmt::Debug;
 
@@ -16,8 +15,7 @@ where
 	PhoneNumberHash(PhoneNumberHash),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct IdentityInfo<AccountId, Username, PhoneNumberHash>
 where
 	AccountId: Debug + Clone + PartialEq,

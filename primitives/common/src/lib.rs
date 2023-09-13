@@ -18,7 +18,6 @@ use scale_info::{
 	},
 	Type, TypeInfo,
 };
-#[cfg(feature = "std")]
 use serde::{de, ser, Deserialize, Deserializer, Serialize, Serializer};
 
 #[derive(
@@ -72,19 +71,17 @@ impl<MaxLength: Get<u32>> TryFrom<BoundedString<MaxLength>> for String {
 	}
 }
 
-#[cfg(feature = "std")]
 impl<MaxLength: Get<u32>> Serialize for BoundedString<MaxLength> {
 	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
 	where
 		S: Serializer,
 	{
 		let bytes = self.0.clone().into_inner();
-		let str = std::str::from_utf8(&bytes).map_err(ser::Error::custom)?;
-		serializer.serialize_str(str)
+		let string = String::from_utf8(bytes).map_err(ser::Error::custom)?;
+		serializer.serialize_str(&string)
 	}
 }
 
-#[cfg(feature = "std")]
 impl<'de, MaxLength: Get<u32>> Deserialize<'de> for BoundedString<MaxLength> {
 	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
 	where

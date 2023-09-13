@@ -1,4 +1,4 @@
-use karmachain_node_runtime::{AccountId, GenesisConfig, Signature};
+use karmachain_node_runtime::{AccountId, RuntimeGenesisConfig, Signature};
 use sp_core::{Pair, Public};
 use sp_runtime::traits::{IdentifyAccount, Verify};
 
@@ -13,7 +13,7 @@ pub fn get_from_seed<TPublic: Public>(seed: &str) -> <TPublic::Pair as Pair>::Pu
 }
 
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
-pub type ChainSpec = sc_service::GenericChainSpec<GenesisConfig>;
+pub type ChainSpec = sc_service::GenericChainSpec<RuntimeGenesisConfig>;
 
 type AccountPublic = <Signature as Verify>::Signer;
 

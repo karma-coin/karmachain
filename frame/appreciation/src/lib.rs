@@ -25,6 +25,7 @@ pub mod pallet {
 		types::{CharTraitId, CommunityId},
 		BoundedString,
 	};
+	use sp_std::vec;
 
 	#[pallet::config]
 	pub trait Config:
@@ -71,7 +72,6 @@ pub mod pallet {
 		pub trait_scores: Vec<(T::AccountId, CommunityId, CharTraitId, Score)>,
 	}
 
-	#[cfg(feature = "std")]
 	impl<T: Config> Default for GenesisConfig<T> {
 		fn default() -> Self {
 			Self {
@@ -90,7 +90,7 @@ pub mod pallet {
 
 	#[allow(clippy::type_complexity)]
 	#[pallet::genesis_build]
-	impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
+	impl<T: Config> BuildGenesisConfig for GenesisConfig<T> {
 		fn build(&self) {
 			let bounded_char_traits: BoundedVec<
 				CharTrait<T::CharNameLimit, T::EmojiLimit>,
@@ -164,13 +164,6 @@ pub mod pallet {
 					TraitScores::<T>::insert((account_id, community_id, char_trait_id), score);
 				},
 			);
-		}
-	}
-
-	#[cfg(feature = "std")]
-	impl<T: Config> GenesisConfig<T> {
-		pub fn build_storage(&self) -> Result<sp_runtime::Storage, std::string::String> {
-			<Self as GenesisBuild<T>>::build_storage(self)
 		}
 	}
 
