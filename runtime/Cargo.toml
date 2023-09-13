@@ -164,3 +164,4 @@ try-runtime = [
 	"pallet-babe/try-runtime",
 	"pallet-bags-list/try-runtime",
 ]
+fast-runtime = []

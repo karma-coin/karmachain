@@ -109,4 +109,19 @@ where
 			.member_of(at, account_id)
 			.map_err(|e| map_err(e, "Failed to query Runtime API"))?)
 	}
+
+	fn get_pool_members(
+		&self,
+		pool_id: PoolId,
+		from_index: Option<u32>,
+		limit: Option<u32>,
+		at: Option<<Block as BlockT>::Hash>,
+	) -> RpcResult<Vec<AccountId>> {
+		let api = self.client.runtime_api();
+		let at = at.unwrap_or_else(|| self.client.info().best_hash);
+
+		Ok(api
+			.get_pool_members(at, pool_id, from_index, limit)
+			.map_err(|e| map_err(e, "Failed to query Runtime API"))?)
+	}
 }

@@ -28,5 +28,8 @@ sp_api::decl_runtime_apis! {
 
 		/// Returns the pool id of the pool that the account is a member of
 		fn member_of(account_id: AccountId) -> Option<PoolMember<Balance>>;
+
+		/// Returns the pool members of a given pool
+		fn get_pool_members(pool_id: PoolId, from_index: Option<u32>, limit: Option<u32>) -> Vec<AccountId>;
 	}
 }
