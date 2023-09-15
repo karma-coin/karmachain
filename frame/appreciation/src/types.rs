@@ -1,14 +1,12 @@
 use codec::{Decode, Encode, MaxEncodedLen};
 use frame_support::{traits::Get, BoundedVec, CloneNoBound, RuntimeDebugNoBound};
 use scale_info::{prelude::string::String, TypeInfo};
-use sp_std::vec::Vec;
-
-#[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_common::{
 	types::{CharTraitId, CommunityId},
 	BoundedString,
 };
+use sp_std::vec::Vec;
 
 pub type GenesisCommunity = (
 	CommunityId,
@@ -27,15 +25,24 @@ pub type GenesisCommunity = (
 #[derive(CloneNoBound, Encode, Decode, MaxEncodedLen, TypeInfo, RuntimeDebugNoBound)]
 #[codec(mel_bound())]
 #[scale_info(skip_type_params(CharNameLimit, EmojiLimit))]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(Serialize, Deserialize)]
 pub struct CharTrait<CharNameLimit: Get<u32>, EmojiLimit: Get<u32>> {
 	pub id: CharTraitId,
 	pub name: BoundedString<CharNameLimit>,
 	pub emoji: BoundedString<EmojiLimit>,
 }
 
-#[derive(Clone, Encode, Decode, MaxEncodedLen, TypeInfo, RuntimeDebugNoBound, Default)]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(
+	Clone,
+	Encode,
+	Decode,
+	MaxEncodedLen,
+	TypeInfo,
+	RuntimeDebugNoBound,
+	Default,
+	Serialize,
+	Deserialize,
+)]
 pub enum CommunityRole {
 	Admin,
 	Member,
@@ -52,7 +59,7 @@ impl CommunityRole {
 #[derive(CloneNoBound, Encode, Decode, MaxEncodedLen, TypeInfo, RuntimeDebugNoBound)]
 #[codec(mel_bound())]
 #[scale_info(skip_type_params(NameLimit, DescLimit, EmojiLimit, UrlLimit, MaxCharTrait))]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(Serialize, Deserialize)]
 pub struct Community<
 	NameLimit: Get<u32>,
 	DescLimit: Get<u32>,

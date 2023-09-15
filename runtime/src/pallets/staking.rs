@@ -126,9 +126,11 @@ impl pallet_staking::Config for Runtime {
 	type HistoryDepth = frame_support::traits::ConstU32<84>;
 	/// Some parameters of the benchmarking.
 	type BenchmarkingConfig = StakingBenchmarkingConfig;
-	/// A hook called when any staker is slashed. Mostly likely this can be a no-op unless
-	/// other pallets exist that are affected by slashing per-staker.
-	type OnStakerSlash = (); // TODO:
 	/// Weight information for extrinsics in this pallet.
 	type WeightInfo = pallet_staking::weights::SubstrateWeight<Runtime>;
+	/// Something that listens to staking updates and performs actions based on the data it
+	/// receives.
+	///
+	/// WARNING: this only reports slashing events for the time being.
+	type EventListeners = ();
 }

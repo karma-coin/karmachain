@@ -60,7 +60,7 @@ pub use pallet_balances::Call as BalancesCall;
 use pallet_staking::UseValidatorsMap;
 pub use pallet_timestamp::Call as TimestampCall;
 use pallet_transaction_payment::{ConstFeeMultiplier, CurrencyAdapter, Multiplier};
-use sp_common::{identity::AccountIdentity, traits::IdentityProvider};
+use sp_common::traits::IdentityProvider;
 pub use sp_runtime::{Perbill, Permill};
 
 pub mod api;
@@ -90,10 +90,6 @@ pub fn native_version() -> NativeVersion {
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
 	pub struct Runtime
-	where
-		Block = Block,
-		NodeBlock = opaque::Block,
-		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		// Basic stuff; balances is uncallable initially.
 		System: frame_system,

@@ -26,6 +26,7 @@ pub mod pallet {
 		offchain::{AppCrypto, CreateSignedTransaction, SigningTypes},
 		pallet_prelude::*,
 	};
+	use sp_std::vec;
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
@@ -48,7 +49,7 @@ pub mod pallet {
 		#[pallet::constant]
 		type MaxGenerateRandom: Get<u32>;
 		/// Something that provides randomness in the runtime.
-		type Randomness: Randomness<Self::Hash, Self::BlockNumber>;
+		type Randomness: Randomness<Self::Hash, BlockNumberFor<Self>>;
 		/// Maximum number of winners in karma rewards per one round
 		#[pallet::constant]
 		type MaxWinners: Get<u32>;
@@ -84,14 +85,13 @@ pub mod pallet {
 		pub tx_fee_subsidies_alloc: T::Balance,
 		pub tx_fee_subsidy_max_amount: T::Balance,
 
-		pub karma_reward_frequency: T::BlockNumber,
+		pub karma_reward_frequency: BlockNumberFor<T>,
 		pub karma_reward_amount: T::Balance,
 		pub karma_reward_alloc: T::Balance,
 		pub karma_reward_users_participates: u32,
 		pub karma_reward_appreciations_requires: u32,
 	}
 
-	#[cfg(feature = "std")]
 	impl<T: Config> Default for GenesisConfig<T> {
 		fn default() -> Self {
 			Self {
@@ -125,7 +125,7 @@ pub mod pallet {
 	}
 
 	#[pallet::genesis_build]
-	impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
+	impl<T: Config> BuildGenesisConfig for GenesisConfig<T> {
 		fn build(&self) {
 			self.accounts.iter().for_each(|account_id| {
 				AccountRewardInfo::<T>::insert(
@@ -217,11 +217,11 @@ pub mod pallet {
 	#[pallet::storage]
 	pub type KarmaRewardsUsersRewardedCounter<T: Config> = StorageValue<_, u64, ValueQuery>;
 	#[pallet::storage]
-	pub type KarmaRewardLastTime<T: Config> = StorageValue<_, T::BlockNumber, ValueQuery>;
+	pub type KarmaRewardLastTime<T: Config> = StorageValue<_, BlockNumberFor<T>, ValueQuery>;
 	#[pallet::storage]
-	pub type KarmaRewardNextTime<T: Config> = StorageValue<_, T::BlockNumber, ValueQuery>;
+	pub type KarmaRewardNextTime<T: Config> = StorageValue<_, BlockNumberFor<T>, ValueQuery>;
 	#[pallet::storage]
-	pub type KarmaRewardFrequency<T: Config> = StorageValue<_, T::BlockNumber, ValueQuery>;
+	pub type KarmaRewardFrequency<T: Config> = StorageValue<_, BlockNumberFor<T>, ValueQuery>;
 	#[pallet::storage]
 	pub type KarmaRewardTotalAllocated<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
 	#[pallet::storage]

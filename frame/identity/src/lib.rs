@@ -87,7 +87,6 @@ pub mod pallet {
 		pub identities: sp_std::vec::Vec<(T::AccountId, T::Username, T::PhoneNumberHash)>,
 	}
 
-	#[cfg(feature = "std")]
 	impl<T: Config> Default for GenesisConfig<T> {
 		fn default() -> Self {
 			Self { phone_verifiers: vec![], identities: vec![] }
@@ -95,7 +94,7 @@ pub mod pallet {
 	}
 
 	#[pallet::genesis_build]
-	impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
+	impl<T: Config> BuildGenesisConfig for GenesisConfig<T> {
 		fn build(&self) {
 			let bounded_phone_verifiers: BoundedVec<T::AccountId, T::MaxPhoneVerifiers> =
 				self.phone_verifiers.clone().try_into().expect(
@@ -118,16 +117,6 @@ pub mod pallet {
 				UsernameFor::<T>::insert(&username, &account_id);
 				PhoneNumberFor::<T>::insert(&phone_number_hash, &account_id);
 			}
-		}
-	}
-
-	#[cfg(feature = "std")]
-	impl<T: Config> GenesisConfig<T> {
-		/// Direct implementation of `GenesisBuild::build_storage`.
-		///
-		/// Kept in order not to break dependency.
-		pub fn build_storage(&self) -> Result<sp_runtime::Storage, std::string::String> {
-			<Self as GenesisBuild<T>>::build_storage(self)
 		}
 	}
 

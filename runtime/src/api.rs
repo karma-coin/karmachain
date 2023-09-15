@@ -414,7 +414,7 @@ impl_runtime_apis! {
 
 	impl runtime_api::identity::IdentityApi<Block, AccountId, Username, PhoneNumberHash> for Runtime {
 		fn get_user_info(
-			account_identity: AccountIdentity<AccountId, Username, PhoneNumberHash>,
+			account_identity: AccountIdentity,
 		) -> Option<UserInfo<AccountId>> {
 			Identity::get_identity_info(&account_identity).map(|identity_info| {
 				let nonce = System::account_nonce(&identity_info.account_id);
