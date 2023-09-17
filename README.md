@@ -92,7 +92,7 @@ Running a node for tests and integration purposes requires both verifier and off
 Use the following command.
 
 ```console
-cargo run --release --features dev -- --dev --verifier --bypass-token="dummy" --auth-dst="https://localhost:8080" --offchain-worker always --rpc-methods unsafe
+cargo run --release --features dev -- --dev --offchain-worker always --rpc-methods unsafe
 ```
 
 Remember to insert the two keys to the chain once it is running.
