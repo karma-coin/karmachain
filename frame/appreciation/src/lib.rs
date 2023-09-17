@@ -25,6 +25,7 @@ pub mod pallet {
 		types::{CharTraitId, CommunityId},
 		BoundedString,
 	};
+	use sp_std::vec;
 
 	#[pallet::config]
 	pub trait Config:
@@ -40,7 +41,7 @@ pub mod pallet {
 		/// Max length of `Community`'s name
 		type CommunityNameLimit: Get<u32>;
 		/// Max length of `Community`'s description
-		type CommunityDescLimit: Get<u32>;
+		type CommunityDescriptionLimit: Get<u32>;
 		/// Max length of emoji
 		type EmojiLimit: Get<u32>;
 		/// Max length of `Community`'s urls
@@ -71,7 +72,6 @@ pub mod pallet {
 		pub trait_scores: Vec<(T::AccountId, CommunityId, CharTraitId, Score)>,
 	}
 
-	#[cfg(feature = "std")]
 	impl<T: Config> Default for GenesisConfig<T> {
 		fn default() -> Self {
 			Self {
@@ -90,7 +90,7 @@ pub mod pallet {
 
 	#[allow(clippy::type_complexity)]
 	#[pallet::genesis_build]
-	impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
+	impl<T: Config> BuildGenesisConfig for GenesisConfig<T> {
 		fn build(&self) {
 			let bounded_char_traits: BoundedVec<
 				CharTrait<T::CharNameLimit, T::EmojiLimit>,
@@ -121,7 +121,7 @@ pub mod pallet {
 			let bounded_communities: BoundedVec<
 				Community<
 					T::CommunityNameLimit,
-					T::CommunityDescLimit,
+					T::CommunityDescriptionLimit,
 					T::EmojiLimit,
 					T::CommunityUrlLimit,
 					T::MaxCharTrait,
@@ -135,7 +135,7 @@ pub mod pallet {
 					Community {
 						id,
 						name: name.try_into().expect("Max length of community name should be lower than T::CommunityNameLimit"),
-						desc: desc.try_into().expect("Max length of community desc should be lower than T::CommunityDescLimit"),
+						desc: desc.try_into().expect("Max length of community desc should be lower than T::CommunityDescriptionLimit"),
 						emoji: emoji.try_into().expect("Max length of community emoji should be lower than T::CommunityEmojiLimit"),
 						website_url: website_url.try_into().expect("Max length of community website url should be lower than T::CommunityUrlLimit"),
 						twitter_url: twitter_url.try_into().expect("Max length of community twitter url should be lower than T::CommunityUrlLimit"),
@@ -164,13 +164,6 @@ pub mod pallet {
 					TraitScores::<T>::insert((account_id, community_id, char_trait_id), score);
 				},
 			);
-		}
-	}
-
-	#[cfg(feature = "std")]
-	impl<T: Config> GenesisConfig<T> {
-		pub fn build_storage(&self) -> Result<sp_runtime::Storage, std::string::String> {
-			<Self as GenesisBuild<T>>::build_storage(self)
 		}
 	}
 
@@ -212,7 +205,7 @@ pub mod pallet {
 		BoundedVec<
 			Community<
 				T::CommunityNameLimit,
-				T::CommunityDescLimit,
+				T::CommunityDescriptionLimit,
 				T::EmojiLimit,
 				T::CommunityUrlLimit,
 				T::MaxCharTrait,
@@ -456,7 +449,7 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			id: CommunityId,
 			name: BoundedString<T::CommunityNameLimit>,
-			desc: BoundedString<T::CommunityDescLimit>,
+			desc: BoundedString<T::CommunityDescriptionLimit>,
 			emoji: BoundedString<T::EmojiLimit>,
 			website_url: BoundedString<T::CommunityUrlLimit>,
 			twitter_url: BoundedString<T::CommunityUrlLimit>,

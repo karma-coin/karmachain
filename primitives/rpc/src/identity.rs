@@ -36,6 +36,7 @@ pub struct UserInfo<AccountId> {
 	// pre_keys
 	pub karma_score: u32,
 	pub community_membership: Vec<CommunityMembership>,
+	pub metadata: Option<Vec<u8>>,
 }
 
 #[derive(Encode, Decode, TypeInfo)]
@@ -46,4 +47,5 @@ pub struct Contact<AccountId> {
 	pub phone_number_hash: PhoneNumberHash,
 	pub community_membership: Vec<CommunityMembership>,
 	pub trait_scores: Vec<TraitScore>,
+	pub metadata: Option<Vec<u8>>,
 }

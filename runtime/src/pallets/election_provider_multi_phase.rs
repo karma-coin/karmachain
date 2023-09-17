@@ -12,8 +12,14 @@ generate_solution_type!(
 
 parameter_types! {
 	// phase durations. 1/4 of the last session for each
-	pub SignedPhase: u32 = EPOCH_DURATION_IN_SLOTS / 4;
-	pub UnsignedPhase: u32 = EPOCH_DURATION_IN_SLOTS / 4;
+	pub SignedPhase: u32 = prod_or_fast!(
+		EPOCH_DURATION_IN_SLOTS / 4,
+		EPOCH_DURATION_IN_SLOTS
+	);
+	pub UnsignedPhase: u32 = prod_or_fast!(
+		EPOCH_DURATION_IN_SLOTS / 4,
+		EPOCH_DURATION_IN_SLOTS
+	);
 
 	// signed config
 	pub const SignedMaxSubmissions: u32 = 16;

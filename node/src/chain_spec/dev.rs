@@ -1,8 +1,8 @@
 use super::{backup::BackupGenesisConfig, utils::*};
 use hex_literal::hex;
 use karmachain_node_runtime::{
-	opaque::SessionKeys, AccountId, AppreciationConfig, BabeConfig, BalancesConfig, GenesisConfig,
-	GrandpaConfig, IdentityConfig, NominationPoolsConfig, PhoneNumberHash, RewardConfig,
+	opaque::SessionKeys, AccountId, AppreciationConfig, BabeConfig, BalancesConfig, GrandpaConfig,
+	IdentityConfig, NominationPoolsConfig, PhoneNumberHash, RewardConfig, RuntimeGenesisConfig,
 	SessionConfig, StakingConfig, SudoConfig, SystemConfig, Treasury, Username, KCOINS,
 	WASM_BINARY,
 };
@@ -115,14 +115,15 @@ fn development_genesis(
 	identities: Vec<(AccountId, Username, PhoneNumberHash)>,
 	community_membership: Vec<(AccountId, CommunityId, CommunityRole)>,
 	trait_scores: Vec<(AccountId, CommunityId, CharTraitId, Score)>,
-) -> GenesisConfig {
-	GenesisConfig {
+) -> RuntimeGenesisConfig {
+	RuntimeGenesisConfig {
 		system: SystemConfig {
 			// Add Wasm runtime to storage.
 			code: wasm_binary.to_vec(),
+			..Default::default()
 		},
 		balances: BalancesConfig { balances: endowed_accounts },
-		grandpa: GrandpaConfig { authorities: Default::default() },
+		grandpa: GrandpaConfig { ..Default::default() },
 		sudo: SudoConfig {
 			// Assign network admin rights.
 			key: Some(root_key),
@@ -143,6 +144,7 @@ fn development_genesis(
 		babe: BabeConfig {
 			authorities: Default::default(),
 			epoch_config: Some(karmachain_node_runtime::BABE_GENESIS_EPOCH_CONFIG),
+			..Default::default()
 		},
 		staking: StakingConfig {
 			minimum_validator_count: 1,

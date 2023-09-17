@@ -26,6 +26,7 @@ pub mod pallet {
 		offchain::{AppCrypto, CreateSignedTransaction, SigningTypes},
 		pallet_prelude::*,
 	};
+	use sp_std::vec;
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
@@ -48,7 +49,7 @@ pub mod pallet {
 		#[pallet::constant]
 		type MaxGenerateRandom: Get<u32>;
 		/// Something that provides randomness in the runtime.
-		type Randomness: Randomness<Self::Hash, Self::BlockNumber>;
+		type Randomness: Randomness<Self::Hash, BlockNumberFor<Self>>;
 		/// Maximum number of winners in karma rewards per one round
 		#[pallet::constant]
 		type MaxWinners: Get<u32>;
@@ -69,29 +70,28 @@ pub mod pallet {
 
 		pub signup_reward_phase1_alloc: T::Balance,
 		pub signup_reward_phase2_alloc: T::Balance,
-
 		pub signup_reward_phase1_amount: T::Balance,
 		pub signup_reward_phase2_amount: T::Balance,
 		pub signup_reward_phase3_amount: T::Balance,
 
 		pub referral_reward_phase1_alloc: T::Balance,
 		pub referral_reward_phase2_alloc: T::Balance,
-
+		pub referral_reward_phase3_alloc: T::Balance,
 		pub referral_reward_phase1_amount: T::Balance,
 		pub referral_reward_phase2_amount: T::Balance,
+		pub referral_reward_phase3_amount: T::Balance,
 
 		pub tx_fee_subsidy_max_per_user: u8,
 		pub tx_fee_subsidies_alloc: T::Balance,
 		pub tx_fee_subsidy_max_amount: T::Balance,
 
-		pub karma_reward_frequency: T::BlockNumber,
+		pub karma_reward_frequency: BlockNumberFor<T>,
 		pub karma_reward_amount: T::Balance,
 		pub karma_reward_alloc: T::Balance,
 		pub karma_reward_users_participates: u32,
 		pub karma_reward_appreciations_requires: u32,
 	}
 
-	#[cfg(feature = "std")]
 	impl<T: Config> Default for GenesisConfig<T> {
 		fn default() -> Self {
 			Self {
@@ -100,15 +100,16 @@ pub mod pallet {
 
 				signup_reward_phase1_alloc: 100_000_000_000_000_u128.try_into().ok().unwrap(),
 				signup_reward_phase2_alloc: 200_000_000_000_000_u128.try_into().ok().unwrap(),
-
 				signup_reward_phase1_amount: 10_000_000_u128.try_into().ok().unwrap(),
 				signup_reward_phase2_amount: 1_000_000_u128.try_into().ok().unwrap(),
 				signup_reward_phase3_amount: 1_000_u128.try_into().ok().unwrap(),
-				referral_reward_phase1_alloc: 10_000_000_000_000_u128.try_into().ok().unwrap(),
-				referral_reward_phase2_alloc: 200_000_000_000_000_u128.try_into().ok().unwrap(),
 
-				referral_reward_phase1_amount: 10_000_000_u128.try_into().ok().unwrap(),
-				referral_reward_phase2_amount: 1_000_000_u128.try_into().ok().unwrap(),
+				referral_reward_phase1_alloc: 10_000_000_000_000_u128.try_into().ok().unwrap(),
+				referral_reward_phase2_alloc: 99_000_000_000_000_u128.try_into().ok().unwrap(),
+				referral_reward_phase3_alloc: 200_000_000_000_000_u128.try_into().ok().unwrap(),
+				referral_reward_phase1_amount: 100_000_000_u128.try_into().ok().unwrap(),
+				referral_reward_phase2_amount: 10_000_000_u128.try_into().ok().unwrap(),
+				referral_reward_phase3_amount: 1_000_000_u128.try_into().ok().unwrap(),
 
 				tx_fee_subsidy_max_per_user: 10,
 				tx_fee_subsidies_alloc: 250_000_000_000_000_u128.try_into().ok().unwrap(),
@@ -124,7 +125,7 @@ pub mod pallet {
 	}
 
 	#[pallet::genesis_build]
-	impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
+	impl<T: Config> BuildGenesisConfig for GenesisConfig<T> {
 		fn build(&self) {
 			self.accounts.iter().for_each(|account_id| {
 				AccountRewardInfo::<T>::insert(
@@ -139,16 +140,16 @@ pub mod pallet {
 
 			SignupRewardPhase1Alloc::<T>::put(self.signup_reward_phase1_alloc);
 			SignupRewardPhase2Alloc::<T>::put(self.signup_reward_phase2_alloc);
-
 			SignupRewardPhase1Amount::<T>::put(self.signup_reward_phase1_amount);
 			SignupRewardPhase2Amount::<T>::put(self.signup_reward_phase2_amount);
 			SignupRewardPhase3Amount::<T>::put(self.signup_reward_phase3_amount);
 
 			ReferralRewardPhase1Alloc::<T>::put(self.referral_reward_phase1_alloc);
 			ReferralRewardPhase2Alloc::<T>::put(self.referral_reward_phase2_alloc);
-
+			ReferralRewardPhase3Alloc::<T>::put(self.referral_reward_phase3_alloc);
 			ReferralRewardPhase1Amount::<T>::put(self.referral_reward_phase1_amount);
 			ReferralRewardPhase2Amount::<T>::put(self.referral_reward_phase2_amount);
+			ReferralRewardPhase3Amount::<T>::put(self.referral_reward_phase3_amount);
 
 			TxFeeSubsidyMaxPerUser::<T>::put(self.tx_fee_subsidy_max_per_user);
 			TxFeeSubsidyMaxAmount::<T>::put(self.tx_fee_subsidy_max_amount);
@@ -191,9 +192,14 @@ pub mod pallet {
 	#[pallet::storage]
 	pub type ReferralRewardPhase2Alloc<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
 	#[pallet::storage]
+	pub type ReferralRewardPhase3Alloc<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
+
+	#[pallet::storage]
 	pub type ReferralRewardPhase1Amount<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
 	#[pallet::storage]
 	pub type ReferralRewardPhase2Amount<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
+	#[pallet::storage]
+	pub type ReferralRewardPhase3Amount<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
 
 	#[pallet::storage]
 	pub type TxFeeSubsidiesCounter<T: Config> = StorageValue<_, u64, ValueQuery>;
@@ -211,11 +217,11 @@ pub mod pallet {
 	#[pallet::storage]
 	pub type KarmaRewardsUsersRewardedCounter<T: Config> = StorageValue<_, u64, ValueQuery>;
 	#[pallet::storage]
-	pub type KarmaRewardLastTime<T: Config> = StorageValue<_, T::BlockNumber, ValueQuery>;
+	pub type KarmaRewardLastTime<T: Config> = StorageValue<_, BlockNumberFor<T>, ValueQuery>;
 	#[pallet::storage]
-	pub type KarmaRewardNextTime<T: Config> = StorageValue<_, T::BlockNumber, ValueQuery>;
+	pub type KarmaRewardNextTime<T: Config> = StorageValue<_, BlockNumberFor<T>, ValueQuery>;
 	#[pallet::storage]
-	pub type KarmaRewardFrequency<T: Config> = StorageValue<_, T::BlockNumber, ValueQuery>;
+	pub type KarmaRewardFrequency<T: Config> = StorageValue<_, BlockNumberFor<T>, ValueQuery>;
 	#[pallet::storage]
 	pub type KarmaRewardTotalAllocated<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
 	#[pallet::storage]
@@ -361,8 +367,12 @@ impl<T: Config> Pallet<T> {
 
 		if total_allocated < ReferralRewardPhase1Alloc::<T>::get() {
 			ReferralRewardPhase1Amount::<T>::get()
-		} else {
+		} else if total_allocated <
+			(ReferralRewardPhase2Alloc::<T>::get() + ReferralRewardPhase1Alloc::<T>::get())
+		{
 			ReferralRewardPhase2Amount::<T>::get()
+		} else {
+			ReferralRewardPhase3Amount::<T>::get()
 		}
 	}
 

@@ -2,8 +2,8 @@ use crate::*;
 
 parameter_types! {
 	pub const SessionsPerEra: SessionIndex = ERA_DURATION_IN_EPOCH;
-	pub const BondingDuration: sp_staking::EraIndex = 28;
-	pub const SlashDeferDuration: sp_staking::EraIndex = 27;
+	pub const BondingDuration: sp_staking::EraIndex = 1;
+	pub const SlashDeferDuration: sp_staking::EraIndex = 0;
 	pub const MaxNominatorRewardedPerValidator: u32 = 512;
 	pub const OffendingValidatorsThreshold: Perbill = Perbill::from_percent(17);
 	pub const MaxNominations: u32 = <NposCompactSolution16 as frame_election_provider_support::NposSolution>::LIMIT as u32;
@@ -126,9 +126,11 @@ impl pallet_staking::Config for Runtime {
 	type HistoryDepth = frame_support::traits::ConstU32<84>;
 	/// Some parameters of the benchmarking.
 	type BenchmarkingConfig = StakingBenchmarkingConfig;
-	/// A hook called when any staker is slashed. Mostly likely this can be a no-op unless
-	/// other pallets exist that are affected by slashing per-staker.
-	type OnStakerSlash = (); // TODO:
 	/// Weight information for extrinsics in this pallet.
 	type WeightInfo = pallet_staking::weights::SubstrateWeight<Runtime>;
+	/// Something that listens to staking updates and performs actions based on the data it
+	/// receives.
+	///
+	/// WARNING: this only reports slashing events for the time being.
+	type EventListeners = ();
 }

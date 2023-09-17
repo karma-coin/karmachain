@@ -412,7 +412,7 @@ impl_runtime_apis! {
 
 	impl runtime_api::identity::IdentityApi<Block, AccountId, Username, PhoneNumberHash> for Runtime {
 		fn get_user_info(
-			account_identity: AccountIdentity<AccountId, Username, PhoneNumberHash>,
+			account_identity: AccountIdentity,
 		) -> Option<UserInfo<AccountId>> {
 			Identity::get_identity_info(&account_identity).map(|identity_info| {
 				let nonce = System::account_nonce(&identity_info.account_id);
@@ -431,8 +431,8 @@ impl_runtime_apis! {
 						community_id, karma_score, is_admin
 					})
 					.collect::<Vec<_>>();
-
 				let karma_score = trait_scores.iter().map(|score| score.karma_score).sum::<u32>() + community_membership.len() as u32;
+				let metadata = Identity::metadata(&identity_info.account_id).map(Into::into);
 
 				UserInfo {
 					account_id: identity_info.account_id,
@@ -443,6 +443,7 @@ impl_runtime_apis! {
 					trait_scores,
 					karma_score,
 					community_membership,
+					metadata: metadata,
 				}
 			})
 		}
@@ -496,6 +497,7 @@ impl_runtime_apis! {
 							community_id, karma_score, is_admin
 						})
 						.collect();
+					let metadata = Identity::metadata(&account_id).map(Into::into);
 
 					Contact {
 						user_name: identity_store.username.try_into().unwrap_or_default(),
@@ -503,6 +505,7 @@ impl_runtime_apis! {
 						phone_number_hash: identity_store.phone_number_hash,
 						community_membership,
 						trait_scores,
+						metadata: metadata,
 					}
 				})
 				.collect()
@@ -564,6 +567,15 @@ impl_runtime_apis! {
 
 		fn member_of(account_id: AccountId) -> Option<PoolMember<Balance>> {
 			pallet_nomination_pools::PoolMembers::<Runtime>::get(&account_id).map(Into::into)
+		}
+
+		fn get_pool_members(pool_id: PoolId, from_index: Option<u32>, limit: Option<u32>) -> Vec<AccountId> {
+			pallet_nomination_pools::PoolMembers::<Runtime>::iter()
+				.filter(|(_, pool)| pool.pool_id == pool_id)
+				.skip(from_index.unwrap_or(0) as usize)
+				.take(limit.unwrap_or(u32::MAX) as usize)
+				.map(|(account_id, _)| account_id)
+				.collect()
 		}
 	}
 

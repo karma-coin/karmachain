@@ -1,4 +1,5 @@
 use crate::*;
+use sp_staking::currency_to_vote::U128CurrencyToVote;
 
 /// An index to a block.
 pub type BlockNumber = u32;
@@ -19,10 +20,13 @@ pub type Index = u32;
 /// A hash of some data used by the chain.
 pub type Hash = sp_core::H256;
 
+/// Index of a transaction in the relay chain. 32-bit should be plenty.
+pub type Nonce = u32;
+
 /// The type used for currency conversion.
 ///
 /// This must only be used as long as the balance type is `u128`.
-pub type CurrencyToVote = frame_support::traits::U128CurrencyToVote;
+pub type CurrencyToVote = U128CurrencyToVote;
 static_assertions::assert_eq_size!(Balance, u128);
 
 /// The address format for describing accounts.

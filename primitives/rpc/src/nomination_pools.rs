@@ -1,4 +1,5 @@
 use codec::{Decode, Encode};
+use frame_system::pallet_prelude::BlockNumberFor;
 use pallet_nomination_pools::BalanceOf;
 use scale_info::TypeInfo;
 #[cfg(feature = "std")]
@@ -142,7 +143,7 @@ pub struct Commission<AccountId, BlockNumber> {
 }
 
 impl<T: pallet_nomination_pools::Config> From<pallet_nomination_pools::Commission<T>>
-	for Commission<T::AccountId, T::BlockNumber>
+	for Commission<T::AccountId, BlockNumberFor<T>>
 {
 	fn from(commission: pallet_nomination_pools::Commission<T>) -> Self {
 		let (current, beneficiary) = commission.current.unzip();
@@ -178,7 +179,7 @@ pub struct BondedPool<AccountId, Balance, BlockNumber> {
 
 impl<T: pallet_nomination_pools::Config>
 	From<(u32, T::AccountId, pallet_nomination_pools::BondedPoolInner<T>)>
-	for BondedPool<T::AccountId, BalanceOf<T>, T::BlockNumber>
+	for BondedPool<T::AccountId, BalanceOf<T>, BlockNumberFor<T>>
 {
 	fn from(
 		(id, bonded_account, pool): (

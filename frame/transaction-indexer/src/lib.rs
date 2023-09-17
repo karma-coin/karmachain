@@ -32,17 +32,18 @@ pub mod pallet {
 
 	#[pallet::storage]
 	#[pallet::getter(fn tx_block_and_index)]
-	pub type TxHashes<T: Config> = StorageMap<_, Blake2_128Concat, T::Hash, (T::BlockNumber, u32)>;
+	pub type TxHashes<T: Config> =
+		StorageMap<_, Blake2_128Concat, T::Hash, (BlockNumberFor<T>, u32)>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn accounts_tx)]
 	pub type AccountTransactions<T: Config> =
-		StorageMap<_, Blake2_128Concat, T::AccountId, Vec<(T::BlockNumber, u32)>>;
+		StorageMap<_, Blake2_128Concat, T::AccountId, Vec<(BlockNumberFor<T>, u32)>>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn phone_number_hash_tx)]
 	pub type PhoneNumberHashTransactions<T: Config> =
-		StorageMap<_, Blake2_128Concat, T::PhoneNumberHash, Vec<(T::BlockNumber, u32)>>;
+		StorageMap<_, Blake2_128Concat, T::PhoneNumberHash, Vec<(BlockNumberFor<T>, u32)>>;
 
 	#[pallet::storage]
 	pub type TransactionsCount<T: Config> = StorageValue<_, u64, ValueQuery>;

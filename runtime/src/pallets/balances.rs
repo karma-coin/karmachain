@@ -17,8 +17,6 @@ impl pallet_balances::Config for Runtime {
 	///
 	/// Use of reserves is deprecated in favour of holds. See `https://github.com/paritytech/substrate/pull/12951/`
 	type ReserveIdentifier = [u8; 8];
-	/// The ID type for holds.
-	type HoldIdentifier = RuntimeHoldReason;
 	/// The ID type for freezes.
 	type FreezeIdentifier = ();
 	/// The maximum number of locks that should exist on an account.
@@ -30,4 +28,6 @@ impl pallet_balances::Config for Runtime {
 	type MaxHolds = ConstU32<1>;
 	/// The maximum number of individual freeze locks that can exist on an account at any time.
 	type MaxFreezes = ();
+	/// The overarching hold reason.
+	type RuntimeHoldReason = RuntimeHoldReason;
 }
