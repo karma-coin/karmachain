@@ -1,4 +1,5 @@
 [workspace]
+resolver = "2"
 members = [
     "node",
     "runtime",
@@ -11,5 +12,6 @@ members = [
     "primitives/common",
     "primitives/rpc",
 ]
+
 [profile.release]
 panic = "unwind"
