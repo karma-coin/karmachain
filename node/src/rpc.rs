@@ -22,7 +22,6 @@ use sp_blockchain::{Error as BlockChainError, HeaderBackend, HeaderMetadata};
 use sp_consensus::SelectChain;
 use sp_consensus_babe::BabeApi;
 use sp_keystore::KeystorePtr;
-use sp_rpc::ByPassToken;
 use sp_runtime::generic::SignedBlock;
 use std::sync::Arc;
 
@@ -51,9 +50,6 @@ pub struct FullDeps<C, P, SC> {
 /// Instantiate all full RPC extensions.
 pub fn create_full<C, P, SC>(
 	deps: FullDeps<C, P, SC>,
-	verifier: bool,
-	bypass_token: Option<ByPassToken>,
-	auth_dst: Option<String>,
 	network_id: String,
 ) -> Result<RpcModule<()>, Box<dyn std::error::Error + Send + Sync>>
 where
@@ -79,7 +75,6 @@ where
 		runtime_api::nomination_pools::NominationPoolsApi<Block, AccountId, Balance, BlockNumber>,
 	C::Api: runtime_api::staking::StakingApi<Block, AccountId>,
 	C::Api: runtime_api::transactions::TransactionIndexer<Block, AccountId, PhoneNumberHash>,
-	C::Api: runtime_api::verifier::VerifierApi<Block, AccountId, Username, PhoneNumberHash>,
 	C::Api: BabeApi<Block>,
 	P: TransactionPool + 'static,
 	SC: SelectChain<Block> + 'static,
@@ -92,7 +87,6 @@ where
 		nomination_pools::{client::NominationPools, NominationPoolsApiServer},
 		staking::{client::Staking, StakingApiServer},
 		transactions::{client::TransactionsIndexer, TransactionsIndexerApiServer},
-		verifier::{client::Verifier, VerifierApiServer},
 	};
 	use sc_consensus_babe_rpc::{Babe, BabeApiServer};
 	use substrate_frame_rpc_system::{System, SystemApiServer};
@@ -124,18 +118,6 @@ where
 	module.merge(ChainDataProvider::new(client.clone(), network_id).into_rpc())?;
 	module.merge(NominationPools::new(client.clone()).into_rpc())?;
 	module.merge(Staking::new(client.clone()).into_rpc())?;
-
-	if verifier {
-		// TODO: better way to handle error
-		let bypass_token = bypass_token.expect("Missing bypass token");
-		let auth_dst = auth_dst.expect("Missing auth endpoint url");
-
-		module.merge(
-			VerifierApiServer::<AccountId, Username, PhoneNumber, PhoneNumberHash>::into_rpc(
-				Verifier::new(client, keystore, bypass_token, auth_dst),
-			),
-		)?;
-	}
 
 	Ok(module)
 }
