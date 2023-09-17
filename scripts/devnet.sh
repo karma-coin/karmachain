@@ -30,7 +30,6 @@ insert_offchain_worker_key() {
 }
 
 run_node &
-insert_verifier_key &
 insert_offchain_worker_key &
 
 wait
