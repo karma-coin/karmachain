@@ -15,23 +15,6 @@ run_node() {
         --rpc-methods unsafe
 }
 
-insert_verifier_key() {
-    # Make sure that node started
-    sleep 5
-    curl --location 'http://localhost:9944/' \
-    --header 'Content-Type: application/json' \
-    --data '{
-        "id": 1,
-        "jsonrpc": "2.0",
-        "method": "author_insertKey",
-        "params": {
-            "key_type": "rewa",
-            "suri": "//Alice",
-            "public": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d"
-        }
-    }'
-}
-
 insert_offchain_worker_key() {
     # Make sure that node started 
     sleep 5
