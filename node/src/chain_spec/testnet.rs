@@ -168,7 +168,7 @@ fn testnet_genesis(
 			validator_count: initial_authorities.len() as u32,
 			stakers: initial_authorities
 				.iter()
-				.map(|x| (x.0.clone(), x.1.clone(), 100 * KCOINS, StakerStatus::Validator))
+				.map(|x| (x.0.clone(), x.1.clone(), 500_000 * KCOINS, StakerStatus::Validator))
 				.collect(),
 			invulnerables: initial_authorities.iter().map(|x| x.0.clone()).collect(),
 			force_era: Forcing::NotForcing,
