@@ -24,7 +24,7 @@ pub fn testnet_config<'a>(backup: Option<&'a str>) -> Result<ChainSpec, String> 
 		(
 			// 5GpsQN8PxCcRPAzuEVTASqzRFX3fDQUb1dHvRkAUt8Dxg7su
 			hex!["ac9add5297f10ff04001f1f13fc51be3639ab3aacd03e57c000421c3a500a034"].into(),
-			500_000 * KCOINS + 100_000 * KCOINS,
+			1_000 * 500_000 * KCOINS,
 		),
 		// Tokens for offchain account to allow sign karma reward transactions
 		(
