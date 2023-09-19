@@ -24,7 +24,7 @@ pub fn testnet_config<'a>(backup: Option<&'a str>) -> Result<ChainSpec, String> 
 		(
 			// 5GpsQN8PxCcRPAzuEVTASqzRFX3fDQUb1dHvRkAUt8Dxg7su
 			hex!["ac9add5297f10ff04001f1f13fc51be3639ab3aacd03e57c000421c3a500a034"].into(),
-			500_000 * KCOINS + 100_000 * KCOINS,
+			1_000 * 500_000 * KCOINS,
 		),
 		// Tokens for offchain account to allow sign karma reward transactions
 		(
@@ -168,12 +168,12 @@ fn testnet_genesis(
 			validator_count: initial_authorities.len() as u32,
 			stakers: initial_authorities
 				.iter()
-				.map(|x| (x.0.clone(), x.1.clone(), 100 * KCOINS, StakerStatus::Validator))
+				.map(|x| (x.0.clone(), x.1.clone(), 500_000 * KCOINS, StakerStatus::Validator))
 				.collect(),
 			invulnerables: initial_authorities.iter().map(|x| x.0.clone()).collect(),
 			force_era: Forcing::NotForcing,
 			slash_reward_fraction: Perbill::from_percent(10),
-			min_nominator_bond: 50_000 * KCOINS,
+			min_nominator_bond: 5 * KCOINS,
 			min_validator_bond: 500_000 * KCOINS,
 			max_validator_count: Some(100),
 			max_nominator_count: Some(1_000),
@@ -181,7 +181,7 @@ fn testnet_genesis(
 		},
 		nomination_pools: NominationPoolsConfig {
 			min_join_bond: KCOINS,
-			min_create_bond: KCOINS,
+			min_create_bond: 5 * KCOINS,
 			max_pools: Some(512),
 			max_members_per_pool: Some(5000),
 			..Default::default()
