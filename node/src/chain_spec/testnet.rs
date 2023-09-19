@@ -173,7 +173,7 @@ fn testnet_genesis(
 			invulnerables: initial_authorities.iter().map(|x| x.0.clone()).collect(),
 			force_era: Forcing::NotForcing,
 			slash_reward_fraction: Perbill::from_percent(10),
-			min_nominator_bond: 50_000 * KCOINS,
+			min_nominator_bond: 5 * KCOINS,
 			min_validator_bond: 500_000 * KCOINS,
 			max_validator_count: Some(100),
 			max_nominator_count: Some(1_000),
@@ -181,7 +181,7 @@ fn testnet_genesis(
 		},
 		nomination_pools: NominationPoolsConfig {
 			min_join_bond: KCOINS,
-			min_create_bond: KCOINS,
+			min_create_bond: 5 * KCOINS,
 			max_pools: Some(512),
 			max_members_per_pool: Some(5000),
 			..Default::default()
