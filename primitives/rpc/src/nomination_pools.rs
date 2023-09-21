@@ -1,7 +1,7 @@
 use codec::{Decode, Encode};
 use frame_system::pallet_prelude::BlockNumberFor;
 use pallet_nomination_pools::BalanceOf;
-use scale_info::TypeInfo;
+use scale_info::{prelude::vec::Vec, TypeInfo};
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_runtime::Perbill;
@@ -175,17 +175,20 @@ pub struct BondedPool<AccountId, Balance, BlockNumber> {
 	pub roles: PoolRoles<AccountId>,
 	/// The current state of the pool.
 	pub state: PoolState,
+	/// Pool metadata
+	pub metadata: Vec<u8>,
 }
 
 impl<T: pallet_nomination_pools::Config>
-	From<(u32, T::AccountId, pallet_nomination_pools::BondedPoolInner<T>)>
+	From<(u32, T::AccountId, pallet_nomination_pools::BondedPoolInner<T>, Vec<u8>)>
 	for BondedPool<T::AccountId, BalanceOf<T>, BlockNumberFor<T>>
 {
 	fn from(
-		(id, bonded_account, pool): (
+		(id, bonded_account, pool, metadata): (
 			u32,
 			T::AccountId,
 			pallet_nomination_pools::BondedPoolInner<T>,
+			Vec<u8>,
 		),
 	) -> Self {
 		Self {
@@ -196,6 +199,7 @@ impl<T: pallet_nomination_pools::Config>
 			points: pool.points,
 			roles: pool.roles.into(),
 			state: pool.state.into(),
+			metadata,
 		}
 	}
 }
