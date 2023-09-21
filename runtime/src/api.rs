@@ -541,7 +541,8 @@ impl_runtime_apis! {
 				.take(limit.unwrap_or(u32::MAX) as usize)
 				.map(|(pool_id, pool)| {
 					let bonded_account = NominationPools::create_bonded_account(pool_id);
-					(pool_id, bonded_account, pool)
+					let metadata: Vec<_> = pallet_nomination_pools::Metadata::<Runtime>::get(pool_id).into();
+					(pool_id, bonded_account, pool, metadata)
 				})
 				.map(Into::into)
 				.collect()
