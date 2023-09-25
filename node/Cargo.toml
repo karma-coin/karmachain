@@ -21,7 +21,7 @@ codec = { package = "parity-scale-codec", version = "3.0.0", default-features = 
 clap = { version = "4.2.2", features = ["derive"] }
 futures = { version = "0.3.28", features = ["thread-pool"]}
 serde = { version = "1.0.180", features = ["derive"] }
-serde_json = "1.0.96"
+serde_json = "1.0.107"
 scale-info = "2.5.0"
 hex-literal = "0.3.4"
 
@@ -92,7 +92,7 @@ substrate-build-script-utils = { version = "3.0.0", git = "https://github.com/pa
 [dev-dependencies]
 tokio = "1.28.0"
 reqwest = { version = "0.11.17", features = ["json"] }
-serde_json = "1.0.96"
+serde_json = "1.0.107"
 sp-panic-handler = { version = "8.0.0", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
 hex = "0.4.3"
 pallet-balances = { version = "4.0.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
