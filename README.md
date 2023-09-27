@@ -38,14 +38,14 @@ cargo run --release -- --dev
 #### Build chainspec with backup data 
 
 ```sh
-cargo run -- build-spec --chain dev:path/to/file.json > chain-spec/chainSpec.json
+cargo run --release -- build-spec --chain dev:path/to/file.json > chain-spec/chainSpec.json
 ```
 
 #### Running with a chainspec
 
 
 ```sh
-cargo run -- build-spec --dev > chain-spec/chainSpec.json
+cargo run --release -- build-spec --dev > chain-spec/chainSpec.json
 ```
 
 This uses one of the provided chain specs. 
