@@ -7,6 +7,7 @@ use karmachain_node_runtime::{
 	MONTHS, WASM_BINARY,
 };
 use pallet_appreciation::*;
+use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
 use pallet_staking::{Forcing, StakerStatus};
 use sc_service::ChainType;
 use scale_info::prelude::string::String;
@@ -47,6 +48,8 @@ pub fn testnet_config<'a>(backup: Option<&'a str>) -> Result<ChainSpec, String> 
 		hex!["ac9add5297f10ff04001f1f13fc51be3639ab3aacd03e57c000421c3a500a034"].unchecked_into(),
 		// 5Ek9Ng9rECya5EBYdL8jgpdyUjvALUbhYaCSUC1nmDDS6VDN
 		hex!["768cefd0d4abbf1d056d0095f4c3353a6bb9485f833b785eed1f10e9c5251b68"].unchecked_into(),
+		// 5GpsQN8PxCcRPAzuEVTASqzRFX3fDQUb1dHvRkAUt8Dxg7su
+		hex!["ac9add5297f10ff04001f1f13fc51be3639ab3aacd03e57c000421c3a500a034"].unchecked_into(),
 	)];
 	// 5HarYoXkJhxCWWio78TQLXrMf3GoZf8RgHE26fHRNCmt5mPw
 	let sudo: AccountId =
@@ -124,7 +127,7 @@ pub fn testnet_config<'a>(backup: Option<&'a str>) -> Result<ChainSpec, String> 
 #[allow(clippy::too_many_arguments)]
 fn testnet_genesis(
 	wasm_binary: &[u8],
-	initial_authorities: Vec<(AccountId, AccountId, BabeId, GrandpaId)>,
+	initial_authorities: Vec<(AccountId, AccountId, BabeId, GrandpaId, ImOnlineId)>,
 	root_key: AccountId,
 	phone_verifiers: Vec<AccountId>,
 	offchain_accounts: Vec<AccountId>,
@@ -152,7 +155,11 @@ fn testnet_genesis(
 					(
 						x.0.clone(),
 						x.0.clone(),
-						SessionKeys { babe: x.2.clone(), grandpa: x.3.clone() },
+						SessionKeys {
+							babe: x.2.clone(),
+							grandpa: x.3.clone(),
+							im_online: x.4.clone(),
+						},
 					)
 				})
 				.collect::<Vec<_>>(),
@@ -300,5 +307,6 @@ fn testnet_genesis(
 			tx_fee_subsidy_max_amount: 10 * KCENTS,
 		},
 		treasury: Default::default(),
+		im_online: Default::default(),
 	}
 }

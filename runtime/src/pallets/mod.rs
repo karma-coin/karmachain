@@ -7,6 +7,7 @@ pub mod election_provider_multi_phase;
 pub mod grandpa;
 pub mod historical;
 pub mod identity;
+pub mod im_online;
 pub mod nomination_pools;
 pub mod offence;
 pub mod reward;

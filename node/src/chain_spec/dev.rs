@@ -7,6 +7,7 @@ use karmachain_node_runtime::{
 	WASM_BINARY,
 };
 use pallet_appreciation::*;
+use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
 use pallet_staking::{Forcing, StakerStatus};
 use sc_service::ChainType;
 use scale_info::prelude::string::String;
@@ -63,6 +64,7 @@ pub fn development_config<'a>(backup: Option<&'a str>) -> Result<ChainSpec, Stri
 					get_account_id_from_seed::<sr25519::Public>("Alice"),
 					get_from_seed::<BabeId>("Alice"),
 					get_from_seed::<GrandpaId>("Alice"),
+					get_from_seed::<ImOnlineId>("Alice"),
 				)],
 				// Sudo account
 				get_account_id_from_seed::<sr25519::Public>("Alice"),
@@ -107,7 +109,7 @@ pub fn development_config<'a>(backup: Option<&'a str>) -> Result<ChainSpec, Stri
 #[allow(clippy::too_many_arguments)]
 fn development_genesis(
 	wasm_binary: &[u8],
-	initial_authorities: Vec<(AccountId, AccountId, BabeId, GrandpaId)>,
+	initial_authorities: Vec<(AccountId, AccountId, BabeId, GrandpaId, ImOnlineId)>,
 	root_key: AccountId,
 	phone_verifiers: Vec<AccountId>,
 	offchain_accounts: Vec<AccountId>,
@@ -135,7 +137,11 @@ fn development_genesis(
 					(
 						x.0.clone(),
 						x.0.clone(),
-						SessionKeys { babe: x.2.clone(), grandpa: x.3.clone() },
+						SessionKeys {
+							babe: x.2.clone(),
+							grandpa: x.3.clone(),
+							im_online: x.4.clone(),
+						},
 					)
 				})
 				.collect::<Vec<_>>(),
@@ -254,5 +260,6 @@ fn development_genesis(
 			..Default::default()
 		},
 		treasury: Default::default(),
+		im_online: Default::default(),
 	}
 }
