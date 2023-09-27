@@ -113,6 +113,7 @@ construct_runtime!(
 		Historical: pallet_session::historical,
 		Session: pallet_session,
 		Grandpa: pallet_grandpa,
+		ImOnline: pallet_im_online,
 
 		Treasury: pallet_treasury,
 
